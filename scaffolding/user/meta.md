@@ -10,30 +10,39 @@ Each specification file shall be named `<kebab-case-component>.md`.
 
 ### META-002
 
-Each item ID shall follow the format `<COMP>-NNN` (e.g., META-001, AUTH-017).
+Each item ID shall follow `<COMP>-NNN` format (e.g., META-001, AUTH-017) as a markdown heading for anchor linking.
 
 ### META-003
 
-Each item ID shall be a markdown heading for anchor linking.
+Each item shall be self-contained and not rely on surrounding section headings for context.
 
 ### META-004
 
-Each item shall be self-contained and not rely on surrounding section headings for context.
-
-### META-005
-
-Item IDs shall not be modified once commited; new items shall use higher IDs.
+Item IDs shall not be modified once committed; new items shall use higher IDs.
 
 ## GEARS Patterns
 
+### META-005
+
+Each item shall use one or more GEARS (Generalized [EARS](https://alistairmavin.com/ears/)) patterns combined before the `shall` clause, where `<subject>` is any noun (system, component, agent, artifact, etc.):
+
+| Pattern | Clause |
+| ------- | ------ |
+| Ubiquitous | _(none)_ |
+| Event-driven | When `<trigger>`, |
+| State-driven | While `<state>`, |
+| Optional | Where `<feature>`, |
+| Unwanted | If `<trigger>`, then |
+
+Template: `<clauses>` the `<subject>` shall `<action>`.
+
 ### META-006
 
-Each item shall use one of the following GEARS (Generalized [EARS](https://alistairmavin.com/ears/)) patterns, where `<subject>` is any noun (system, component, agent, artifact, etc.):
+Test cases shall use Given/When/Then (GWT) format, which combines State-driven and Event-driven patterns:
 
-| Pattern | Template |
-| ------- | -------- |
-| Ubiquitous | The `<subject>` shall `<action>`. |
-| Event-driven | When `<trigger>`, the `<subject>` shall `<action>`. |
-| State-driven | While `<state>`, the `<subject>` shall `<action>`. |
-| Optional | Where `<feature>`, the `<subject>` shall `<action>`. |
-| Unwanted | If `<condition>`, then the `<subject>` shall `<action>`. |
+| GWT | GEARS Equivalent |
+| --- | ---------------- |
+| **Given** `<precondition>` | While `<precondition>` |
+| **And** `<additional>` | and `<additional>` |
+| **When** `<trigger>` | when `<trigger>` |
+| **Then** `<subject>` shall `<action>` | the `<subject>` shall `<action>` |

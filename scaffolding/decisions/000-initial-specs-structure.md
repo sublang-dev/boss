@@ -31,7 +31,19 @@ specs/
 | dev/ | GEARS | `<kebab-case-component>.md` |
 | tests/ | Test cases by feature | `<kebab-case-feature>.md` |
 
-GEARS (Generalized [EARS](https://alistairmavin.com/ears/)) extends EARS by allowing any `<subject>` (system, component, agent, artifact, etc.) instead of only `<system>`.
+GEARS (Generalized [EARS](https://alistairmavin.com/ears/)) extends EARS:
+- Any `<subject>` (system, component, agent, artifact, etc.) instead of only `<system>`
+- Patterns may be combined: `<clauses>` the `<subject>` shall `<action>`
+
+| Pattern | Clause |
+| ------- | ------ |
+| Ubiquitous | _(none)_ |
+| Event-driven | When `<trigger>`, |
+| State-driven | While `<state>`, |
+| Optional | Where `<feature>`, |
+| Unwanted | If `<trigger>`, then |
+
+Test cases use Given/When/Then (GWT), mapping to State + Event patterns.
 
 Subdirectories optional for user/, dev/, and tests/.
 
