@@ -1,19 +1,22 @@
-# TC: SPDX Headers (IR-000)
+# SPDX: SPDX Headers
 
-Acceptance tests to verify IR-000 completion.
+## SPDX-001: Copyright Header Presence
 
-## TC-001: Copyright Header
-
-**Given** a source file in the project
-**When** checking its header
+**Given** a git-tracked file with comment syntax (excludes JSON, binaries, vendor)
+**When** checking its first comment block (after shebang if present)
 **Then** it shall contain `SPDX-FileCopyrightText`
 
-## TC-002: License Header
+## SPDX-002: License Header Presence
 
-**Given** a project with a LICENSE file
-**When** checking source file headers
-**Then** each shall contain `SPDX-License-Identifier`
+**Given** a git-tracked file with comment syntax (excludes JSON, binaries, vendor)
+**And** one or more license files exist at project root
+**When** checking its first comment block (after shebang if present)
+**Then** it shall contain `SPDX-License-Identifier`
 
-**Given** a project without a LICENSE file
-**When** checking source file headers
-**Then** `SPDX-License-Identifier` shall be absent
+### License File Detection
+
+Recognized patterns at project root:
+
+- `LICENSE`, `LICENSE.txt`, `LICENSE.md`, `COPYING`
+- `LICENCE`, `LICENCE.txt` (British spelling)
+- `LICENSES/` folder (REUSE convention)

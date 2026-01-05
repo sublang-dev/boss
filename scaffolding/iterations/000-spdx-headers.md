@@ -4,6 +4,8 @@
 
 Add SPDX headers to all source files.
 
+Source files: git-tracked files with comment syntax (excludes JSON, binaries, vendor). Headers go in the first comment block, after shebang if present.
+
 ## Deliverables
 
 - [ ] Add SPDX headers to source files missing them
@@ -11,7 +13,10 @@ Add SPDX headers to all source files.
 
 ## Tasks
 
-1. **Detect license** from LICENSE file; skip license line if absent
+1. **Detect license file(s)** at project root; skip license line if absent
+   - Single license: `LICENSE`, `LICENSE.txt`, `LICENSE.md`, `COPYING`
+   - British spelling: `LICENCE`, `LICENCE.txt`
+   - Multiple licenses: `LICENSES/` folder (REUSE convention)
 2. **Add headers** using appropriate comment syntax per file type
 3. **Document format** in specs/dev/rules.md
    E.g.:
@@ -43,4 +48,4 @@ Add SPDX headers to all source files.
 ## Acceptance Criteria
 
 - All source files have SPDX-FileCopyrightText header
-- Files have SPDX-License-Identifier if LICENSE exists
+- Files have SPDX-License-Identifier if a license file exists
