@@ -9,7 +9,7 @@ Source files: git-tracked files with comment syntax (excludes JSON, binaries, ve
 ## Deliverables
 
 - [ ] Add SPDX headers to source files missing them
-- [ ] Document header format in specs/dev/rules.md
+- [ ] Document header format in [dev/rules.md](../dev/rules.md)
 
 ## Tasks
 
@@ -18,7 +18,7 @@ Source files: git-tracked files with comment syntax (excludes JSON, binaries, ve
    - British spelling: `LICENCE`, `LICENCE.txt`
    - Multiple licenses: `LICENSES/` folder (REUSE convention)
 2. **Add headers** using appropriate comment syntax per file type
-3. **Document format** in specs/dev/rules.md
+3. **Document format** in [dev/rules.md](../dev/rules.md)
    E.g.:
 
    > ## Licensing
@@ -47,5 +47,5 @@ Source files: git-tracked files with comment syntax (excludes JSON, binaries, ve
 
 ## Acceptance Criteria
 
-- All source files have SPDX-FileCopyrightText header
-- Files have SPDX-License-Identifier if a license file exists
+- All source files have SPDX-FileCopyrightText header ([SPDX-001](../tests/spdx-headers.md#spdx-001-copyright-header-presence))
+- Files have SPDX-License-Identifier if a license file exists ([SPDX-002](../tests/spdx-headers.md#spdx-002-license-header-presence))

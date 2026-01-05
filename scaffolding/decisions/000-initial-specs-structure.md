@@ -27,9 +27,11 @@ specs/
 | --------- | ------- | ------ |
 | decisions/ | [ADR](https://adr.github.io/) (Architectural Decision Record) | `NNN-<kebab-case-title>.md` |
 | iterations/ | Goal, deliverables, tasks, verification | `NNN-<kebab-case-title>.md` |
-| user/ | [EARS](https://alistairmavin.com/ears/) (Easy Approach to Requirements Syntax) | `<kebab-case-component>.md` |
-| dev/ | [EARS](https://alistairmavin.com/ears/) (Easy Approach to Requirements Syntax) | `<kebab-case-component>.md` |
+| user/ | GEARS | `<kebab-case-component>.md` |
+| dev/ | GEARS | `<kebab-case-component>.md` |
 | tests/ | Test cases by feature | `<kebab-case-feature>.md` |
+
+GEARS (Generalized [EARS](https://alistairmavin.com/ears/)) extends EARS by allowing any `<subject>` (system, component, agent, artifact, etc.) instead of only `<system>`.
 
 Subdirectories optional for user/, dev/, and tests/.
 
@@ -39,9 +41,8 @@ Subdirectories optional for user/, dev/, and tests/.
 | ---- | ------- |
 | `decisions/000-initial-specs-structure.md` | This DR |
 | `iterations/000-spdx-headers.md` | Initial IR |
-| `user/meta.md` | EARS syntax guide |
+| `user/meta.md` | GEARS syntax guide |
 | `dev/rules.md` | Development rules |
-| `tests/spec-format.md` | Spec format verification |
 | `tests/spdx-headers.md` | SPDX headers verification |
 
 ## Consequences

@@ -1,6 +1,6 @@
 # META: Specification Format
 
-This component defines how to write specifications using [EARS](https://alistairmavin.com/ears/) syntax.
+This component defines how to write specifications using GEARS (Generalized [EARS](https://alistairmavin.com/ears/)) syntax, per [DR-000](../decisions/000-initial-specs-structure.md#dr-000-initial-specs-structure).
 
 ## File Format
 
@@ -22,18 +22,18 @@ Each item shall be self-contained and not rely on surrounding section headings f
 
 ### META-005
 
-Item IDs shall not be modified once assigned; new items shall use higher IDs.
+Item IDs shall not be modified once commited; new items shall use higher IDs.
 
-## EARS Patterns
+## GEARS Patterns
 
 ### META-006
 
-Each item shall use one of the following EARS patterns:
+Each item shall use one of the following GEARS (Generalized [EARS](https://alistairmavin.com/ears/)) patterns, where `<subject>` is any noun (system, component, agent, artifact, etc.):
 
 | Pattern | Template |
 | ------- | -------- |
-| Ubiquitous | The `<system>` shall `<action>`. |
-| Event-driven | When `<trigger>`, the `<system>` shall `<action>`. |
-| State-driven | While `<state>`, the `<system>` shall `<action>`. |
-| Optional | Where `<feature>`, the `<system>` shall `<action>`. |
-| Unwanted | If `<condition>`, then the `<system>` shall `<action>`. |
+| Ubiquitous | The `<subject>` shall `<action>`. |
+| Event-driven | When `<trigger>`, the `<subject>` shall `<action>`. |
+| State-driven | While `<state>`, the `<subject>` shall `<action>`. |
+| Optional | Where `<feature>`, the `<subject>` shall `<action>`. |
+| Unwanted | If `<condition>`, then the `<subject>` shall `<action>`. |
