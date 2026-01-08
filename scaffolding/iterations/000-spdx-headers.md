@@ -9,7 +9,7 @@ Source files: git-tracked files with comment syntax (excludes JSON, binaries, ve
 ## Deliverables
 
 - [ ] Add SPDX headers to source files missing them
-- [ ] Document header format in [dev/rules.md](../dev/rules.md)
+- [ ] Document header format in [dev/style.md](../dev/style.md)
 
 ## Tasks
 
@@ -18,7 +18,7 @@ Source files: git-tracked files with comment syntax (excludes JSON, binaries, ve
    - British spelling: `LICENCE`, `LICENCE.txt`
    - Multiple licenses: `LICENSES/` folder (REUSE convention)
 2. **Add headers** using appropriate comment syntax per file type
-3. **Document format** in [dev/rules.md](../dev/rules.md)
+3. **Document format** in [dev/style.md](../dev/style.md)
    E.g.:
 
    > ## Licensing

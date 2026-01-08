@@ -54,7 +54,8 @@ Subdirectories optional for user/, dev/, and tests/.
 | `decisions/000-initial-specs-structure.md` | This DR |
 | `iterations/000-spdx-headers.md` | Initial IR |
 | `user/meta.md` | GEARS syntax guide |
-| `dev/rules.md` | Development rules |
+| `dev/git.md` | Git workflow rules |
+| `dev/style.md` | Authoring conventions |
 | `tests/spdx-headers.md` | SPDX headers verification |
 
 ## Consequences
