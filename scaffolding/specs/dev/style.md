@@ -41,3 +41,7 @@ Specs shall cite decisions when deriving from them.
 ### STYLE-008
 
 Specs shall not cite iterations.
+
+### STYLE-009
+
+Test specs shall not be cited by other specs.
