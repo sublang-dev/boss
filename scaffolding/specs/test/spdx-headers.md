@@ -20,5 +20,6 @@ While the file is git-tracked with comment syntax (see exclusions below) and one
 Recognized patterns at project root:
 
 - `LICENSE`, `LICENSE.txt`, `LICENSE.md`, `COPYING`
+- `LICENSE-CONTENT`, `LICENSE-APACHE`, etc. (named variants)
 - `LICENCE`, `LICENCE.txt` (British spelling)
 - `LICENSES/` folder (REUSE convention)
