@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2025 SubLang contributors <https://github.com/sublang-xyz>
 
-import { mkdir, copyFile, readdir } from 'node:fs/promises';
+import { mkdir, copyFile, readdir, readFile, appendFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 
@@ -97,6 +97,77 @@ export async function copyTemplates(specsDir: string): Promise<CopyResult[]> {
   if (existsSync(templateSpecsDir)) {
     await copyTemplateDir(templateSpecsDir, specsDir, results);
   }
+
+  return results;
+}
+
+/**
+ * Get the scaffolding directory path.
+ */
+function getScaffoldingDir(): string {
+  const distDir = dirname(__dirname);
+  return join(dirname(distDir), 'scaffolding');
+}
+
+export interface AppendAgentSpecsResult {
+  path: string;
+  action: 'created' | 'appended' | 'skipped';
+}
+
+/**
+ * Append agent specs instructions to a single file.
+ * Does not append if the content is already present.
+ */
+async function appendSpecsToFile(
+  filePath: string,
+  specsContent: string,
+  createIfMissing: boolean
+): Promise<AppendAgentSpecsResult | null> {
+  if (existsSync(filePath)) {
+    const existingContent = await readFile(filePath, 'utf-8');
+    if (existingContent.includes('## Specs (source of truth)')) {
+      return { path: filePath, action: 'skipped' };
+    }
+    const separator = existingContent.endsWith('\n') ? '\n' : '\n\n';
+    await appendFile(filePath, separator + specsContent);
+    return { path: filePath, action: 'appended' };
+  } else if (createIfMissing) {
+    await writeFile(filePath, specsContent);
+    return { path: filePath, action: 'created' };
+  }
+  return null;
+}
+
+/**
+ * Append agent specs instructions to CLAUDE.md and AGENTS.md.
+ * If neither exists, creates both. Otherwise appends to each that exists.
+ * Does not append if the content is already present in a file.
+ */
+export async function appendAgentSpecs(basePath: string): Promise<AppendAgentSpecsResult[]> {
+  const scaffoldingDir = getScaffoldingDir();
+  const agentSpecsPath = join(scaffoldingDir, 'agent-specs.md');
+
+  if (!existsSync(agentSpecsPath)) {
+    return [];
+  }
+
+  const specsContent = await readFile(agentSpecsPath, 'utf-8');
+  const claudeMdPath = join(basePath, 'CLAUDE.md');
+  const agentsMdPath = join(basePath, 'AGENTS.md');
+
+  const claudeExists = existsSync(claudeMdPath);
+  const agentsExists = existsSync(agentsMdPath);
+  const neitherExists = !claudeExists && !agentsExists;
+
+  const results: AppendAgentSpecsResult[] = [];
+
+  // Process CLAUDE.md
+  const claudeResult = await appendSpecsToFile(claudeMdPath, specsContent, neitherExists);
+  if (claudeResult) results.push(claudeResult);
+
+  // Process AGENTS.md
+  const agentsResult = await appendSpecsToFile(agentsMdPath, specsContent, neitherExists);
+  if (agentsResult) results.push(agentsResult);
 
   return results;
 }

@@ -4,7 +4,7 @@
 import { basename, resolve } from 'node:path';
 import { existsSync, statSync } from 'node:fs';
 import { findGitRoot } from '../utils/git.js';
-import { createSpecsStructure, copyTemplates } from '../utils/fs.js';
+import { createSpecsStructure, copyTemplates, appendAgentSpecs } from '../utils/fs.js';
 
 /**
  * Initialize the iteron specs directory structure.
@@ -62,6 +62,21 @@ export async function initCommand(targetPath?: string): Promise<void> {
         const status = result.copied ? '(created)' : '(already exists)';
         const relativePath = result.path.slice(specsDir.length + 1);
         console.log(`  ${relativePath} ${status}`);
+      }
+    }
+
+    // Append agent specs to CLAUDE.md and AGENTS.md
+    const agentSpecsResults = await appendAgentSpecs(basePath);
+    if (agentSpecsResults.length > 0) {
+      const statusMap = {
+        created: '(created)',
+        appended: '(updated)',
+        skipped: '(already has specs)',
+      };
+      console.log('\nAgent instructions:');
+      for (const result of agentSpecsResults) {
+        const fileName = basename(result.path);
+        console.log(`  ${fileName} ${statusMap[result.action]}`);
       }
     }
 

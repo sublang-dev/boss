@@ -45,6 +45,7 @@
   "files": [
     "dist",
     "bin",
-    "templates"
+    "templates",
+    "scaffolding"
   ]
 }
