@@ -29,7 +29,7 @@ export async function createSpecsStructure(basePath: string): Promise<{
   subDirs: CreateDirResult[];
 }> {
   const specsDir = join(basePath, 'specs');
-  const subfolders = ['decisions', 'iterations', 'user', 'dev', 'tests'];
+  const subfolders = ['decisions', 'iterations', 'user', 'dev', 'test'];
 
   // Create specs directory first
   await ensureDir(specsDir);
@@ -48,12 +48,12 @@ export interface CopyResult {
 }
 
 /**
- * Get the templates directory path.
+ * Get the scaffolding directory path.
  */
-function getTemplatesDir(): string {
+function getScaffoldingDir(): string {
   // __dirname is dist/utils, go up to package root
   const distDir = dirname(__dirname);
-  return join(dirname(distDir), 'templates');
+  return join(dirname(distDir), 'scaffolding');
 }
 
 /**
@@ -87,26 +87,18 @@ async function copyTemplateDir(
 }
 
 /**
- * Copy template files to the specs directory.
+ * Copy scaffolding spec templates to the specs directory.
  */
 export async function copyTemplates(specsDir: string): Promise<CopyResult[]> {
-  const templatesDir = getTemplatesDir();
-  const templateSpecsDir = join(templatesDir, 'specs');
+  const scaffoldingDir = getScaffoldingDir();
+  const specsTemplateDir = join(scaffoldingDir, 'specs');
   const results: CopyResult[] = [];
 
-  if (existsSync(templateSpecsDir)) {
-    await copyTemplateDir(templateSpecsDir, specsDir, results);
+  if (existsSync(specsTemplateDir)) {
+    await copyTemplateDir(specsTemplateDir, specsDir, results);
   }
 
   return results;
-}
-
-/**
- * Get the scaffolding directory path.
- */
-function getScaffoldingDir(): string {
-  const distDir = dirname(__dirname);
-  return join(dirname(distDir), 'scaffolding');
 }
 
 export interface AppendAgentSpecsResult {
