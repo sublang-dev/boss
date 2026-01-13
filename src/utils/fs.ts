@@ -137,7 +137,7 @@ async function appendSpecsToFile(
  */
 export async function appendAgentSpecs(basePath: string): Promise<AppendAgentSpecsResult[]> {
   const scaffoldingDir = getScaffoldingDir();
-  const agentSpecsPath = join(scaffoldingDir, 'agent-specs.md');
+  const agentSpecsPath = join(scaffoldingDir, 'agent-specs.txt');
 
   if (!existsSync(agentSpecsPath)) {
     return [];
