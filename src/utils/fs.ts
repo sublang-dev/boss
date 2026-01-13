@@ -3,7 +3,7 @@
 
 import { mkdir, copyFile, readdir, readFile, appendFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 
 export interface CreateDirResult {
   path: string;
@@ -117,14 +117,17 @@ async function appendSpecsToFile(
 ): Promise<AppendAgentSpecsResult | null> {
   if (existsSync(filePath)) {
     const existingContent = await readFile(filePath, 'utf-8');
-    if (existingContent.includes('## Specs (source of truth)')) {
+    if (existingContent.includes('## Specs (Source of Truth)')) {
       return { path: filePath, action: 'skipped' };
     }
     const separator = existingContent.endsWith('\n') ? '\n' : '\n\n';
     await appendFile(filePath, separator + specsContent);
     return { path: filePath, action: 'appended' };
   } else if (createIfMissing) {
-    await writeFile(filePath, specsContent);
+    // Add a title when creating new files
+    const filename = basename(filePath, '.md');
+    const content = `# ${filename}\n\n${specsContent}`;
+    await writeFile(filePath, content);
     return { path: filePath, action: 'created' };
   }
   return null;

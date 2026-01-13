@@ -1,4 +1,4 @@
-## Specs (source of truth)
+## Specs (Source of Truth)
 
 - Canonical specs live in `specs/`.
 - Before making changes or suggestions in an area that has a spec, read the relevant spec file(s) first and follow them.
