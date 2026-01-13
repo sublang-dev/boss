@@ -18,9 +18,9 @@ Add SPDX headers (license and copyright info) to applicable files.
    - Multiple licenses: `LICENSES/` folder (REUSE convention)
 
 2. **Identify applicable files** according to the license(s): git-tracked or `git add`-able files with comment syntax. Excludes:
-   - No comment syntax: JSON, binaries
-   - Config: `.gitignore`, `.editorconfig`, `**/settings.json`, lock files
-   - Generated/vendor: `dist/`, `node_modules/`, vendor directories
+   - No comment syntax: e.g., JSON, binaries
+   - Config: e.g., `.gitignore`, `.editorconfig`, `**/settings.json`, `AGENTS.md`, lock files
+   - Generated/vendor: e.g., `dist/`, `node_modules/`
    - License/legal documents
 
 3. **Add headers** in the first comment block (after shebang if present), using appropriate comment syntax per file type
