@@ -53,7 +53,15 @@ Test specs shall not be cited by other specs.
 
 ### STYLE-009
 
-While a file is git-tracked or `git add`-able with comment syntax, when adding SPDX headers, the file shall include both `SPDX-License-Identifier` and `SPDX-FileCopyrightText` in the first comment block (after shebang if present).
+While a file is git-tracked or `git add`-able with comment syntax (see exclusions below), when adding SPDX headers, the file shall include both `SPDX-License-Identifier` and `SPDX-FileCopyrightText` in the first comment block (after shebang if present).
+
+#### Exclusions
+
+- No comment syntax: JSON, binaries
+- Config: `.gitignore`, `.editorconfig`, `**/settings.json`, lock files
+- Generated/vendor: `dist/`, `node_modules/`, vendor directories
+- Templates: `scaffolding/` (copied to user projects)
+- License/legal documents
 
 ### STYLE-010
 
