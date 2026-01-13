@@ -19,7 +19,7 @@ Add SPDX headers (license and copyright info) to applicable files.
 
 2. **Identify applicable files** according to the license(s): git-tracked or `git add`-able files with comment syntax. Excludes:
    - No comment syntax: e.g., JSON, binaries
-   - Config: e.g., `.gitignore`, `.editorconfig`, `**/settings.json`, `AGENTS.md`, lock files
+   - Config: e.g., `.gitignore`, `.editorconfig`, `**/settings.json`, `AGENTS.md`, `.github/workflows/ci.yml`, lock files
    - Generated/vendor: e.g., `dist/`, `node_modules/`
    - License/legal documents
 

@@ -3,20 +3,21 @@
 
 # SPDX: SPDX Headers
 
+## Exclusions
+
+- No comment syntax: e.g., JSON, binaries
+- Config: e.g., `.gitignore`, `.editorconfig`, `**/settings.json`, `AGENTS.md`, `.github/workflows/ci.yml`, lock files
+- Generated/vendor: e.g., `dist/`, `node_modules/`, vendor directories
+- Templates: `scaffolding/` (copied to user projects)
+- License/legal documents
+
 ## SPDX-001: Copyright Header Presence
 
-While the file is git-tracked or `git add`-able, with comment syntax (see exclusions below), when checking its first comment block (after shebang if present), the file shall contain `SPDX-FileCopyrightText`.
+While the file is git-tracked or `git add`-able, with comment syntax (see [Exclusions](#exclusions)), when checking its first comment block (after shebang if present), the file shall contain `SPDX-FileCopyrightText`.
 
 ## SPDX-002: License Header Presence
 
-While the file is git-tracked or `git add`-able, with comment syntax (see exclusions below) and one or more license files exist at project root, when checking its first comment block (after shebang if present), the file shall contain `SPDX-License-Identifier`.
-
-### Exclusions
-
-- No comment syntax: JSON, binaries
-- Config: `.gitignore`, `.editorconfig`, `**/settings.json`, lock files
-- Generated/vendor: `dist/`, `node_modules/`, vendor directories
-- License/legal documents
+While the file is git-tracked or `git add`-able, with comment syntax (see [Exclusions](#exclusions)) and one or more license files exist at project root, when checking its first comment block (after shebang if present), the file shall contain `SPDX-License-Identifier`.
 
 ### License File Detection
 

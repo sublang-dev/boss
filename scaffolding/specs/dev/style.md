@@ -16,9 +16,9 @@ Each item ID shall follow `<COMP>-NNN` format (e.g., AUTH-001, SPDX-003) as a ma
 
 Each item shall use GEARS syntax per [META-001](../user/meta.md#meta-001) and be self-contained:
 
-- No dependency on sibling or containing sections for understanding;
+- No implicit dependency on sibling or containing sections;
 - May rely on its own subsections for details;
-- Cross-references to other specs are allowed but the item must be understandable without reading them.
+- Cross-references to other specs or shared sections are allowed.
 
 ### STYLE-004
 

@@ -19,9 +19,9 @@ Each item ID shall follow `<COMP>-NNN` format (e.g., AUTH-001, SPDX-003) as a ma
 
 Each item shall use GEARS syntax per [META-001](../user/meta.md#meta-001) and be self-contained:
 
-- No dependency on sibling or containing sections for understanding;
+- No implicit dependency on sibling or containing sections;
 - May rely on its own subsections for details;
-- Cross-references to other specs are allowed but the item must be understandable without reading them.
+- Cross-references to other specs or shared sections are allowed.
 
 ### STYLE-004
 
@@ -57,9 +57,9 @@ While a file is git-tracked or `git add`-able with comment syntax (see exclusion
 
 #### Exclusions
 
-- No comment syntax: JSON, binaries
-- Config: `.gitignore`, `.editorconfig`, `**/settings.json`, lock files
-- Generated/vendor: `dist/`, `node_modules/`, vendor directories
+- No comment syntax: e.g., JSON, binaries
+- Config: e.g., `.gitignore`, `.editorconfig`, `**/settings.json`, `AGENTS.md`, `.github/workflows/ci.yml`, lock files
+- Generated/vendor: e.g., `dist/`, `node_modules/`, vendor directories
 - Templates: `scaffolding/` (copied to user projects)
 - License/legal documents
 
