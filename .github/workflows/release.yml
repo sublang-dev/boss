@@ -35,6 +35,9 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
+      - name: Upgrade npm for OIDC support
+        run: npm install -g npm@latest
+
       - name: Verify version match
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"

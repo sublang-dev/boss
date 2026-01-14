@@ -12,15 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.1] - 2025-01-14
 
+First public release of IterOn - a CLI tool that delegates dev loops to Claude Code and Codex CLI, enabling autonomous iteration for hours without API keys.
+
+Install with `npm install -g @sublang-xyz/iteron`.
+
 ### Added
 
-- Initial public release
-- CLI tool for delegating dev loops to Claude Code and Codex CLI
+- CLI tool (`iteron`) for delegating dev loops
+- Autonomous iteration without API keys via Claude Code and Codex CLI
 - Scaffolding templates for project setup
 - GitHub Actions CI workflow
-- README with installation and usage instructions
-- Contributing guidelines
 - Project specifications structure
 
-[Unreleased]: https://github.com/sublang-xyz/iteron/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/sublang-xyz/iteron/releases/tag/v0.1.1
+[Unreleased]: https://github.com/sublang-xyz/IterOn/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/sublang-xyz/IterOn/releases/tag/v0.1.1

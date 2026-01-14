@@ -22,11 +22,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sublang-xyz/iteron.git"
+    "url": "git+https://github.com/sublang-xyz/IterOn.git"
   },
-  "homepage": "https://github.com/sublang-xyz/iteron#readme",
+  "homepage": "https://github.com/sublang-xyz/IterOn#readme",
   "bugs": {
-    "url": "https://github.com/sublang-xyz/iteron/issues"
+    "url": "https://github.com/sublang-xyz/IterOn/issues"
   },
   "license": "Apache-2.0",
   "publishConfig": {
