@@ -3,7 +3,7 @@
 
 # GIT: Git Workflow
 
-This component defines git workflow rules for the project, per [DR-000](../decisions/000-initial-specs-structure.md#dr-000-initial-specs-structure).
+This component defines git workflow rules for the project.
 
 ## Commits
 
