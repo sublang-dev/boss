@@ -35,3 +35,15 @@ Complete Iteration #0
 3. **AI Executes** — Let AI agents complete the tasks autonomously. They generate code and update `specs/`.
 
 Then loop back to the next decision or iteration.
+
+## Contributing
+
+We welcome contributions of all kinds. If you'd like to help:
+
+⭐ Star the repo if you find IterOn useful.
+
+🐛 [Open an issue](https://github.com/sublang-xyz/iteron/issues) for bugs or feature requests.
+
+🤝 [Open a PR](https://github.com/sublang-xyz/iteron/pulls) for fixes or improvements.
+
+💬 Join the [discussions](https://github.com/orgs/sublang-xyz/discussions) to share ideas and help shape the roadmap.
