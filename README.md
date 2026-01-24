@@ -17,7 +17,7 @@ Delegate dev loops to Claude Code, Codex CLI, or any AI coder. Runs autonomously
 
 ```bash
 npm install -g @sublang-xyz/iteron
-iteron init
+iteron scaffold
 ```
 
 Review the sample iteration `specs/iterations/000-spdx-headers.md` and update the copyright text, then prompt your AI coding agent:

@@ -10,7 +10,7 @@ Projects need a standardized structure and format for specifications to support 
 
 ## Decision
 
-Use `iteron init` to create:
+Use `iteron scaffold` to create:
 
 ```text
 specs/

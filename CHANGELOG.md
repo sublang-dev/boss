@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** Renamed `iteron init` command to `iteron scaffold` to reserve `init` for future full project initialization
+
 ## [0.1.1] - 2025-01-14
 
 First public release of IterOn - a CLI tool that delegates dev loops to Claude Code and Codex CLI, enabling autonomous iteration for hours without API keys.

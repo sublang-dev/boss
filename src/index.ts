@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: 2025 SubLang International <https://www.sublang.xyz>
 
 import { Command } from 'commander';
-import { initCommand } from './commands/init.js';
+import { scaffoldCommand } from './commands/scaffold.js';
 
 const program = new Command();
 
@@ -13,9 +13,9 @@ program
   .version('0.1.1');
 
 program
-  .command('init')
-  .description('Initialize iteron specs directory structure')
+  .command('scaffold')
+  .description('Create iteron specs directory structure and templates')
   .argument('[path]', 'target directory (defaults to git root or cwd)')
-  .action(initCommand);
+  .action(scaffoldCommand);
 
 program.parse();

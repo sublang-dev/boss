@@ -7,14 +7,14 @@ import { findGitRoot } from '../utils/git.js';
 import { createSpecsStructure, copyTemplates, appendAgentSpecs } from '../utils/fs.js';
 
 /**
- * Initialize the iteron specs directory structure.
+ * Scaffold the iteron specs directory structure.
  *
  * Behavior:
  * - If path provided: use that directory (must exist)
  * - Else if inside a git repo: creates specs/ at the git root
  * - Else: creates specs/ in current directory
  */
-export async function initCommand(targetPath?: string): Promise<void> {
+export async function scaffoldCommand(targetPath?: string): Promise<void> {
   let basePath: string;
 
   if (targetPath) {
@@ -39,7 +39,7 @@ export async function initCommand(targetPath?: string): Promise<void> {
     }
   }
 
-  console.log(`Initializing iteron specs in: ${basePath}`);
+  console.log(`Scaffolding iteron specs in: ${basePath}`);
 
   try {
     const { specsDir, subDirs } = await createSpecsStructure(basePath);
@@ -80,10 +80,10 @@ export async function initCommand(targetPath?: string): Promise<void> {
       }
     }
 
-    console.log('\nIteron initialized successfully!');
+    console.log('\nIteron scaffolding complete!');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`Failed to initialize iteron: ${message}`);
+    console.error(`Failed to scaffold iteron: ${message}`);
     process.exit(1);
   }
 }
