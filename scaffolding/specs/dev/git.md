@@ -18,6 +18,6 @@ The commit body shall explain what/why (not how), wrap at 72 chars, and use bull
 
 ### GIT-004
 
-When AI assists in authoring a commit, the message shall include a `Co-authored-by` trailer in the format `<model> (<role>) <email>`, where `<role>` is one of `coder|reviewer|maintainer`.
+When AI assists in authoring a commit, the message shall include a `Co-authored-by` trailer in the format `<model> (<role>) <email>`, where `<role>` is one of `coder|reviewer|maintainer` and `<email>` is `cligent@sublang.xyz`.
 
-Example: `Co-authored-by: Claude Opus 4.5 (coder) <noreply@anthropic.com>`
+Example: `Co-authored-by: Codex (coder) <cligent@sublang.xyz>`
