@@ -9,14 +9,14 @@ Build a multi-arch OCI container image that packages all four agent runtimes (Cl
 
 ## Deliverables
 
-- [ ] Dockerfile based on `node:22-bookworm-slim`
-- [ ] Multi-arch build script (`linux/amd64`, `linux/arm64`)
-- [ ] All four agent runtimes installed and invocable
-- [ ] Canonical agent-name-to-binary mapping
-- [ ] tini as PID 1, tmux for session management
-- [ ] Non-root user `iteron` (UID 1000) with read-only-compatible layout
-- [ ] Agent autonomy defaults (full permissions, no interactive approval prompts)
-- [ ] Default tmux configuration
+- [x] Dockerfile based on `node:22-bookworm-slim`
+- [x] Multi-arch build script (`linux/amd64`, `linux/arm64`)
+- [x] All four agent runtimes installed and invocable
+- [x] Canonical agent-name-to-binary mapping
+- [x] tini as PID 1, tmux for session management
+- [x] Non-root user `iteron` (UID 1000) with read-only-compatible layout
+- [x] Agent autonomy defaults (full permissions, no interactive approval prompts)
+- [x] Default tmux configuration
 
 ## Tasks
 
@@ -99,13 +99,6 @@ These defaults live in the image so every container launch is autonomous out of 
 | 13 | `podman run --rm <image> cat /home/iteron/.claude/settings.json` | JSON with tool-allow-all permission config |
 | 14 | `podman run --rm <image> find / -perm /6000 -type f 2>/dev/null \| wc -l` | `0` (no SUID/SGID binaries) |
 | 15 | `podman image inspect <image> --format '{{.Size}}'` | < 1 GB compressed |
-
-## Non-Goals
-
-- CLI commands (`iteron init/start/stop/open/ls/rm`) — see [IR-002](002-container-lifecycle.md), [IR-003](003-workspace-interaction.md)
-- Authentication (API key injection) — see [IR-004](004-headless-auth.md)
-- AWS deployment (Fargate, EFS, ECR)
-- CI/CD pipeline for automated image builds
 
 ## Dependencies
 
