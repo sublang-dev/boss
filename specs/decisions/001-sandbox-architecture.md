@@ -11,7 +11,7 @@ Accepted
 
 We need to run CLI coding agents (Claude Code, Codex CLI, Gemini CLI, OpenCode) autonomously with full permissions inside isolated sandboxes. The solution must work locally on macOS, Linux, and Windows with minimal installation friction; deploy to AWS for long-running autonomous tasks; support subscription and API-key auth; and map to Tmux outside the sandbox for user interaction.
 
-The agents have conflicting runtimes: Gemini CLI requires Node 20+ \[1], Claude Code requires Node 18+ \[2], Codex CLI is a Rust binary linked against glibc \[3], and the active OpenCode fork (anomalyco/opencode) is TypeScript \[4]. Node.js 22 LTS on Debian Bookworm Slim (~30 MB \[5]) satisfies all four while providing the glibc Codex needs — Alpine's musl would require a compatibility layer. All three major agents already use internal sandboxing (Claude Code and Codex CLI use sandbox-exec on macOS \[6]\[7] and Bubblewrap on Linux \[6]\[38]; Gemini CLI uses sandbox-exec on macOS and container-based sandboxing cross-platform \[8]), but these are platform-specific, do not encapsulate runtimes or resolve dependency conflicts, and have no managed AWS equivalent. They remain useful as defense-in-depth inside the container.
+The agents have conflicting runtimes: Gemini CLI requires Node 20+ \[1], Claude Code requires Node 18+ \[2], Codex CLI is a Rust binary available in both glibc and musl-linked variants \[3], and OpenCode is a TypeScript CLI published on npm as `opencode-ai` \[4]. Node.js 22 LTS on Debian Bookworm Slim (~30 MB \[5]) satisfies the Node-based agents; Codex CLI uses its statically-linked musl binary, which runs on any Linux regardless of the system libc. All three major agents already use internal sandboxing (Claude Code and Codex CLI use sandbox-exec on macOS \[6]\[7] and Bubblewrap on Linux \[6]\[38]; Gemini CLI uses sandbox-exec on macOS and container-based sandboxing cross-platform \[8]), but these are platform-specific, do not encapsulate runtimes or resolve dependency conflicts, and have no managed AWS equivalent. They remain useful as defense-in-depth inside the container.
 
 ## Decision
 
@@ -86,7 +86,7 @@ Each agent runs inside a **named tmux session within the container**. IterOn pro
 1. Gemini CLI requires Node 20+ — <https://www.npmjs.com/package/@google/gemini-cli>
 2. Claude Code npm package — <https://www.npmjs.com/package/@anthropic-ai/claude-code>
 3. Codex CLI Rust rewrite — <https://www.infoq.com/news/2025/06/codex-cli-rust-native-rewrite/>
-4. OpenCode (anomalyco fork) is TypeScript — <https://github.com/anomalyco/opencode>
+4. OpenCode CLI (npm: opencode-ai) — <https://www.npmjs.com/package/opencode-ai>
 5. Debian Bookworm Slim ~30 MB — <https://hub.docker.com/_/debian>
 6. Claude Code sandboxing — <https://www.anthropic.com/engineering/claude-code-sandboxing>
 7. Codex CLI uses Apple Seatbelt on macOS — see \[3]

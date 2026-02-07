@@ -33,18 +33,18 @@ Build a multi-arch OCI container image that packages all four agent runtimes (Cl
 Install each agent and verify its binary is on `PATH`:
 
 - Claude Code: `npm install -g @anthropic-ai/claude-code`
+- Codex CLI: standalone musl binary from GitHub releases (avoids 400 MB npm multi-platform bundle)
 - Gemini CLI: `npm install -g @google/gemini-cli`
-- Codex CLI: download architecture-specific Rust binary from GitHub releases
-- OpenCode: clone and install `anomalyco/opencode` (TypeScript)
+- OpenCode: `npm install -g opencode-ai`
 
 **Agent name mapping** — [DR-002](../decisions/002-iteron-cli-commands.md#workspace-model) defines reserved agent names for `iteron open` and tmux session naming. These map to binary commands as follows:
 
 | Agent name (config / CLI) | Binary command | Source |
 | --- | --- | --- |
 | `claude-code` | `claude` | npm: `@anthropic-ai/claude-code` |
-| `codex-cli` | `codex` | GitHub releases (Rust binary) |
+| `codex-cli` | `codex` | GitHub releases (standalone musl binary) |
 | `gemini-cli` | `gemini` | npm: `@google/gemini-cli` |
-| `opencode` | `opencode` | `anomalyco/opencode` (TypeScript) |
+| `opencode` | `opencode` | npm: `opencode-ai` |
 
 `iteron open claude-code myproject` resolves to binary `claude` and creates tmux session `claude-code:myproject`. Verify exact binary names during implementation — upstream projects may change them.
 
