@@ -126,12 +126,6 @@ GEMINI_API_KEY=
 | 13 | `iteron start`, `podman exec iteron-sandbox touch /home/iteron/persist-test`, `iteron stop`, `iteron start`, `podman exec iteron-sandbox test -f /home/iteron/persist-test` | Exit 0 (file persists across restart) |
 | 14 | `iteron --help` | Lists `init`, `start`, `stop` subcommands with one-line descriptions |
 
-## Non-Goals
-
-- Workspace interaction commands (`open`, `ls`, `rm`) — see [IR-003](003-workspace-interaction.md)
-- Agent-specific authentication setup — see [IR-004](004-headless-auth.md)
-- Podman machine auto-stop on idle (optimization for later)
-
 ## Dependencies
 
 - [IR-001](001-oci-sandbox-image.md) (image must be built and pullable)

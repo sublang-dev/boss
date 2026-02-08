@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- SPDX-FileCopyrightText: 2026 SubLang International <https://www.sublang.ai> -->
 
-# IR-003: Workspace Interaction
+# IR-004: Workspace Interaction
 
 ## Goal
 
@@ -82,13 +82,8 @@ Per [DR-002 §6](../decisions/002-iteron-cli-commands.md#6-iteron-rm-workspace):
 | 13 | `iteron rm` (no arg) | Exit non-zero; prints usage error |
 | 14 | `iteron open` when container not running | Exit non-zero; prints "Container iteron-sandbox is not running. Run `iteron start` first." |
 
-## Non-Goals
-
-- Agent orchestration or inter-agent communication
-- Automatic task assignment or retry logic
-- Graphical monitoring UI
-
 ## Dependencies
 
 - [IR-002](002-container-lifecycle.md) (container must be startable)
+- [IR-003](003-tests-ci.md) (tests and CI established)
 - [DR-002](../decisions/002-iteron-cli-commands.md) approved

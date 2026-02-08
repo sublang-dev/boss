@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- SPDX-FileCopyrightText: 2026 SubLang International <https://www.sublang.ai> -->
 
-# IR-006: Reliability, Security, and Documentation
+# IR-007: Reliability, Security, and Documentation
 
 ## Goal
 
@@ -79,16 +79,9 @@ Per [DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the
 | --- | --- | --- |
 | Claude Code memory leak exceeds 16 GB during 8h run | Container OOM-killed, task lost | `--memory` cgroup limit prevents host impact; container restartable; volume data preserved |
 | Agent version update introduces new CVE in image | Vulnerability scan fails | Pin agent versions; re-scan on each image rebuild |
-| Upstream agent changes break headless config | Permission prompts reappear | Pin versions; regression test in [IR-005](005-autonomous-execution.md) catches this |
-
-## Non-Goals
-
-- AWS deployment (Fargate, EFS, Secrets Manager)
-- Per-agent resource limits within container
-- Automated CI/CD pipeline for image builds and vulnerability scanning
-- Performance benchmarking or optimization
+| Upstream agent changes break headless config | Permission prompts reappear | Pin versions; regression test in [IR-006](006-autonomous-execution.md) catches this |
 
 ## Dependencies
 
-- [IR-005](005-autonomous-execution.md) (agents must pass autonomous execution before reliability testing)
+- [IR-006](006-autonomous-execution.md) (agents must pass autonomous execution before reliability testing)
 - [DR-001](../decisions/001-sandbox-architecture.md) approved

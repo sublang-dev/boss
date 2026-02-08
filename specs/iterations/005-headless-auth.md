@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- SPDX-FileCopyrightText: 2026 SubLang International <https://www.sublang.ai> -->
 
-# IR-004: Headless Authentication
+# IR-005: Headless Authentication
 
 ## Goal
 
@@ -57,16 +57,10 @@ Each test runs in a freshly started container (`iteron stop && iteron start`) wi
 | 7 | `podman exec iteron-sandbox printenv ANTHROPIC_API_KEY` | Matches value from `.env` (key injection works) |
 | 8 | `podman exec iteron-sandbox cat ~/.claude.json \| jq .hasCompletedOnboarding` | `true` |
 
-## Non-Goals
-
-- Credential-injecting proxy (LiteLLM/Envoy) — deferred to cloud deployment
-- Dynamic key rotation or Vault integration
-- Agent compatibility / coding task validation — see [IR-005](005-autonomous-execution.md)
-
 ## Dependencies
 
 - [IR-001](001-oci-sandbox-image.md) (autonomy defaults baked into image)
 - [IR-002](002-container-lifecycle.md) (`.env` loading via `iteron start`)
-- [IR-003](003-workspace-interaction.md) (`iteron open` for interactive verification)
+- [IR-004](004-workspace-interaction.md) (`iteron open` for interactive verification)
 - [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication) approved
 - Valid API keys for Anthropic, OpenAI, and Google (test accounts)

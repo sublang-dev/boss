@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- SPDX-FileCopyrightText: 2026 SubLang International <https://www.sublang.ai> -->
 
-# IR-005: Autonomous Execution Validation
+# IR-006: Autonomous Execution Validation
 
 ## Goal
 
@@ -104,13 +104,7 @@ For each agent test above, additionally verify that the agent did not pause for 
 | 9 | OpenCode log grep | Agent log from test 8 | No permission prompt patterns found |
 | 10 | All four agents sequentially | Run tests 2, 4, 6, 8 in sequence | All four pass |
 
-## Non-Goals
-
-- Extended-run / reliability testing — see [IR-006](006-reliability-security.md)
-- Performance benchmarking
-- Multi-agent orchestration
-
 ## Dependencies
 
-- [IR-004](004-headless-auth.md) (agents must authenticate headlessly)
+- [IR-005](005-headless-auth.md) (agents must authenticate headlessly)
 - Valid API keys for all four agent providers
