@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
-export const CONFIG_DIR = join(homedir(), '.iteron');
+export const CONFIG_DIR = process.env.ITERON_CONFIG_DIR ?? join(homedir(), '.iteron');
 export const CONFIG_PATH = join(CONFIG_DIR, 'config.toml');
 export const ENV_PATH = join(CONFIG_DIR, '.env');
 

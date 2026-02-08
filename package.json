@@ -10,7 +10,12 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "test": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration --fileParallelism=false",
+    "test:all": "vitest run",
+    "test:watch": "vitest tests/unit",
+    "test:coverage": "vitest run --coverage tests/unit"
   },
   "keywords": [
     "cli",
@@ -38,7 +43,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.3.0"
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=18.0.0"

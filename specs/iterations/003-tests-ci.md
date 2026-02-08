@@ -12,7 +12,7 @@ Add automated unit and integration tests for the CLI utilities and container lif
 - [ ] Vitest test framework configured with coverage
 - [ ] Unit tests for `platform`, `config`, `podman`, and `git` utilities
 - [ ] Integration tests for `init`, `start`, `stop` with real Podman
-- [ ] CI: unit tests on Node 18/20/22, integration tests on Ubuntu with Podman
+- [ ] CI: unit tests on Node 20/22, integration tests on Ubuntu with Podman
 - [ ] `ITERON_CONFIG_DIR` env var override for test isolation
 
 ## Tasks
@@ -41,12 +41,14 @@ export const CONFIG_DIR = process.env.ITERON_CONFIG_DIR ?? join(homedir(), '.ite
 ### 3. Unit tests
 
 **`tests/unit/platform.test.ts`**:
+
 - `needsMachine()`: true for macOS, false for linux/wsl
 - `podmanInstallCommand()`: correct arrays for all 8 install methods
 - `detectPlatform()`: mock `process.platform`/`process.arch`/`readFileSync` for macOS, linux, wsl, unsupported
 - `detectInstallMethod()`: mock `execFileSync` (the `which` calls)
 
 **`tests/unit/config.test.ts`** (uses temp dir via `ITERON_CONFIG_DIR`):
+
 - `defaultConfig()` returns correct structure with/without custom image
 - `writeConfig()` → `readConfig()` round-trip
 - `writeConfig()` idempotent (returns false second time)
@@ -54,21 +56,25 @@ export const CONFIG_DIR = process.env.ITERON_CONFIG_DIR ?? join(homedir(), '.ite
 - `writeEnvTemplate()` creates file with expected keys, idempotent
 
 **`tests/unit/podman.test.ts`**:
+
 - `podmanErrorMessage()`: ENOENT, stderr extraction, fallback
 - Mock `execFile` for: `isPodmanInstalled`, `imageExists`, `containerExists`, `isContainerRunning`, `volumeExists`
 
 **`tests/unit/git.test.ts`** (uses temp dir):
+
 - `findGitRoot()` from within repo finds root
 - `findGitRoot()` from temp dir without `.git` returns null
 
 ### 4. Integration tests (real Podman required)
 
 **`tests/integration/init.test.ts`**:
+
 - Init with `--yes` and `--image alpine:latest` in isolated config dir
 - Second init skips all steps (idempotent) — IR-002 test 3
 - Config and env files have expected content — IR-002 tests 10, 11
 
 **`tests/integration/start-stop.test.ts`**:
+
 - Start: container is running
 - Security: cap-drop ALL, read-only rootfs, no-new-privileges — IR-002 tests 4–6
 - Start idempotent: "already running" — IR-002 test 7
@@ -84,7 +90,7 @@ Integration tests use 120s timeout and run sequentially (shared Podman state). R
 Extend `.github/workflows/ci.yml` with three jobs:
 
 - **build**: existing — `npm run build` on Node [18, 20, 22]
-- **test-unit**: parallel with build — `npm test` on Node [18, 20, 22]
+- **test-unit**: parallel with build — `npm test` on Node [20, 22] (Vitest 4 requires Node >=20)
 - **test-integration**: after build — `npm run test:integration` on Ubuntu, Node 22 only (Podman pre-installed on GitHub Ubuntu runners)
 
 No macOS runner for integration (Podman not pre-installed, slow to set up). macOS-specific paths covered by unit tests with mocking.
