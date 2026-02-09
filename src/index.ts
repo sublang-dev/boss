@@ -7,13 +7,17 @@ import { scaffoldCommand } from './commands/scaffold.js';
 import { initCommand } from './commands/init.js';
 import { startCommand } from './commands/start.js';
 import { stopCommand } from './commands/stop.js';
+import { openCommand } from './commands/open.js';
+import { lsCommand } from './commands/ls.js';
+import { rmCommand } from './commands/rm.js';
 
 const program = new Command();
 
 program
   .name('iteron')
   .description('Delegate dev loops to Claude Code + Codex CLI. Iterates for hours. No API keys.')
-  .version('0.1.2');
+  .version('0.1.2')
+  .enablePositionalOptions();
 
 program
   .command('scaffold')
@@ -37,5 +41,26 @@ program
   .command('stop')
   .description('Stop and remove the sandbox container')
   .action(stopCommand);
+
+program
+  .command('open')
+  .description('Open a workspace with an agent or shell')
+  .argument('[agent-or-workspace]', 'agent name or workspace directory')
+  .argument('[workspace]', 'workspace directory (when first arg is agent)')
+  .passThroughOptions(true)
+  .action(openCommand);
+
+program
+  .command('ls')
+  .description('List workspaces and running sessions')
+  .option('--json', 'output as JSON')
+  .action(lsCommand);
+
+program
+  .command('rm')
+  .description('Remove a workspace and kill its sessions')
+  .argument('<workspace>', 'workspace to remove')
+  .option('--force', 'skip confirmation prompt')
+  .action(rmCommand);
 
 program.parse();

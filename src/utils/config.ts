@@ -83,6 +83,18 @@ CODEX_API_KEY=
 GEMINI_API_KEY=
 `;
 
+/**
+ * Validate a workspace name. Rejects traversal segments, absolute paths,
+ * and path separators to prevent escaping /home/iteron.
+ */
+export function validateWorkspace(name: string): string | null {
+  if (!name || name === '~') return null;
+  if (name.startsWith('/')) return 'Workspace name must not be an absolute path.';
+  if (name.includes('/') || name.includes('\\')) return 'Workspace name must not contain path separators.';
+  if (name === '.' || name === '..') return 'Workspace name must not be a traversal segment.';
+  return null;
+}
+
 export async function writeEnvTemplate(): Promise<boolean> {
   await ensureConfigDir();
   if (existsSync(ENV_PATH)) {

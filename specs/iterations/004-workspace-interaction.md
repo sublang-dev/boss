@@ -41,7 +41,8 @@ Per [DR-002 §5](../decisions/002-iteron-cli-commands.md#5-iteron-ls):
 - Parse session names (`<command>:<location>`) to extract command and location
 - Scan workspace directories under `/home/iteron` (exclude dotfiles)
 - Display tree format grouping by workspace:
-  ```
+
+  ```shell
   ~/ (home)
     claude-code (attached, 2h 15m)
     bash (detached, 45m)
@@ -50,6 +51,7 @@ Per [DR-002 §5](../decisions/002-iteron-cli-commands.md#5-iteron-ls):
   backend/
     gemini-cli (detached, 10m)
   ```
+
 - Show status (attached/detached) and uptime for each session
 - `--json` flag: output JSON array with fields `session`, `command`, `location`, `attached`, `uptime_seconds`
 

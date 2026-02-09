@@ -174,6 +174,17 @@ function runCommand(bin: string, args: string[]): Promise<void> {
   });
 }
 
+export function podmanSpawn(args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('podman', args, { stdio: 'inherit' });
+    child.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`podman ${args.join(' ')} exited with code ${code}`));
+    });
+    child.on('error', reject);
+  });
+}
+
 export async function machineExists(): Promise<boolean> {
   try {
     await podmanExec(['machine', 'inspect']);
