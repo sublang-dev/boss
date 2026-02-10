@@ -10,19 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-02-10
+
+### Changed
+
+- Migrated npm package name from `@sublang-dev/iteron` to `@sublang/iteron`
+
 ## [0.1.2] - 2026-01-25
 
 ### Changed
 
 - **BREAKING:** Renamed `iteron init` command to `iteron scaffold` to reserve `init` for future full project initialization
-- Updated copyright URL to www.sublang.xyz in SPDX headers
-- Updated AI co-author email to cligent@sublang.xyz in git spec
+- Updated copyright URL to www.sublang.ai in SPDX headers
+- Updated AI co-author email to cligent@sublang.ai in git spec
 
 ## [0.1.1] - 2025-01-14
 
 First public release of IterOn - a CLI tool that delegates dev loops to Claude Code and Codex CLI, enabling autonomous iteration for hours without API keys.
 
-Install with `npm install -g @sublang-xyz/iteron`.
+Install with `npm install -g @sublang/iteron`.
 
 ### Added
 
@@ -32,6 +38,7 @@ Install with `npm install -g @sublang-xyz/iteron`.
 - GitHub Actions CI workflow
 - Project specifications structure
 
-[Unreleased]: https://github.com/sublang-xyz/IterOn/compare/v0.1.2...HEAD
-[0.1.2]: https://github.com/sublang-xyz/IterOn/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/sublang-xyz/IterOn/releases/tag/v0.1.1
+[Unreleased]: https://github.com/sublang-dev/IterOn/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/sublang-dev/IterOn/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/sublang-dev/IterOn/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/sublang-dev/IterOn/releases/tag/v0.1.1

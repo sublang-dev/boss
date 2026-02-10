@@ -1,6 +1,6 @@
 {
-  "name": "@sublang-xyz/iteron",
-  "version": "0.1.2",
+  "name": "@sublang/iteron",
+  "version": "0.1.3",
   "description": "Delegate dev loops to Claude Code + Codex CLI. Iterates for hours. No API keys.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,11 +27,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sublang-xyz/IterOn.git"
+    "url": "git+https://github.com/sublang-dev/IterOn.git"
   },
-  "homepage": "https://github.com/sublang-xyz/IterOn#readme",
+  "homepage": "https://github.com/sublang-dev/IterOn#readme",
   "bugs": {
-    "url": "https://github.com/sublang-xyz/IterOn/issues"
+    "url": "https://github.com/sublang-dev/IterOn/issues"
   },
   "license": "Apache-2.0",
   "publishConfig": {
