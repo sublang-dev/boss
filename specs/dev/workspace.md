@@ -17,7 +17,8 @@ flows
 
 ### WSD-002
 
-Where a session identity is parsed, the rightmost `@` shall define the
+Where a session identity is parsed from tmux output, including
+non-IterOn or legacy names, the rightmost `@` shall define the
 command/location split. Where no valid delimiter is present, the full
 name shall be treated as command and location shall default to `~`.
 
@@ -39,16 +40,16 @@ absolute paths, path separators (`/`, `\`), and traversal segments
 
 ### WSD-005
 
-Where `iteron open` targets a non-home workspace, the workspace
-directory shall exist before session launch.
+Where `iteron open` targets a non-home workspace and that directory
+is absent, the CLI shall create it before launching the session.
 
 ## Ls Behavior
 
 ### WSD-006
 
-Where `iteron ls` returns running sessions, it shall tolerate malformed
-session metadata by ignoring invalid rows rather than failing the
-command
+Where `iteron ls` returns running sessions, including non-IterOn or
+legacy names, it shall tolerate malformed session metadata by ignoring
+invalid rows rather than failing the command
 ([DR-002 §5](../decisions/002-iteron-cli-commands.md#5-iteron-ls)).
 
 ### WSD-007
