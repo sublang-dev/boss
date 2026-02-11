@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 SubLang International <https://www.sublang.ai>
 
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { detectPlatform, needsMachine } from '../utils/platform.js';
 import {
   isMachineRunning,
@@ -11,6 +14,12 @@ import {
   podmanErrorMessage,
 } from '../utils/podman.js';
 import { readConfig, ENV_PATH } from '../utils/config.js';
+
+/** Resolve OpenCode auth file honoring XDG_DATA_HOME. */
+export function opencodeAuthPath(): string {
+  const dataHome = process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share');
+  return join(dataHome, 'opencode', 'auth.json');
+}
 
 export async function startCommand(): Promise<void> {
   try {
@@ -37,7 +46,7 @@ export async function startCommand(): Promise<void> {
 
     // Launch with security hardening per IR-002 §3
     console.log(`Starting container "${name}"...`);
-    await podmanExec([
+    const args = [
       'run', '-d',
       '--name', name,
       '--cap-drop', 'ALL',
@@ -48,9 +57,16 @@ export async function startCommand(): Promise<void> {
       '--env-file', ENV_PATH,
       '--memory', memory,
       '--init',
-      image,
-      'sleep', 'infinity',
-    ]);
+    ];
+
+    // IR-005: forward OpenCode credentials with UID remap for token refresh
+    const opencodeAuth = opencodeAuthPath();
+    if (existsSync(opencodeAuth)) {
+      args.push('-v', `${opencodeAuth}:/home/iteron/.local/share/opencode/auth.json:U`);
+    }
+
+    args.push(image, 'sleep', 'infinity');
+    await podmanExec(args);
 
     // Verify
     if (await isContainerRunning(name)) {

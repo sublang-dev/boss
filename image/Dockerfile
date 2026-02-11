@@ -44,6 +44,9 @@ RUN groupmod -n iteron node \
 # ---------- remove SUID/SGID ----------
 RUN find / -perm /6000 -type f -exec chmod a-s {} + 2>/dev/null || true
 
+# ---------- container defaults ----------
+ENV NO_BROWSER=true
+
 # ---------- agent autonomy configs ----------
 COPY --chown=iteron:iteron conf/claude.json          /home/iteron/.claude.json
 COPY --chown=iteron:iteron conf/claude-settings.json  /home/iteron/.claude/settings.json

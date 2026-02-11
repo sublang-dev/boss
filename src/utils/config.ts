@@ -120,9 +120,17 @@ export async function readConfig(): Promise<IteronConfig> {
   return config;
 }
 
-const ENV_TEMPLATE = `# API keys for headless agent authentication
+const ENV_TEMPLATE = `# Headless agent authentication
+# Primary: subscription tokens; Fallback: API keys
+# See specs/iterations/005-headless-auth.md
+
+# Claude Code (run \`claude setup-token\` on host)
+CLAUDE_CODE_OAUTH_TOKEN=
+# Claude Code fallback
 ANTHROPIC_API_KEY=
+# Codex CLI fallback (primary: \`codex login --device-auth\` in container)
 CODEX_API_KEY=
+# Gemini CLI fallback (primary: NO_BROWSER OAuth in container)
 GEMINI_API_KEY=
 `;
 

@@ -144,6 +144,7 @@ describe('writeEnvTemplate', () => {
     expect(existsSync(envFile)).toBe(true);
 
     const content = readFileSync(envFile, 'utf-8');
+    expect(content).toContain('CLAUDE_CODE_OAUTH_TOKEN=');
     expect(content).toContain('ANTHROPIC_API_KEY=');
     expect(content).toContain('CODEX_API_KEY=');
     expect(content).toContain('GEMINI_API_KEY=');

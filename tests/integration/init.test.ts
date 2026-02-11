@@ -54,6 +54,7 @@ describe.skipIf(!HAS_PODMAN)('iteron init (integration)', { timeout: 120_000 }, 
     const envPath = join(configDir, '.env');
     expect(existsSync(envPath)).toBe(true);
     const envContent = readFileSync(envPath, 'utf-8');
+    expect(envContent).toContain('CLAUDE_CODE_OAUTH_TOKEN=');
     expect(envContent).toContain('ANTHROPIC_API_KEY=');
     expect(envContent).toContain('CODEX_API_KEY=');
     expect(envContent).toContain('GEMINI_API_KEY=');
