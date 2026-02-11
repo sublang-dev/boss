@@ -12,6 +12,7 @@ export const CONFIG_PATH = join(CONFIG_DIR, 'config.toml');
 export const ENV_PATH = join(CONFIG_DIR, '.env');
 
 export const DEFAULT_IMAGE = 'ghcr.io/sublang-dev/iteron-sandbox:latest';
+export const LEGACY_DEFAULT_IMAGE = 'docker.io/library/alpine:latest';
 export const DEFAULT_CONTAINER_NAME = 'iteron-sandbox';
 export const DEFAULT_MEMORY = '16g';
 export const VOLUME_NAME = 'iteron-data';
@@ -65,6 +66,38 @@ export async function writeConfig(image?: string): Promise<boolean> {
   const { stringify } = await loadToml();
   const config = defaultConfig(image);
   const toml = stringify(config as unknown as Record<string, unknown>);
+  await writeFile(CONFIG_PATH, toml, 'utf-8');
+  return true;
+}
+
+export async function reconcileConfigImage(
+  image: string,
+  options?: { force?: boolean },
+): Promise<boolean> {
+  if (!existsSync(CONFIG_PATH)) {
+    return false;
+  }
+
+  const config = await readConfig();
+  if (config.container.image === image) {
+    return false;
+  }
+
+  const force = options?.force === true;
+  const isLegacyDefault = config.container.image === LEGACY_DEFAULT_IMAGE;
+  if (!force && !isLegacyDefault) {
+    return false;
+  }
+
+  const { stringify } = await loadToml();
+  const updated: IteronConfig = {
+    ...config,
+    container: {
+      ...config.container,
+      image,
+    },
+  };
+  const toml = stringify(updated as unknown as Record<string, unknown>);
   await writeFile(CONFIG_PATH, toml, 'utf-8');
   return true;
 }

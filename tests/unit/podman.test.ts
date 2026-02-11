@@ -113,6 +113,7 @@ describe('containerExists', () => {
     });
     const { containerExists } = await import('../../src/utils/podman.js');
     expect(await containerExists('test-container')).toBe(true);
+    expect(mockExecFile.mock.calls[0]?.[1]).toEqual(['container', 'inspect', 'test-container']);
   });
 
   it('returns false when container does not exist', async () => {
@@ -121,6 +122,7 @@ describe('containerExists', () => {
     });
     const { containerExists } = await import('../../src/utils/podman.js');
     expect(await containerExists('nonexistent')).toBe(false);
+    expect(mockExecFile.mock.calls[0]?.[1]).toEqual(['container', 'inspect', 'nonexistent']);
   });
 });
 
@@ -136,6 +138,7 @@ describe('isContainerRunning', () => {
     });
     const { isContainerRunning } = await import('../../src/utils/podman.js');
     expect(await isContainerRunning('test-container')).toBe(true);
+    expect(mockExecFile.mock.calls[0]?.[1]).toEqual(['container', 'inspect', 'test-container', '--format', '{{.State.Running}}']);
   });
 
   it('returns false when container is not running', async () => {
@@ -144,6 +147,7 @@ describe('isContainerRunning', () => {
     });
     const { isContainerRunning } = await import('../../src/utils/podman.js');
     expect(await isContainerRunning('test-container')).toBe(false);
+    expect(mockExecFile.mock.calls[0]?.[1]).toEqual(['container', 'inspect', 'test-container', '--format', '{{.State.Running}}']);
   });
 });
 

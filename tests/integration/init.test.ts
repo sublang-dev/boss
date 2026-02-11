@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 SubLang International <https://www.sublang.ai>
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { rm } from 'node:fs/promises';
@@ -68,5 +68,35 @@ describe.skipIf(!HAS_PODMAN)('iteron init (integration)', { timeout: 120_000 }, 
     // Files should still exist and be unchanged
     const configPath = join(configDir, 'config.toml');
     expect(existsSync(configPath)).toBe(true);
+  });
+
+  it('updates legacy image in existing config to default image', async () => {
+    const legacyToml = `[container]
+name = "iteron-sandbox"
+image = "docker.io/library/alpine:latest"
+memory = "16g"
+
+[agents.claude-code]
+binary = "claude"
+
+[agents.codex-cli]
+binary = "codex"
+
+[agents.gemini-cli]
+binary = "gemini"
+
+[agents.opencode]
+binary = "opencode"
+`;
+    const configPath = join(configDir, 'config.toml');
+    writeFileSync(configPath, legacyToml, 'utf-8');
+
+    const { initCommand } = await import('../../src/commands/init.js');
+    const { DEFAULT_IMAGE } = await import('../../src/utils/config.js');
+    await initCommand({ yes: true });
+
+    const configContent = readFileSync(configPath, 'utf-8');
+    expect(configContent).toContain(DEFAULT_IMAGE);
+    expect(configContent).not.toContain('docker.io/library/alpine:latest');
   });
 });

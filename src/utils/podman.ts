@@ -89,7 +89,7 @@ export async function volumeExists(name: string): Promise<boolean> {
 export async function isContainerRunning(name: string): Promise<boolean> {
   try {
     const { stdout } = await podmanExec([
-      'inspect', name, '--format', '{{.State.Running}}',
+      'container', 'inspect', name, '--format', '{{.State.Running}}',
     ]);
     return stdout === 'true';
   } catch {
@@ -99,7 +99,7 @@ export async function isContainerRunning(name: string): Promise<boolean> {
 
 export async function containerExists(name: string): Promise<boolean> {
   try {
-    await podmanExec(['inspect', name]);
+    await podmanExec(['container', 'inspect', name]);
     return true;
   } catch {
     return false;
@@ -107,7 +107,7 @@ export async function containerExists(name: string): Promise<boolean> {
 }
 
 export async function inspectContainer(name: string, format: string): Promise<string> {
-  const { stdout } = await podmanExec(['inspect', name, '--format', format]);
+  const { stdout } = await podmanExec(['container', 'inspect', name, '--format', format]);
   return stdout;
 }
 

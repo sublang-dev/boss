@@ -20,13 +20,20 @@ import {
 } from '../utils/podman.js';
 import {
   writeConfig,
+  reconcileConfigImage,
   writeEnvTemplate,
   DEFAULT_IMAGE,
   VOLUME_NAME,
 } from '../utils/config.js';
 
-function step(label: string, status: 'created' | 'skipped' | 'done'): void {
-  const tag = status === 'skipped' ? '(skipped)' : status === 'created' ? '(created)' : '(done)';
+function step(label: string, status: 'created' | 'updated' | 'skipped' | 'done'): void {
+  const tag = status === 'skipped'
+    ? '(skipped)'
+    : status === 'created'
+      ? '(created)'
+      : status === 'updated'
+        ? '(updated)'
+        : '(done)';
   console.log(`  ${label} ${tag}`);
 }
 
@@ -126,8 +133,13 @@ export async function initCommand(options: { image?: string; yes?: boolean }): P
     }
 
     // 7. Generate config
-    const configCreated = await writeConfig(options.image);
-    step('Config ~/.iteron/config.toml', configCreated ? 'created' : 'skipped');
+    const configCreated = await writeConfig(image);
+    if (configCreated) {
+      step('Config ~/.iteron/config.toml', 'created');
+    } else {
+      const configUpdated = await reconcileConfigImage(image, { force: Boolean(options.image) });
+      step('Config ~/.iteron/config.toml', configUpdated ? 'updated' : 'skipped');
+    }
 
     // 8. Generate .env template
     const envCreated = await writeEnvTemplate();

@@ -99,6 +99,41 @@ binary = "bad"
   });
 });
 
+describe('reconcileConfigImage', () => {
+  it('updates legacy default image to the desired image', async () => {
+    const { writeConfig, reconcileConfigImage, readConfig, DEFAULT_IMAGE, LEGACY_DEFAULT_IMAGE } = await import('../../src/utils/config.js');
+    await writeConfig(LEGACY_DEFAULT_IMAGE);
+
+    const updated = await reconcileConfigImage(DEFAULT_IMAGE);
+    expect(updated).toBe(true);
+
+    const config = await readConfig();
+    expect(config.container.image).toBe(DEFAULT_IMAGE);
+  });
+
+  it('does not update custom image unless forced', async () => {
+    const { writeConfig, reconcileConfigImage, readConfig, DEFAULT_IMAGE } = await import('../../src/utils/config.js');
+    await writeConfig('my-custom:image');
+
+    const updated = await reconcileConfigImage(DEFAULT_IMAGE);
+    expect(updated).toBe(false);
+
+    const config = await readConfig();
+    expect(config.container.image).toBe('my-custom:image');
+  });
+
+  it('updates custom image when forced', async () => {
+    const { writeConfig, reconcileConfigImage, readConfig } = await import('../../src/utils/config.js');
+    await writeConfig('my-custom:image');
+
+    const updated = await reconcileConfigImage('ghcr.io/sublang-dev/iteron-sandbox:canary', { force: true });
+    expect(updated).toBe(true);
+
+    const config = await readConfig();
+    expect(config.container.image).toBe('ghcr.io/sublang-dev/iteron-sandbox:canary');
+  });
+});
+
 describe('writeEnvTemplate', () => {
   it('creates .env with expected keys', async () => {
     const { writeEnvTemplate } = await import('../../src/utils/config.js');
