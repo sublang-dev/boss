@@ -167,4 +167,37 @@ binary = "opencode"
 
     forceRmTempDir(emptyXdg);
   });
+
+  // IR-005 test 6 (spec verification #3): no auth → non-zero exit, auth error (not onboarding)
+  it.skipIf(!HAS_SANDBOX_IMAGE)('exits with auth error when no credentials provided', async () => {
+    // Write an empty .env (no tokens, no API keys)
+    writeFileSync(join(configDir, '.env'), '# empty — no auth\n', 'utf-8');
+    process.env.XDG_DATA_HOME = xdgDataDir;
+
+    const { startCommand } = await import('../../src/commands/start.js');
+    await startCommand();
+
+    let exitCode: number | null = null;
+    let stderr = '';
+    try {
+      execFileSync('podman', ['exec', TEST_CONTAINER, 'claude', '-p', 'echo hello'], {
+        encoding: 'utf-8',
+        timeout: 30_000,
+      });
+      exitCode = 0;
+    } catch (err: unknown) {
+      const e = err as { status?: number; stderr?: string };
+      exitCode = e.status ?? 1;
+      stderr = e.stderr ?? '';
+    }
+
+    expect(exitCode).not.toBe(0);
+    // Should show an auth-related error, not an onboarding prompt
+    const output = stderr.toLowerCase();
+    expect(output).toMatch(/auth|token|api.key|unauthorized|credential|log.?in/);
+    expect(output).not.toContain('onboarding');
+
+    const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+  });
 });

@@ -9,12 +9,12 @@ Configure subscription-based authentication as the primary headless auth path, w
 
 ## Deliverables
 
-- [ ] Claude Code subscription auth (`CLAUDE_CODE_OAUTH_TOKEN` via `setup-token`)
-- [ ] Codex CLI subscription auth (`codex login --device-auth`)
-- [ ] Gemini CLI subscription auth (`NO_BROWSER=true` PKCE OAuth flow)
-- [ ] OpenCode auth (credential forwarding or provider env vars)
-- [ ] API key fallback for Claude Code, Codex CLI, and Gemini CLI
-- [ ] `hasCompletedOnboarding` bypass for Claude Code
+- [x] Claude Code subscription auth (`CLAUDE_CODE_OAUTH_TOKEN` via `setup-token`)
+- [x] Codex CLI subscription auth (`codex login --device-auth`)
+- [x] Gemini CLI subscription auth (`NO_BROWSER=true` PKCE OAuth flow)
+- [x] OpenCode auth (credential forwarding or provider env vars)
+- [x] API key fallback for Claude Code, Codex CLI, and Gemini CLI
+- [x] `hasCompletedOnboarding` bypass for Claude Code
 
 ## Tasks
 
