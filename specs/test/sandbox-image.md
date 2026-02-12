@@ -99,3 +99,84 @@ Where a multi-arch sandbox image is published to a registry, when
 compressed layer sizes are summed per platform from the registry
 manifest, the total for `linux/amd64` and for `linux/arm64` shall
 each be less than or equal to 700 MiB.
+
+## Headless Authentication
+
+### SBT-014
+
+Where `iteron init` creates `~/.iteron/.env`, the template shall
+contain placeholders for `CLAUDE_CODE_OAUTH_TOKEN`,
+`ANTHROPIC_API_KEY`, `CODEX_API_KEY`, and `GEMINI_API_KEY`
+([LCD-001](../dev/lifecycle.md#lcd-001)).
+
+### SBT-015
+
+Where `~/.iteron/.env` defines `CLAUDE_CODE_OAUTH_TOKEN=<value>`,
+when the container starts, `printenv CLAUDE_CODE_OAUTH_TOKEN`
+inside the container shall equal `<value>`
+([SBX-006](../user/sandbox-image.md#sbx-006),
+[LCD-002](../dev/lifecycle.md#lcd-002)).
+
+### SBT-016
+
+Where the official sandbox image is running, `printenv NO_BROWSER`
+inside the container shall equal `true`
+([SBD-010](../dev/sandbox-image.md#sbd-010)).
+
+### SBT-017
+
+Where the supported host OpenCode credential file exists at start
+time, the container file
+`/home/iteron/.local/share/opencode/auth.json` shall exist and be
+readable and writable by the runtime user
+([SBD-012](../dev/sandbox-image.md#sbd-012)).
+
+### SBT-018
+
+Where the supported host OpenCode credential file is absent at
+start time, container mount metadata shall not contain an OpenCode
+credential file mapping
+([SBD-013](../dev/sandbox-image.md#sbd-013)).
+
+### SBT-019
+
+Where a user runs `codex login --device-auth` in a sandbox Codex
+session, the CLI shall print a device-auth URL and one-time code
+([SBX-008](../user/sandbox-image.md#sbx-008)).
+
+### SBT-020
+
+Where a user runs Gemini interactive auth in the sandbox with no
+cached credentials, the CLI shall print an auth URL and accept an
+authorization code pasted in the terminal
+([SBX-009](../user/sandbox-image.md#sbx-009)).
+
+### SBT-021
+
+Where `CLAUDE_CODE_OAUTH_TOKEN` is unset and
+`ANTHROPIC_API_KEY=<value>` is set in `~/.iteron/.env`, a
+non-interactive Claude command in the container shall
+authenticate successfully
+([SBX-007](../user/sandbox-image.md#sbx-007)).
+
+### SBT-022
+
+Where `CODEX_API_KEY=<value>` is set in `~/.iteron/.env`, a
+non-interactive `codex exec` command in the container shall
+authenticate successfully
+([SBX-008](../user/sandbox-image.md#sbx-008)).
+
+### SBT-023
+
+Where `GEMINI_API_KEY=<value>` is set in `~/.iteron/.env`, a
+non-interactive Gemini command in the container shall
+authenticate successfully
+([SBX-009](../user/sandbox-image.md#sbx-009)).
+
+### SBT-024
+
+Where forwarded OpenCode credentials are absent and a supported
+provider API key is set in `~/.iteron/.env`, OpenCode
+non-interactive commands in the container shall authenticate
+successfully
+([SBX-010](../user/sandbox-image.md#sbx-010)).

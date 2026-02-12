@@ -47,3 +47,44 @@ sessions, the agents shall run without onboarding or interactive
 permission gates for standard file and shell actions
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary),
 [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+## Headless Authentication
+
+### SBX-006
+
+Where a user sets `CLAUDE_CODE_OAUTH_TOKEN` in `~/.iteron/.env`,
+when the sandbox container is started, Claude Code commands shall
+run without interactive login prompts
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+### SBX-007
+
+Where `CLAUDE_CODE_OAUTH_TOKEN` is unset and
+`ANTHROPIC_API_KEY` is set in `~/.iteron/.env`, Claude Code
+non-interactive commands shall authenticate with API key fallback
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+### SBX-008
+
+Where a user opens a Codex CLI session in the sandbox, Codex
+subscription authentication shall be completable through a
+terminal device-code flow, and `CODEX_API_KEY` shall be accepted
+as fallback for non-interactive execution
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+### SBX-009
+
+Where a user opens a Gemini CLI session in the sandbox, Gemini
+subscription authentication shall be completable through a
+terminal URL/code flow without requiring an in-container browser,
+and `GEMINI_API_KEY` shall be accepted as fallback
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+### SBX-010
+
+Where host OpenCode credentials exist at the supported host path,
+OpenCode commands in the sandbox shall be able to use forwarded
+credentials without a separate login; where credentials are absent,
+sandbox startup shall still succeed and provider API-key
+environment variables shall remain usable
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).

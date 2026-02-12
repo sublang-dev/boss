@@ -76,3 +76,35 @@ enforce a per-architecture compressed image size budget of at
 most 700 MiB, measured as the sum of
 compressed layer sizes from the registry manifest for each target
 platform.
+
+## Headless Authentication
+
+### SBD-010
+
+Where the sandbox image is built, container defaults shall set
+`NO_BROWSER=true` for headless Gemini OAuth
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+### SBD-011
+
+Where IterOn resolves host OpenCode credentials, the supported
+source path shall be
+`$XDG_DATA_HOME/opencode/auth.json` when `XDG_DATA_HOME` is set,
+otherwise `~/.local/share/opencode/auth.json`
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+### SBD-012
+
+Where the supported host OpenCode credential file exists at
+container start, launch behavior shall include a mapped credential
+file at `/home/iteron/.local/share/opencode/auth.json` that is
+readable and writable by the container runtime user, including
+credential refresh
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+### SBD-013
+
+Where the supported host OpenCode credential file is absent at
+container start, launch behavior shall omit any OpenCode
+credential file mapping
+([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
