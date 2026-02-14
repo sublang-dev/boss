@@ -34,6 +34,9 @@ const HAS_PODMAN = podmanAvailable();
 /** At least one agent auth key must be set for autonomous tests to be meaningful. */
 const AUTH_KEYS = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'CODEX_API_KEY', 'GEMINI_API_KEY', 'MOONSHOT_API_KEY'];
 const HAS_AUTH = AUTH_KEYS.some((k) => !!process.env[k]);
+
+/** Flip to false once Codex / Gemini / OpenCode API keys are funded. */
+const SKIP_UNPAID_AGENTS = true;
 const SECRET_VALUES = new Set<string>();
 
 function registerSecretValue(raw: string | undefined): void {
@@ -290,7 +293,7 @@ binary = "opencode"
 
     let codexLog = '';
 
-    it('Codex CLI autonomously fixes the bug', () => {
+    it.skipIf(SKIP_UNPAID_AGENTS)('Codex CLI autonomously fixes the bug', () => {
       setupFixture('test-codex');
 
       const agent = runAgent(
@@ -306,7 +309,7 @@ binary = "opencode"
       expect(result.output).toContain('PASS');
     });
 
-    it('Codex CLI log has no permission prompts', () => {
+    it.skipIf(SKIP_UNPAID_AGENTS)('Codex CLI log has no permission prompts', () => {
       expect(codexLog).not.toMatch(PERMISSION_PATTERNS);
     });
 
@@ -314,7 +317,7 @@ binary = "opencode"
 
     let geminiLog = '';
 
-    it('Gemini CLI autonomously fixes the bug', () => {
+    it.skipIf(SKIP_UNPAID_AGENTS)('Gemini CLI autonomously fixes the bug', () => {
       setupFixture('test-gemini');
 
       const agent = runAgent(
@@ -330,7 +333,7 @@ binary = "opencode"
       expect(result.output).toContain('PASS');
     });
 
-    it('Gemini CLI log has no permission prompts', () => {
+    it.skipIf(SKIP_UNPAID_AGENTS)('Gemini CLI log has no permission prompts', () => {
       expect(geminiLog).not.toMatch(PERMISSION_PATTERNS);
     });
 
@@ -338,7 +341,7 @@ binary = "opencode"
 
     let opencodeLog = '';
 
-    it('OpenCode autonomously fixes the bug', () => {
+    it.skipIf(SKIP_UNPAID_AGENTS)('OpenCode autonomously fixes the bug', () => {
       setupFixture('test-opencode');
 
       const agent = runAgent(
@@ -355,7 +358,7 @@ binary = "opencode"
       expect(result.output).toContain('PASS');
     });
 
-    it('OpenCode log has no permission prompts', () => {
+    it.skipIf(SKIP_UNPAID_AGENTS)('OpenCode log has no permission prompts', () => {
       expect(opencodeLog).not.toMatch(PERMISSION_PATTERNS);
     });
   },
