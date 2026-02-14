@@ -10,16 +10,7 @@ Projects need a standardized structure and format for specifications to support 
 
 ## Decision
 
-Use `iteron scaffold` to create:
-
-```text
-specs/
-├── decisions/    # Decision Records (DRs)
-├── iterations/   # Iteration Records (IRs)
-├── user/         # User-facing specs
-├── dev/          # Development specs
-└── test/         # Verification specs
-```
+Use `iteron scaffold` to create the following.
 
 ### Records
 
@@ -59,6 +50,7 @@ Test specs map Given-When-Then: Given → Where+While, When → When, Then → s
 
 | Path | Content |
 | ---- | ------- |
+| `spec-map.md` | Spec index for navigation (non-normative) |
 | `decisions/000-initial-specs-structure.md` | This DR |
 | `iterations/000-spdx-headers.md` | Initial IR |
 | `user/meta.md` | GEARS syntax guide |
