@@ -10,6 +10,7 @@ on:
 permissions:
   contents: read
   packages: write
+  security-events: write
 
 env:
   IMAGE: ghcr.io/sublang-dev/iteron-sandbox
@@ -51,3 +52,41 @@ jobs:
           tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  trivy-scan:
+    needs: build-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine image tag
+        id: image-tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "tag=${IMAGE}:${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${IMAGE}:${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.34.0
+        with:
+          image-ref: ${{ steps.image-tag.outputs.tag }}
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          format: table
+
+      - name: Run Trivy (SARIF)
+        if: always()
+        uses: aquasecurity/trivy-action@v0.34.0
+        with:
+          image-ref: ${{ steps.image-tag.outputs.tag }}
+          format: sarif
+          output: trivy-results.sarif
+
+      - name: Upload SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif

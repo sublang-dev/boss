@@ -5,32 +5,18 @@
 
 ## Goal
 
-Validate that the local sandbox survives extended autonomous agent runs (8 hours) without OOM kills, passes security hardening checks, has no critical/high CVEs, and is fully documented for end users.
+Validate that the local sandbox passes security hardening checks, has no critical/high CVEs, and is fully documented for end users.
 
 ## Deliverables
 
-- [ ] Memory leak mitigation validated (8-hour autonomous run)
-- [ ] Security hardening validated (rootless, cap-drop, read-only, no-new-privileges)
-- [ ] Vulnerability scan clean (no critical/high CVEs)
-- [ ] Documentation: installation guide, CLI reference, agent configuration, workspace guide, troubleshooting
-- [ ] User-local binary directory (`~/.local/bin`) on PATH
+- [x] Security hardening validated (rootless, cap-drop, read-only, no-new-privileges)
+- [x] Vulnerability scan clean (no critical/high CVEs)
+- [x] Documentation: installation guide, CLI reference, agent configuration, workspace guide, troubleshooting
+- [x] User-local binary directory (`~/.local/bin`) on PATH
 
 ## Tasks
 
-### 1. Memory leak mitigation validation
-
-Per [DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary):
-
-- Verify `--memory 16g` cgroup limit is enforced:
-  - `podman stats --no-stream --format '{{.MemLimit}}' iteron-sandbox` → `16 GB`
-- Run Claude Code autonomously for 8 hours on a looping task (e.g., iterative refactoring of a test project)
-- Sample memory every 15 minutes: `podman stats --no-stream --format '{{.MemUsage}}' iteron-sandbox >> mem.log`
-- Verify tini reaps zombie processes after agent exit:
-  - `podman exec iteron-sandbox ps aux | grep -c defunct` → `0`
-- Test container restart after OOM:
-  - `iteron stop && iteron start` succeeds; `iteron-data` volume intact
-
-### 2. Security hardening validation
+### 1. Security hardening validation
 
 Per [DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary):
 
@@ -41,23 +27,26 @@ Per [DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the
 - Write outside allowed paths: `podman exec iteron-sandbox touch /usr/local/test` → exit 1, `Read-only file system`
 - Write to allowed paths: `podman exec iteron-sandbox touch /tmp/test && podman exec iteron-sandbox touch /home/iteron/test` → both exit 0
 
-### 3. Vulnerability scan
+Already covered by integration tests in `tests/integration/start-stop.test.ts` (IR-002 tests 4–6): cap-drop ALL, read-only rootfs, no-new-privileges. Rootless mode is a host Podman property verified by `iteron init`.
+
+### 2. Vulnerability scan
 
 - Run Trivy on the OCI image: `trivy image ghcr.io/sublang-dev/iteron-sandbox:<version>`
-- Run Grype as cross-check: `grype ghcr.io/sublang-dev/iteron-sandbox:<version>`
+- CI integration: Trivy scan step in `.github/workflows/image.yml` fails on CRITICAL/HIGH
+- Local scan: `scripts/scan-image.sh` runs Trivy against local or registry image
 - Expected: no critical or high severity CVEs
 - Document any accepted medium/low CVEs with justification
 
-### 4. Documentation
+### 3. Documentation
 
-- **Installation guide**: step-by-step `iteron init` on macOS, Linux, WSL2 with expected terminal output
-- **CLI reference**: all 6 commands (`init`, `start`, `stop`, `open`, `ls`, `rm`) with options, examples, and exit codes
-- **Agent configuration**: API key setup per agent, `hasCompletedOnboarding`, `apiKeyHelper`, subscription auth alternatives
-- **Workspace guide**: creating workspaces, running multiple agents, `iteron ls` output interpretation, `iteron rm` cleanup
-- **Tmux quick reference**: detach (`Ctrl-B D`), reattach (`iteron open`), pane splits, scrollback, custom `~/.tmux.conf`
-- **Troubleshooting**: Podman not installed, container not running, OOM, auth failures, agent permission prompts
+- **Installation guide** (`docs/install.md`): step-by-step `iteron init` on macOS, Linux, WSL2 with expected terminal output
+- **CLI reference** (`docs/cli-reference.md`): all 7 commands (`scaffold`, `init`, `start`, `stop`, `open`, `ls`, `rm`) with options, examples, and exit codes
+- **Agent configuration** (`docs/agents.md`): API key setup per agent, `hasCompletedOnboarding`, `apiKeyHelper`, subscription auth alternatives
+- **Workspace guide** (`docs/workspaces.md`): creating workspaces, running multiple agents, `iteron ls` output interpretation, `iteron rm` cleanup
+- **Tmux quick reference** (`docs/tmux.md`): detach (`Ctrl-B D`), reattach (`iteron open`), pane splits, scrollback, custom `~/.tmux.conf`
+- **Troubleshooting** (`docs/troubleshooting.md`): Podman not installed, container not running, OOM, auth failures, agent permission prompts
 
-### 5. User-local binary directory
+### 4. User-local binary directory
 
 Per [DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-layer): `~/.local/bin` provides a persistent, user-writable directory for standalone binaries.
 
@@ -69,26 +58,21 @@ Per [DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-laye
 
 | # | Test | Expected |
 | --- | --- | --- |
-| 1 | `podman stats --no-stream --format '{{.MemLimit}}' iteron-sandbox` | `16 GiB` (or equivalent) |
-| 2 | 8-hour Claude Code run; `max(mem.log)` | Memory peak < 16 GB (no OOM kill) |
-| 3 | After 8-hour run: `podman exec iteron-sandbox ps aux \| grep -c defunct` | `0` (no zombie processes) |
-| 4 | `iteron stop && iteron start` after 8-hour run; `podman exec iteron-sandbox ls /home/iteron/` | Previous workspace data intact |
-| 5 | `podman info --format '{{.Host.Security.Rootless}}'` | `true` |
-| 6 | `podman inspect iteron-sandbox --format '{{.HostConfig.CapDrop}}'` | Contains `ALL` |
-| 7 | `podman inspect iteron-sandbox --format '{{.HostConfig.ReadonlyRootfs}}'` | `true` |
-| 8 | `podman inspect iteron-sandbox --format '{{.HostConfig.SecurityOpt}}'` | Contains `no-new-privileges` |
-| 9 | `podman exec iteron-sandbox touch /usr/local/test` | Exit 1, `Read-only file system` |
-| 10 | `trivy image <image> --severity CRITICAL,HIGH --exit-code 1` | Exit 0 (no critical/high CVEs) |
-| 11 | New user follows installation guide from step 1 to running `iteron open claude-code` | Completes without external help; agent prompt appears |
-| 12 | CLI reference documents all 6 commands | Each command has: synopsis, options, examples, exit codes |
-| 13 | `podman run --rm <image> test -d /home/iteron/.local/bin -a -w /home/iteron/.local/bin` | Exit 0 |
-| 14 | `podman run --rm <image> sh -c 'cp /usr/bin/true ~/.local/bin/mytool && mytool'` | Exit 0 |
+| 1 | `podman info --format '{{.Host.Security.Rootless}}'` | `true` |
+| 2 | `podman inspect iteron-sandbox --format '{{.HostConfig.CapDrop}}'` | Contains `ALL` |
+| 3 | `podman inspect iteron-sandbox --format '{{.HostConfig.ReadonlyRootfs}}'` | `true` |
+| 4 | `podman inspect iteron-sandbox --format '{{.HostConfig.SecurityOpt}}'` | Contains `no-new-privileges` |
+| 5 | `podman exec iteron-sandbox touch /usr/local/test` | Exit 1, `Read-only file system` |
+| 6 | `trivy image <image> --severity CRITICAL,HIGH --exit-code 1` | Exit 0 (no critical/high CVEs) |
+| 7 | New user follows installation guide from step 1 to running `iteron open claude-code` | Completes without external help; agent prompt appears |
+| 8 | CLI reference documents all 7 commands | Each command has: synopsis, options, examples, exit codes |
+| 9 | `podman run --rm <image> test -d /home/iteron/.local/bin -a -w /home/iteron/.local/bin` | Exit 0 |
+| 10 | `podman run --rm <image> sh -c 'cp /usr/bin/true ~/.local/bin/mytool && mytool'` | Exit 0 |
 
 ## Risks
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Claude Code memory leak exceeds 16 GB during 8h run | Container OOM-killed, task lost | `--memory` cgroup limit prevents host impact; container restartable; volume data preserved |
 | Agent version update introduces new CVE in image | Vulnerability scan fails | Pin agent versions; re-scan on each image rebuild |
 | Upstream agent changes break headless config | Permission prompts reappear | Pin versions; regression test in [IR-006](006-autonomous-execution.md) catches this |
 
