@@ -183,10 +183,10 @@ iteron open [agent-or-workspace] [workspace] [-- extra-args]
 | --- | --- | --- |
 | (none) | `bash` | `~` (home) |
 | `<agent-name>` | Agent binary | `~` (home) |
-| `<workspace>` | `bash` | `~/workspace` |
+| `<non-agent-name>` | `bash` | `~/workspace` |
 | `<agent> <workspace>` | Agent binary | `~/workspace` |
 
-Agent names: `claude`, `codex`, `gemini`, `opencode` (from `~/.iteron/config.toml`).
+Agent names: `claude`, `codex`, `gemini`, `opencode` (from `~/.iteron/config.toml`). With a single argument, agent names take precedence. To open a shell in a workspace that shares a name with an agent, use the 2-arg form: `iteron open bash claude`.
 
 ### Pass-through Arguments
 

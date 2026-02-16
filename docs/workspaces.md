@@ -49,6 +49,8 @@ Workspace names must follow these rules:
 
 Valid names: `myproject`, `feature-x`, `experiment_1`
 
+**Note:** Agent names (`claude`, `codex`, `gemini`, `opencode`) take precedence in the 1-arg form of `iteron open`. If a workspace happens to share a name with an agent, use the 2-arg form to open a shell there: `iteron open bash claude`.
+
 ## Running Multiple Agents
 
 You can run different agents in different workspaces simultaneously:

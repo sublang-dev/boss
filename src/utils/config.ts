@@ -102,6 +102,29 @@ export async function reconcileConfigImage(
   return true;
 }
 
+/** Legacy agent key → canonical key. */
+const LEGACY_AGENT_KEYS: Record<string, string> = {
+  'claude-code': 'claude',
+  'codex-cli': 'codex',
+  'gemini-cli': 'gemini',
+};
+
+/**
+ * Normalize legacy agent keys (claude-code → claude, etc.) in-place.
+ * Returns the set of keys that were migrated (empty if none).
+ */
+function reconcileAgentNames(agents: Record<string, AgentConfig>): Set<string> {
+  const migrated = new Set<string>();
+  for (const [legacy, canonical] of Object.entries(LEGACY_AGENT_KEYS)) {
+    if (legacy in agents && !(canonical in agents)) {
+      agents[canonical] = agents[legacy];
+      delete agents[legacy];
+      migrated.add(legacy);
+    }
+  }
+  return migrated;
+}
+
 export async function readConfig(): Promise<IteronConfig> {
   if (!existsSync(CONFIG_PATH)) {
     throw new Error('Config not found. Run "iteron init" first.');
@@ -109,6 +132,10 @@ export async function readConfig(): Promise<IteronConfig> {
   const { parse } = await loadToml();
   const content = await readFile(CONFIG_PATH, 'utf-8');
   const config = parse(content) as unknown as IteronConfig;
+
+  if (config.agents) {
+    reconcileAgentNames(config.agents);
+  }
 
   for (const agentName of Object.keys(config.agents ?? {})) {
     const err = validateSessionToken(agentName, 'Agent name');
