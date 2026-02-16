@@ -179,13 +179,13 @@ name = "${TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "2g"
 
-[agents.claude-code]
+[agents.claude]
 binary = "claude"
 
-[agents.codex-cli]
+[agents.codex]
 binary = "codex"
 
-[agents.gemini-cli]
+[agents.gemini]
 binary = "gemini"
 
 [agents.opencode]
@@ -277,7 +277,7 @@ binary = "opencode"
         'claude -p "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js." --output-format json',
       );
       ccLog = agent.log;
-      dumpAgentLog('claude-code', agent.log);
+      dumpAgentLog('claude', agent.log);
       expect(agent.exitCode, diagnoseAgent(agent.exitCode, agent.log)).toBe(0);
 
       const result = verifyNpmTest('test-cc');
@@ -301,7 +301,7 @@ binary = "opencode"
         'codex exec "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."',
       );
       codexLog = agent.log;
-      dumpAgentLog('codex-cli', agent.log);
+      dumpAgentLog('codex', agent.log);
       expect(agent.exitCode, diagnoseAgent(agent.exitCode, agent.log)).toBe(0);
 
       const result = verifyNpmTest('test-codex');
@@ -325,7 +325,7 @@ binary = "opencode"
         'gemini --yolo -p "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."',
       );
       geminiLog = agent.log;
-      dumpAgentLog('gemini-cli', agent.log);
+      dumpAgentLog('gemini', agent.log);
       expect(agent.exitCode, diagnoseAgent(agent.exitCode, agent.log)).toBe(0);
 
       const result = verifyNpmTest('test-gemini');

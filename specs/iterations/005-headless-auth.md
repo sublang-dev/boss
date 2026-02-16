@@ -84,12 +84,12 @@ Each test runs in a freshly started container (`iteron stop && iteron start`).
 
 | # | Test | Expected |
 | --- | --- | --- |
-| 1 | Set `CLAUDE_CODE_OAUTH_TOKEN` in `.env`; `iteron open claude-code`; send `hello` | Agent responds without login or onboarding prompt |
+| 1 | Set `CLAUDE_CODE_OAUTH_TOKEN` in `.env`; `iteron open claude`; send `hello` | Agent responds without login or onboarding prompt |
 | 2 | Set `ANTHROPIC_API_KEY` in `.env` (no OAuth token); `podman exec iteron-sandbox claude -p "echo hello"` | Exit 0 (API key fallback works) |
 | 3 | No auth in `.env`; `podman exec iteron-sandbox claude -p "echo hello"` | Exit non-zero; stderr shows auth error, not onboarding |
-| 4 | `iteron open codex-cli`; run `codex login --device-auth` | CLI displays device URL and code; login succeeds after browser auth |
+| 4 | `iteron open codex`; run `codex login --device-auth` | CLI displays device URL and code; login succeeds after browser auth |
 | 5 | Set `CODEX_API_KEY` in `.env`; `podman exec iteron-sandbox codex exec "echo hello"` | Exit 0 |
-| 6 | `iteron open gemini-cli` (with `NO_BROWSER=true`); run `gemini` | CLI prints auth URL; after browser auth and code paste, agent responds |
+| 6 | `iteron open gemini` (with `NO_BROWSER=true`); run `gemini` | CLI prints auth URL; after browser auth and code paste, agent responds |
 | 7 | Set `GEMINI_API_KEY` in `.env`; `podman exec iteron-sandbox gemini -p "echo hello"` | Exit 0 (API key fallback) |
 | 8 | Mount host `auth.json`; `podman exec iteron-sandbox opencode run "echo hello"` | Exit 0; uses forwarded credentials |
 | 9 | `podman exec iteron-sandbox cat ~/.claude.json \| jq .hasCompletedOnboarding` | `true` |

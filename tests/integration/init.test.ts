@@ -46,7 +46,7 @@ describe.skipIf(!HAS_PODMAN)('iteron init (integration)', { timeout: 120_000 }, 
     expect(existsSync(configPath)).toBe(true);
     const configContent = readFileSync(configPath, 'utf-8');
     expect(configContent).toContain('[container]');
-    expect(configContent).toContain('[agents.claude-code]');
+    expect(configContent).toContain('[agents.claude]');
     expect(configContent).toContain('binary = "claude"');
     expect(configContent).toContain(TEST_IMAGE);
 
@@ -77,13 +77,13 @@ name = "iteron-sandbox"
 image = "docker.io/library/alpine:latest"
 memory = "16g"
 
-[agents.claude-code]
+[agents.claude]
 binary = "claude"
 
-[agents.codex-cli]
+[agents.codex]
 binary = "codex"
 
-[agents.gemini-cli]
+[agents.gemini]
 binary = "gemini"
 
 [agents.opencode]

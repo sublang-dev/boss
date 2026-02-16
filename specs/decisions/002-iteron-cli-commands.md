@@ -37,7 +37,7 @@ iteron <command> [options] [args]
 - Agent state: `~/.claude/`, `~/.codex/`, `~/.gemini/`, `~/.opencode/`
 - Home directory: `~` (can run agents/shells directly here)
 - Workspaces: `~/<workspace>` (e.g., `~/myproject`, `~/backend`, `~/frontend`)
-- Each session gets a unique tmux session name: `<command>@<location>` (e.g., `claude-code@myproject`, `bash@~`, `vim@backend`). The `@` delimiter is used because tmux reserves `:` as a session-window separator and silently replaces it with `_`.
+- Each session gets a unique tmux session name: `<command>@<location>` (e.g., `claude@myproject`, `bash@~`, `vim@backend`). The `@` delimiter is used because tmux reserves `:` as a session-window separator and silently replaces it with `_`.
 - Everything persists across container restarts in one volume
 
 ### Core Commands
@@ -72,11 +72,11 @@ Open a workspace with an agent or shell. Creates workspace directory and tmux se
 
 - `iteron open` — Shell in home directory (`~`)
 - `iteron open myproject` — Shell in `~/myproject` workspace (if no agent name)
-- `iteron open claude-code` — Claude Code agent in home directory (`~`)
-- `iteron open claude-code myproject` — Claude Code agent in `~/myproject` workspace
-- `iteron open claude-code myproject -- --resume` — Pass `--resume` to claude-code
+- `iteron open claude` — Claude Code agent in home directory (`~`)
+- `iteron open claude myproject` — Claude Code agent in `~/myproject` workspace
+- `iteron open claude myproject -- --resume` — Pass `--resume` to claude
 
-**Reserved agent names**: claude-code, codex-cli, gemini-cli, opencode (from `~/.iteron/config.toml`)
+**Reserved agent names**: claude, codex, gemini, opencode (from `~/.iteron/config.toml`)
 
 **Tmux control**: Full tmux access once inside (split panes, customize via `~/.tmux.conf`)
 
@@ -90,15 +90,15 @@ List workspaces and their running agents in tree format.
 
 ```shell
 ~/ (home)
-  claude-code (attached, 2h 15m)
+  claude (attached, 2h 15m)
   bash (detached, 45m)
 
 myproject/
-  claude-code (attached, 1h 30m)
-  codex-cli (detached, 20m)
+  claude (attached, 1h 30m)
+  codex (detached, 20m)
 
 backend/
-  gemini-cli (detached, 10m)
+  gemini (detached, 10m)
 ```
 
 ---

@@ -7,9 +7,9 @@ import { validateWorkspace } from '../../src/utils/config.js';
 import type { IteronConfig } from '../../src/utils/config.js';
 
 const agents: IteronConfig['agents'] = {
-  'claude-code': { binary: 'claude' },
-  'codex-cli': { binary: 'codex' },
-  'gemini-cli': { binary: 'gemini' },
+  claude: { binary: 'claude' },
+  codex: { binary: 'codex' },
+  gemini: { binary: 'gemini' },
   opencode: { binary: 'opencode' },
 };
 
@@ -22,9 +22,9 @@ describe('resolveArgs', () => {
   });
 
   it('1 arg matching agent → agent in home', () => {
-    const result = resolveArgs(['claude-code'], agents);
+    const result = resolveArgs(['claude'], agents);
     expect(result.binary).toBe('claude');
-    expect(result.sessionName).toBe('claude-code@~');
+    expect(result.sessionName).toBe('claude@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
@@ -36,9 +36,9 @@ describe('resolveArgs', () => {
   });
 
   it('2 args with known agent → agent in workspace', () => {
-    const result = resolveArgs(['claude-code', 'myproject'], agents);
+    const result = resolveArgs(['claude', 'myproject'], agents);
     expect(result.binary).toBe('claude');
-    expect(result.sessionName).toBe('claude-code@myproject');
+    expect(result.sessionName).toBe('claude@myproject');
     expect(result.workDir).toBe('/home/iteron/myproject');
   });
 
@@ -50,9 +50,9 @@ describe('resolveArgs', () => {
   });
 
   it('2 args with ~ workspace → agent in home', () => {
-    const result = resolveArgs(['claude-code', '~'], agents);
+    const result = resolveArgs(['claude', '~'], agents);
     expect(result.binary).toBe('claude');
-    expect(result.sessionName).toBe('claude-code@~');
+    expect(result.sessionName).toBe('claude@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
@@ -123,20 +123,20 @@ describe('validateWorkspace', () => {
 
 describe('extractPassthroughArgs', () => {
   it('returns empty array when no separator is present', () => {
-    expect(extractPassthroughArgs(['claude-code', 'myproject'])).toEqual([]);
+    expect(extractPassthroughArgs(['claude', 'myproject'])).toEqual([]);
   });
 
   it('returns everything after the first separator', () => {
-    expect(extractPassthroughArgs(['claude-code', 'myproject', '--', '--resume'])).toEqual(['--resume']);
+    expect(extractPassthroughArgs(['claude', 'myproject', '--', '--resume'])).toEqual(['--resume']);
   });
 
   it('preserves subsequent -- tokens as payload', () => {
     expect(
-      extractPassthroughArgs(['claude-code', 'myproject', '--', '--resume', '--', 'literal']),
+      extractPassthroughArgs(['claude', 'myproject', '--', '--resume', '--', 'literal']),
     ).toEqual(['--resume', '--', 'literal']);
   });
 
   it('returns empty array when separator is the final token', () => {
-    expect(extractPassthroughArgs(['claude-code', '--'])).toEqual([]);
+    expect(extractPassthroughArgs(['claude', '--'])).toEqual([]);
   });
 });

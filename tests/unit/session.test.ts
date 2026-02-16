@@ -16,8 +16,8 @@ describe('buildSessionName', () => {
 
 describe('parseSessionName', () => {
   it('parses standard command@location names', () => {
-    expect(parseSessionName('claude-code@myproject')).toEqual({
-      command: 'claude-code',
+    expect(parseSessionName('claude@myproject')).toEqual({
+      command: 'claude',
       location: 'myproject',
     });
   });

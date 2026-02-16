@@ -186,23 +186,23 @@ iteron open [agent-or-workspace] [workspace] [-- extra-args]
 | `<workspace>` | `bash` | `~/workspace` |
 | `<agent> <workspace>` | Agent binary | `~/workspace` |
 
-Agent names: `claude-code`, `codex-cli`, `gemini-cli`, `opencode` (from `~/.iteron/config.toml`).
+Agent names: `claude`, `codex`, `gemini`, `opencode` (from `~/.iteron/config.toml`).
 
 ### Pass-through Arguments
 
 Everything after `--` is passed to the agent binary:
 
 ```bash
-iteron open claude-code myproject -- --resume
+iteron open claude myproject -- --resume
 # Runs: claude --resume (in ~/myproject)
 ```
 
 ### Session Naming
 
 Sessions are named `{agent-or-command}@{location}`:
-- `claude-code@myproject`
+- `claude@myproject`
 - `bash@~`
-- `codex-cli@feature-x`
+- `codex@feature-x`
 
 ### Examples
 
@@ -211,16 +211,16 @@ Sessions are named `{agent-or-command}@{location}`:
 iteron open
 
 # Open Claude Code in home directory
-iteron open claude-code
+iteron open claude
 
 # Open Codex CLI in a workspace
-iteron open codex-cli myproject
+iteron open codex myproject
 
 # Open a shell in a workspace
 iteron open myproject
 
 # Pass extra arguments to agent
-iteron open claude-code myproject -- --resume
+iteron open claude myproject -- --resume
 ```
 
 ### Exit Codes
@@ -248,10 +248,10 @@ Tree view grouped by workspace location:
 
 ```
 ~/ (home)
-  claude-code (attached, 2h 15m)
+  claude (attached, 2h 15m)
   bash (detached, 5m)
 project/
-  codex-cli (attached, 30s)
+  codex (attached, 30s)
 ```
 
 Each session shows:
@@ -301,7 +301,7 @@ The home directory (`~`) cannot be removed — use `iteron stop` instead.
 
 ```bash
 iteron rm myproject
-# Kill codex-cli@myproject? [y/N] y
+# Kill codex@myproject? [y/N] y
 # Workspace "myproject" removed.
 ```
 

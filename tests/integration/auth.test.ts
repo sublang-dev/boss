@@ -62,13 +62,13 @@ name = "${TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
 
-[agents.claude-code]
+[agents.claude]
 binary = "claude"
 
-[agents.codex-cli]
+[agents.codex]
 binary = "codex"
 
-[agents.gemini-cli]
+[agents.gemini]
 binary = "gemini"
 
 [agents.opencode]

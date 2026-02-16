@@ -22,12 +22,12 @@ describe('parseSessions', () => {
   });
 
   it('parses single session', () => {
-    const output = `claude-code@myproject 1 ${fixedNow - 3600}`;
+    const output = `claude@myproject 1 ${fixedNow - 3600}`;
     const result = parseSessions(output);
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual({
-      session: 'claude-code@myproject',
-      command: 'claude-code',
+      session: 'claude@myproject',
+      command: 'claude',
       location: 'myproject',
       attached: true,
       uptime_seconds: 3600,
@@ -36,19 +36,19 @@ describe('parseSessions', () => {
 
   it('parses multiple sessions', () => {
     const output = [
-      `claude-code@~ 1 ${fixedNow - 8100}`,
+      `claude@~ 1 ${fixedNow - 8100}`,
       `bash@myproject 0 ${fixedNow - 2700}`,
-      `gemini-cli@backend 0 ${fixedNow - 600}`,
+      `gemini@backend 0 ${fixedNow - 600}`,
     ].join('\n');
     const result = parseSessions(output);
     expect(result).toHaveLength(3);
-    expect(result[0].command).toBe('claude-code');
+    expect(result[0].command).toBe('claude');
     expect(result[0].location).toBe('~');
     expect(result[0].attached).toBe(true);
     expect(result[1].command).toBe('bash');
     expect(result[1].location).toBe('myproject');
     expect(result[1].attached).toBe(false);
-    expect(result[2].command).toBe('gemini-cli');
+    expect(result[2].command).toBe('gemini');
     expect(result[2].location).toBe('backend');
     expect(result[2].attached).toBe(false);
   });
@@ -113,16 +113,16 @@ describe('formatUptime', () => {
 describe('formatTree', () => {
   it('groups sessions by location', () => {
     const sessions = [
-      { session: 'claude-code@~', command: 'claude-code', location: '~', attached: true, uptime_seconds: 8100 },
+      { session: 'claude@~', command: 'claude', location: '~', attached: true, uptime_seconds: 8100 },
       { session: 'bash@~', command: 'bash', location: '~', attached: false, uptime_seconds: 2700 },
-      { session: 'claude-code@myproject', command: 'claude-code', location: 'myproject', attached: false, uptime_seconds: 5400 },
+      { session: 'claude@myproject', command: 'claude', location: 'myproject', attached: false, uptime_seconds: 5400 },
     ];
     const output = formatTree(sessions, []);
     expect(output).toContain('~/ (home)');
-    expect(output).toContain('  claude-code (attached, 2h 15m)');
+    expect(output).toContain('  claude (attached, 2h 15m)');
     expect(output).toContain('  bash (detached, 45m)');
     expect(output).toContain('myproject/');
-    expect(output).toContain('  claude-code (detached, 1h 30m)');
+    expect(output).toContain('  claude (detached, 1h 30m)');
   });
 
   it('shows home before other workspaces', () => {

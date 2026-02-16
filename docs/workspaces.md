@@ -12,7 +12,7 @@ A workspace is a directory inside the sandbox container at `/home/iteron/<name>`
 Workspaces are created automatically when you open an agent in a new workspace:
 
 ```bash
-iteron open claude-code myproject
+iteron open claude myproject
 ```
 
 This creates `~/myproject` in the container (if it doesn't exist) and starts Claude Code there.
@@ -31,10 +31,10 @@ iteron open myproject
 
 ```bash
 # Agent in home directory
-iteron open claude-code
+iteron open claude
 
 # Agent in a workspace
-iteron open codex-cli myproject
+iteron open codex myproject
 ```
 
 ## Workspace Naming Rules
@@ -55,10 +55,10 @@ You can run different agents in different workspaces simultaneously:
 
 ```bash
 # Terminal 1: Claude Code working on the backend
-iteron open claude-code backend
+iteron open claude backend
 
 # Terminal 2: Codex CLI working on the frontend
-iteron open codex-cli frontend
+iteron open codex frontend
 
 # Terminal 3: Shell for manual inspection
 iteron open backend
@@ -76,16 +76,16 @@ Output is a tree view grouped by workspace:
 
 ```
 ~/ (home)
-  claude-code (attached, 2h 15m)
+  claude (attached, 2h 15m)
   bash (detached, 5m)
 backend/
-  claude-code (attached, 45m)
+  claude (attached, 45m)
 frontend/
-  codex-cli (attached, 30s)
+  codex (attached, 30s)
 ```
 
 Each entry shows:
-- **Command** — the agent or command name (e.g., `claude-code`, `codex-cli`, `bash`)
+- **Command** — the agent or command name (e.g., `claude`, `codex`, `bash`)
 - **Status** — `attached` (terminal connected) or `detached` (running in background)
 - **Uptime** — how long the session has been running (`30s`, `5m`, `2h 15m`)
 
@@ -104,7 +104,7 @@ iteron rm myproject
 If the workspace has active sessions, IterOn prompts before killing them:
 
 ```
-Kill claude-code@myproject, bash@myproject? [y/N] y
+Kill claude@myproject, bash@myproject? [y/N] y
 Workspace "myproject" removed.
 ```
 
@@ -125,7 +125,7 @@ When you close your terminal or detach from tmux (`Ctrl-B D`), the agent keeps r
 
 ```bash
 # Reattach to an existing session
-iteron open claude-code myproject
+iteron open claude myproject
 ```
 
 See [Tmux Quick Reference](tmux.md) for more tmux operations.

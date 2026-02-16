@@ -7,21 +7,21 @@
 
 | Agent Name | Binary | Provider | Subscription Auth | API Key Env Var |
 | --- | --- | --- | --- | --- |
-| `claude-code` | `claude` | Anthropic | `setup-token` | `ANTHROPIC_API_KEY` |
-| `codex-cli` | `codex` | OpenAI | `codex login --device-auth` | `CODEX_API_KEY` |
-| `gemini-cli` | `gemini` | Google | `NO_BROWSER` PKCE OAuth | `GEMINI_API_KEY` |
+| `claude` | `claude` | Anthropic | `setup-token` | `ANTHROPIC_API_KEY` |
+| `codex` | `codex` | OpenAI | `codex login --device-auth` | `CODEX_API_KEY` |
+| `gemini` | `gemini` | Google | `NO_BROWSER` PKCE OAuth | `GEMINI_API_KEY` |
 | `opencode` | `opencode` | OpenCode | Credential forwarding | `MOONSHOT_API_KEY` |
 
 Agent-to-binary mappings are defined in `~/.iteron/config.toml`:
 
 ```toml
-[agents.claude-code]
+[agents.claude]
 binary = "claude"
 
-[agents.codex-cli]
+[agents.codex]
 binary = "codex"
 
-[agents.gemini-cli]
+[agents.gemini]
 binary = "gemini"
 
 [agents.opencode]
@@ -60,7 +60,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 **Subscription auth (recommended):** Run the device-code flow inside the container:
 
 ```bash
-iteron open codex-cli
+iteron open codex
 # In the tmux session:
 codex login --device-auth
 ```
@@ -78,7 +78,7 @@ CODEX_API_KEY=sk-...
 **Subscription auth (recommended):** The `NO_BROWSER=true` environment variable (set in the sandbox image) triggers a PKCE OAuth flow:
 
 ```bash
-iteron open gemini-cli
+iteron open gemini
 # Gemini prints an auth URL; open it in your browser
 # Paste the authorization code back into the terminal
 ```

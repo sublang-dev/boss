@@ -25,9 +25,9 @@ from a pinned standalone Linux musl release binary
 
 Where agent names are resolved for CLI sessions, the mapping
 shall be:
-`claude-code -> claude`,
-`codex-cli -> codex`,
-`gemini-cli -> gemini`,
+`claude -> claude`,
+`codex -> codex`,
+`gemini -> gemini`,
 `opencode -> opencode`
 ([DR-002 Workspace Model](../decisions/002-iteron-cli-commands.md#workspace-model)).
 

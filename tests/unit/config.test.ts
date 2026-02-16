@@ -44,11 +44,11 @@ describe('defaultConfig', () => {
     const { defaultConfig } = await import('../../src/utils/config.js');
     const config = defaultConfig();
     expect(Object.keys(config.agents)).toEqual([
-      'claude-code', 'codex-cli', 'gemini-cli', 'opencode',
+      'claude', 'codex', 'gemini', 'opencode',
     ]);
-    expect(config.agents['claude-code'].binary).toBe('claude');
-    expect(config.agents['codex-cli'].binary).toBe('codex');
-    expect(config.agents['gemini-cli'].binary).toBe('gemini');
+    expect(config.agents['claude'].binary).toBe('claude');
+    expect(config.agents['codex'].binary).toBe('codex');
+    expect(config.agents['gemini'].binary).toBe('gemini');
     expect(config.agents['opencode'].binary).toBe('opencode');
   });
 });
@@ -62,7 +62,7 @@ describe('writeConfig / readConfig', () => {
     const config = await readConfig();
     expect(config.container.name).toBe('iteron-sandbox');
     expect(config.container.memory).toBe('16g');
-    expect(config.agents['claude-code'].binary).toBe('claude');
+    expect(config.agents['claude'].binary).toBe('claude');
   });
 
   it('writeConfig is idempotent (returns false on second call)', async () => {

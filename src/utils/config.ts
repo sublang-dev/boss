@@ -44,9 +44,9 @@ export function defaultConfig(image?: string): IteronConfig {
       memory: DEFAULT_MEMORY,
     },
     agents: {
-      'claude-code': { binary: 'claude' },
-      'codex-cli': { binary: 'codex' },
-      'gemini-cli': { binary: 'gemini' },
+      claude: { binary: 'claude' },
+      codex: { binary: 'codex' },
+      gemini: { binary: 'gemini' },
       opencode: { binary: 'opencode' },
     },
   };

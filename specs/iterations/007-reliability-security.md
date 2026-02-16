@@ -78,7 +78,7 @@ Per [DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-laye
 | 4 | `podman inspect iteron-sandbox --format '{{.HostConfig.SecurityOpt}}'` | Contains `no-new-privileges` |
 | 5 | `podman exec iteron-sandbox touch /usr/local/test` | Exit 1, `Read-only file system` |
 | 6 | `trivy image <image> --severity CRITICAL,HIGH --exit-code 1 --ignorefile image/.trivyignore` | Exit 0 (no critical/high CVEs outside accepted list) |
-| 7 | New user follows installation guide from step 1 to running `iteron open claude-code` | Completes without external help; agent prompt appears |
+| 7 | New user follows installation guide from step 1 to running `iteron open claude` | Completes without external help; agent prompt appears |
 | 8 | CLI reference documents all 7 commands | Each command has: synopsis, options, examples, exit codes |
 | 9 | `podman run --rm <image> test -d /home/iteron/.local/bin -a -w /home/iteron/.local/bin` | Exit 0 |
 | 10 | `podman run --rm <image> sh -c 'cp /usr/bin/true ~/.local/bin/mytool && mytool'` | Exit 0 |

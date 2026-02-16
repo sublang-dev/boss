@@ -88,13 +88,13 @@ name = "iteron-sandbox"
 image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
 memory = "16g"
 
-[agents.claude-code]
+[agents.claude]
 binary = "claude"
 
-[agents.codex-cli]
+[agents.codex]
 binary = "codex"
 
-[agents.gemini-cli]
+[agents.gemini]
 binary = "gemini"
 
 [agents.opencode]
@@ -123,7 +123,7 @@ GEMINI_API_KEY=
 | 7 | `iteron start` when already running | Exits 0, prints "already running" |
 | 8 | `iteron stop` | Container stops within 30s; `podman ps -a --filter name=iteron-sandbox` returns empty |
 | 9 | `iteron stop` when not running | Exits 0, prints "not running" |
-| 10 | `cat ~/.iteron/config.toml` after init | Valid TOML; contains `[container]` and `[agents.claude-code]` with `binary = "claude"` |
+| 10 | `cat ~/.iteron/config.toml` after init | Valid TOML; contains `[container]` and `[agents.claude]` with `binary = "claude"` |
 | 11 | `cat ~/.iteron/.env` after init | Contains `ANTHROPIC_API_KEY=`, `CODEX_API_KEY=`, `GEMINI_API_KEY=` |
 | 12 | Set `ANTHROPIC_API_KEY=sk-test-123` in `.env`, `iteron start`, `podman exec iteron-sandbox printenv ANTHROPIC_API_KEY` | `sk-test-123` |
 | 13 | `iteron start`, `podman exec iteron-sandbox touch /home/iteron/persist-test`, `iteron stop`, `iteron start`, `podman exec iteron-sandbox test -f /home/iteron/persist-test` | Exit 0 (file persists across restart) |

@@ -41,12 +41,12 @@ Install each agent and verify its binary is on `PATH`:
 
 | Agent name (config / CLI) | Binary command | Source |
 | --- | --- | --- |
-| `claude-code` | `claude` | npm: `@anthropic-ai/claude-code` |
-| `codex-cli` | `codex` | GitHub releases (standalone musl binary) |
-| `gemini-cli` | `gemini` | npm: `@google/gemini-cli` |
+| `claude` | `claude` | npm: `@anthropic-ai/claude-code` |
+| `codex` | `codex` | GitHub releases (standalone musl binary) |
+| `gemini` | `gemini` | npm: `@google/gemini-cli` |
 | `opencode` | `opencode` | npm: `opencode-ai` |
 
-`iteron open claude-code myproject` resolves to binary `claude` and creates tmux session `claude-code@myproject`. Verify exact binary names during implementation — upstream projects may change them.
+`iteron open claude myproject` resolves to binary `claude` and creates tmux session `claude@myproject`. Verify exact binary names during implementation — upstream projects may change them.
 
 ### 3. Multi-arch build
 
