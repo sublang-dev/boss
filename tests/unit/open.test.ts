@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 
 import { describe, it, expect } from 'vitest';
-import { extractPassthroughArgs, resolveArgs } from '../../src/commands/open.js';
+import { detectDeprecatedForm, extractPassthroughArgs, resolveArgs } from '../../src/commands/open.js';
 import { validateWorkspace } from '../../src/utils/config.js';
 import type { IteronConfig } from '../../src/utils/config.js';
 
@@ -21,38 +21,53 @@ describe('resolveArgs', () => {
     expect(result.workDir).toBe('/home/iteron');
   });
 
-  it('1 arg matching agent → agent in home', () => {
-    const result = resolveArgs(['claude'], agents);
-    expect(result.binary).toBe('claude');
-    expect(result.sessionName).toBe('claude@~');
+  it('1 arg ~ → shell in home', () => {
+    const result = resolveArgs(['~'], agents);
+    expect(result.binary).toBe('bash');
+    expect(result.sessionName).toBe('bash@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
-  it('1 arg not matching agent → shell in workspace', () => {
+  it('1 arg workspace → shell in workspace', () => {
     const result = resolveArgs(['myproject'], agents);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@myproject');
     expect(result.workDir).toBe('/home/iteron/myproject');
   });
 
-  it('2 args with known agent → agent in workspace', () => {
-    const result = resolveArgs(['claude', 'myproject'], agents);
+  it('1 arg matching agent name → shell in workspace (no agent lookup)', () => {
+    // With workspace-first grammar, a single arg is always a workspace
+    const result = resolveArgs(['claude'], agents);
+    expect(result.binary).toBe('bash');
+    expect(result.sessionName).toBe('bash@claude');
+    expect(result.workDir).toBe('/home/iteron/claude');
+  });
+
+  it('2 args with ~ and known agent → agent in home', () => {
+    const result = resolveArgs(['~', 'claude'], agents);
+    expect(result.binary).toBe('claude');
+    expect(result.sessionName).toBe('claude@~');
+    expect(result.workDir).toBe('/home/iteron');
+  });
+
+  it('2 args workspace and known agent → agent in workspace', () => {
+    const result = resolveArgs(['myproject', 'claude'], agents);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@myproject');
     expect(result.workDir).toBe('/home/iteron/myproject');
   });
 
-  it('2 args with unknown command → raw command in workspace', () => {
-    const result = resolveArgs(['vim', 'myproject'], agents);
+  it('2 args workspace and unknown command → raw command in workspace', () => {
+    const result = resolveArgs(['myproject', 'vim'], agents);
     expect(result.binary).toBe('vim');
     expect(result.sessionName).toBe('vim@myproject');
     expect(result.workDir).toBe('/home/iteron/myproject');
   });
 
-  it('2 args with ~ workspace → agent in home', () => {
-    const result = resolveArgs(['claude', '~'], agents);
-    expect(result.binary).toBe('claude');
-    expect(result.sessionName).toBe('claude@~');
+  it('2 args ~ and unknown command → raw command in home', () => {
+    const result = resolveArgs(['~', 'vim'], agents);
+    expect(result.binary).toBe('vim');
+    expect(result.sessionName).toBe('vim@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
@@ -61,7 +76,7 @@ describe('resolveArgs', () => {
   });
 
   it('rejects traversal segment as workspace (2-arg)', () => {
-    expect(() => resolveArgs(['vim', '..'], agents)).toThrow('traversal');
+    expect(() => resolveArgs(['..', 'vim'], agents)).toThrow('traversal');
   });
 
   it('rejects absolute path as workspace', () => {
@@ -70,17 +85,57 @@ describe('resolveArgs', () => {
 
   it('rejects path with separators as workspace', () => {
     expect(() => resolveArgs(['foo/bar'], agents)).toThrow('separator');
-    expect(() => resolveArgs(['vim', 'a/b'], agents)).toThrow('separator');
+    expect(() => resolveArgs(['a/b', 'vim'], agents)).toThrow('separator');
   });
 
   it('rejects command containing @ (session delimiter)', () => {
-    expect(() => resolveArgs(['foo@bar', 'ws'], agents)).toThrow('@');
+    expect(() => resolveArgs(['ws', 'foo@bar'], agents)).toThrow('@');
   });
 
   it('rejects configured agent name containing @', () => {
     const badAgents = { ...agents, 'bad@agent': { binary: 'bad' } };
-    expect(() => resolveArgs(['bad@agent'], badAgents)).toThrow('@');
-    expect(() => resolveArgs(['bad@agent', 'ws'], badAgents)).toThrow('@');
+    expect(() => resolveArgs(['~', 'bad@agent'], badAgents)).toThrow('@');
+  });
+});
+
+describe('detectDeprecatedForm', () => {
+  it('1-arg matching agent → deprecated', () => {
+    const result = detectDeprecatedForm(['claude'], agents);
+    expect(result).not.toBeNull();
+    expect(result!.swapped).toEqual(['~', 'claude']);
+    expect(result!.hint).toContain('Deprecated');
+    expect(result!.hint).toContain('iteron open ~ claude');
+  });
+
+  it('1-arg not matching agent → not deprecated', () => {
+    expect(detectDeprecatedForm(['myproject'], agents)).toBeNull();
+  });
+
+  it('2-arg agent-first with valid workspace → deprecated', () => {
+    const result = detectDeprecatedForm(['claude', 'myproject'], agents);
+    expect(result).not.toBeNull();
+    expect(result!.swapped).toEqual(['myproject', 'claude']);
+    expect(result!.hint).toContain('Deprecated');
+    expect(result!.hint).toContain('iteron open myproject claude');
+  });
+
+  it('2-arg agent-first with ~ workspace → deprecated', () => {
+    const result = detectDeprecatedForm(['claude', '~'], agents);
+    expect(result).not.toBeNull();
+    expect(result!.swapped).toEqual(['~', 'claude']);
+  });
+
+  it('2-arg where both are agents → not deprecated (new grammar)', () => {
+    // e.g. `iteron open claude codex` — under new grammar workspace=claude, command=codex
+    expect(detectDeprecatedForm(['claude', 'codex'], agents)).toBeNull();
+  });
+
+  it('2-arg non-agent first → not deprecated', () => {
+    expect(detectDeprecatedForm(['myproject', 'claude'], agents)).toBeNull();
+  });
+
+  it('0 args → not deprecated', () => {
+    expect(detectDeprecatedForm([], agents)).toBeNull();
   });
 });
 
@@ -123,16 +178,16 @@ describe('validateWorkspace', () => {
 
 describe('extractPassthroughArgs', () => {
   it('returns empty array when no separator is present', () => {
-    expect(extractPassthroughArgs(['claude', 'myproject'])).toEqual([]);
+    expect(extractPassthroughArgs(['myproject', 'claude'])).toEqual([]);
   });
 
   it('returns everything after the first separator', () => {
-    expect(extractPassthroughArgs(['claude', 'myproject', '--', '--resume'])).toEqual(['--resume']);
+    expect(extractPassthroughArgs(['myproject', 'claude', '--', '--resume'])).toEqual(['--resume']);
   });
 
   it('preserves subsequent -- tokens as payload', () => {
     expect(
-      extractPassthroughArgs(['claude', 'myproject', '--', '--resume', '--', 'literal']),
+      extractPassthroughArgs(['myproject', 'claude', '--', '--resume', '--', 'literal']),
     ).toEqual(['--resume', '--', 'literal']);
   });
 

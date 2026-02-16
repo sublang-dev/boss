@@ -12,7 +12,7 @@ A workspace is a directory inside the sandbox container at `/home/iteron/<name>`
 Workspaces are created automatically when you open an agent in a new workspace:
 
 ```bash
-iteron open claude myproject
+iteron open myproject claude
 ```
 
 This creates `~/myproject` in the container (if it doesn't exist) and starts Claude Code there.
@@ -31,10 +31,10 @@ iteron open myproject
 
 ```bash
 # Agent in home directory
-iteron open claude
+iteron open ~ claude
 
 # Agent in a workspace
-iteron open codex myproject
+iteron open myproject codex
 ```
 
 ## Workspace Naming Rules
@@ -49,7 +49,7 @@ Workspace names must follow these rules:
 
 Valid names: `myproject`, `feature-x`, `experiment_1`
 
-**Note:** Agent names (`claude`, `codex`, `gemini`, `opencode`) take precedence in the 1-arg form of `iteron open`. If a workspace happens to share a name with an agent, use the 2-arg form to open a shell there: `iteron open bash claude`.
+With workspace-first grammar, the first argument is always the workspace and the second is the command. There is no ambiguity between agent names and workspace names.
 
 ## Running Multiple Agents
 
@@ -57,10 +57,10 @@ You can run different agents in different workspaces simultaneously:
 
 ```bash
 # Terminal 1: Claude Code working on the backend
-iteron open claude backend
+iteron open backend claude
 
 # Terminal 2: Codex CLI working on the frontend
-iteron open codex frontend
+iteron open frontend codex
 
 # Terminal 3: Shell for manual inspection
 iteron open backend
@@ -127,7 +127,7 @@ When you close your terminal or detach from tmux (`Ctrl-B D`), the agent keeps r
 
 ```bash
 # Reattach to an existing session
-iteron open claude myproject
+iteron open myproject claude
 ```
 
 See [Tmux Quick Reference](tmux.md) for more tmux operations.

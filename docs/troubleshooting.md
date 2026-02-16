@@ -84,7 +84,7 @@ iteron start
 **Fix:**
 1. Run the device-code flow inside the container:
    ```bash
-   iteron open codex
+   iteron open ~ codex
    codex login --device-auth
    ```
 2. Or set `CODEX_API_KEY` in `~/.iteron/.env` (works with `codex exec` only)
@@ -97,7 +97,7 @@ iteron start
 **Fix:**
 1. Open Gemini and complete the PKCE flow:
    ```bash
-   iteron open gemini
+   iteron open ~ gemini
    # Follow the URL printed by Gemini, paste the code back
    ```
 2. Or set `GEMINI_API_KEY` in `~/.iteron/.env`

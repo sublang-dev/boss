@@ -64,19 +64,21 @@ Stop the sandbox container.
 
 ---
 
-#### 4. `iteron open [agent] [workspace] [-- <args>...]`
+#### 4. `iteron open [workspace] [command] [-- <args>...]`
 
 Open a workspace with an agent or shell. Creates workspace directory and tmux session if needed, otherwise attaches to existing session.
 
-**Argument interpretation**:
+**Argument interpretation** (workspace-first):
 
 - `iteron open` — Shell in home directory (`~`)
-- `iteron open myproject` — Shell in `~/myproject` workspace (if no agent name)
-- `iteron open claude` — Claude Code agent in home directory (`~`)
-- `iteron open claude myproject` — Claude Code agent in `~/myproject` workspace
-- `iteron open claude myproject -- --resume` — Pass `--resume` to claude
+- `iteron open myproject` — Shell in `~/myproject` workspace
+- `iteron open ~ claude` — Claude Code agent in home directory (`~`)
+- `iteron open myproject claude` — Claude Code agent in `~/myproject` workspace
+- `iteron open myproject claude -- --resume` — Pass `--resume` to claude
 
-**Reserved agent names**: claude, codex, gemini, opencode (from `~/.iteron/config.toml`)
+**Agent names**: claude, codex, gemini, opencode (from `~/.iteron/config.toml`). When the second argument matches a configured agent, the agent binary is used; otherwise the argument is run as-is.
+
+**Deprecated form**: The old `iteron open <agent> [workspace]` syntax is detected and executed with a migration hint on stderr. It will be removed in a future release.
 
 **Tmux control**: Full tmux access once inside (split panes, customize via `~/.tmux.conf`)
 
@@ -116,7 +118,7 @@ Remove a workspace directory and kill any running agent sessions in it.
 | `iteron init` | One-time setup | Manual podman install + config |
 | `iteron start` | Start sandbox | `podman run -d --name iteron-sandbox [complex flags]` |
 | `iteron stop` | Stop sandbox | `podman stop iteron-sandbox` |
-| `iteron open [agent] [workspace] [-- <args>]` | Open workspace (shell or agent) | `podman exec -it ... tmux new -A -s ...` |
+| `iteron open [workspace] [command] [-- <args>]` | Open workspace (shell or agent) | `podman exec -it ... tmux new -A -s ...` |
 | `iteron ls` | List workspaces and agents (tree) | `podman exec ... tmux list-sessions` + parsing |
 | `iteron rm <workspace>` | Remove workspace | `podman exec iteron-sandbox rm -rf ~/workspace` |
 

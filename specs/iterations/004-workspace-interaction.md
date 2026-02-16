@@ -9,7 +9,7 @@ Implement `iteron open`, `iteron ls`, and `iteron rm` commands for launching age
 
 ## Deliverables
 
-- [x] `iteron open [agent] [workspace] [-- <args>]`: launch agent/shell in tmux session, with agent-name-to-binary resolution
+- [x] `iteron open [workspace] [command] [-- <args>]`: launch agent/shell in tmux session, with agent-name-to-binary resolution
 - [x] Attach-to-existing: reattach to running tmux sessions
 - [x] `iteron ls`: tree view of workspaces and running sessions
 - [x] `iteron rm <workspace>`: remove workspace and kill its sessions
@@ -20,12 +20,12 @@ Implement `iteron open`, `iteron ls`, and `iteron rm` commands for launching age
 
 Per [DR-002 §4](../decisions/002-iteron-cli-commands.md#4-iteron-open-agent-workspace----args):
 
-- Argument interpretation:
+- Argument interpretation (workspace-first):
   - 0 args: shell in `~`
-  - 1 arg, matches agent name in `config.toml`: agent in `~`
-  - 1 arg, no match: shell in `~/workspace`
-  - 2 args: first is agent/command, second is workspace
-- Agent name resolution: look up agent name in `config.toml` `[agents.<name>]` to get `binary` value (see [IR-001 §2](001-oci-sandbox-image.md#2-agent-runtime-installation-and-name-mapping) and [IR-002 §5](002-container-lifecycle.md#5-config-file-schema)). If not found in config, use the argument as-is (raw command).
+  - 1 arg: shell in `~/<workspace>` (use `~` for home)
+  - 2 args: first is workspace, second is command/agent
+- Agent name resolution: look up second arg (command) in `config.toml` `[agents.<name>]` to get `binary` value (see [IR-001 §2](001-oci-sandbox-image.md#2-agent-runtime-installation-and-name-mapping) and [IR-002 §5](002-container-lifecycle.md#5-config-file-schema)). If not found in config, use the argument as-is (raw command).
+- Deprecated form: old `iteron open <agent> [workspace]` syntax is detected and executed with a migration hint on stderr.
 - Arguments after `--` are passed to the resolved command
 - Wraps: `podman exec -it iteron-sandbox tmux new-session -A -s <session> -c <path> <binary> [<args>]`
 - Session naming per [DR-002 Workspace Model](../decisions/002-iteron-cli-commands.md#workspace-model): `<agent-name>@<location>` (e.g., `claude@myproject`). For non-agent commands, use the command itself (e.g., `bash@~`, `vim@backend`). The `@` delimiter is used because tmux reserves `:` and silently replaces it with `_`.
@@ -69,12 +69,12 @@ Per [DR-002 §6](../decisions/002-iteron-cli-commands.md#6-iteron-rm-workspace):
 | --- | --- | --- |
 | 1 | `iteron open` | Attaches to bash in `~`; `tmux list-sessions` shows `bash@~` |
 | 2 | `iteron open myproject` | Creates `~/myproject`; attaches to `bash@myproject` |
-| 3 | `iteron open claude` | Resolves `claude` → binary `claude` from config; attaches to `claude@~` |
-| 4 | `iteron open claude myproject` | Attaches to `claude@myproject`; binary is `claude`, cwd is `~/myproject` |
-| 5 | `iteron open claude myproject -- --resume` | `tmux list-sessions` shows `claude@myproject`; `--resume` passed to `claude` process (verify via `/proc/<pid>/cmdline`) |
-| 6 | `iteron open vim myproject` | `vim` is not in config → runs `vim` as-is; session `vim@myproject` |
-| 7 | Run `iteron open claude myproject`, detach (Ctrl-B D), run `iteron open claude myproject` again | Reattaches to same session; `tmux list-sessions` still shows exactly one `claude@myproject`. **Manual verification required** — `-A` reattach needs an interactive terminal. |
-| 8 | Run `iteron open claude ~` and `iteron open claude myproject` in parallel | Two separate sessions: `claude@~` and `claude@myproject` |
+| 3 | `iteron open ~ claude` | Resolves `claude` → binary `claude` from config; attaches to `claude@~` |
+| 4 | `iteron open myproject claude` | Attaches to `claude@myproject`; binary is `claude`, cwd is `~/myproject` |
+| 5 | `iteron open myproject claude -- --resume` | `tmux list-sessions` shows `claude@myproject`; `--resume` passed to `claude` process (verify via `/proc/<pid>/cmdline`) |
+| 6 | `iteron open myproject vim` | `vim` is not in config → runs `vim` as-is; session `vim@myproject` |
+| 7 | Run `iteron open myproject claude`, detach (Ctrl-B D), run `iteron open myproject claude` again | Reattaches to same session; `tmux list-sessions` still shows exactly one `claude@myproject`. **Manual verification required** — `-A` reattach needs an interactive terminal. |
+| 8 | Run `iteron open ~ claude` and `iteron open myproject claude` in parallel | Two separate sessions: `claude@~` and `claude@myproject` |
 | 9 | `iteron ls` with sessions `claude@~`, `bash@myproject`, `gemini@backend` running | Tree output groups by location; shows correct attached/detached status and uptime |
 | 10 | `iteron rm myproject` with `claude@myproject` running | Prompts "Kill claude@myproject? [y/N]"; on `y`: session killed, `~/myproject` removed |
 | 11 | `iteron rm` (no arg) | Exit non-zero; prints usage error |

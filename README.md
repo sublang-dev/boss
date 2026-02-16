@@ -70,10 +70,10 @@ iteron init
 iteron start
 
 # Open Claude Code in a workspace
-iteron open claude myproject
+iteron open myproject claude
 
 # Open Claude Code with extra args
-iteron open claude myproject -- --resume
+iteron open myproject claude -- --resume
 
 # List running sessions
 iteron ls

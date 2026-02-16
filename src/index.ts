@@ -45,8 +45,8 @@ program
 program
   .command('open')
   .description('Open a workspace with an agent or shell')
-  .argument('[agent-or-workspace]', 'agent name or workspace directory')
-  .argument('[workspace]', 'workspace directory (when first arg is agent)')
+  .argument('[workspace]', 'workspace directory (use ~ for home, default: ~)')
+  .argument('[command]', 'agent name or command to run (default: bash)')
   .passThroughOptions(true)
   .action(openCommand);
 

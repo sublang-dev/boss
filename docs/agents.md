@@ -60,7 +60,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 **Subscription auth (recommended):** Run the device-code flow inside the container:
 
 ```bash
-iteron open codex
+iteron open ~ codex
 # In the tmux session:
 codex login --device-auth
 ```
@@ -78,7 +78,7 @@ CODEX_API_KEY=sk-...
 **Subscription auth (recommended):** The `NO_BROWSER=true` environment variable (set in the sandbox image) triggers a PKCE OAuth flow:
 
 ```bash
-iteron open gemini
+iteron open ~ gemini
 # Gemini prints an auth URL; open it in your browser
 # Paste the authorization code back into the terminal
 ```

@@ -10,28 +10,29 @@ commands.
 
 ### WSX-001
 
-Where a user runs `iteron open [agent] [workspace] [-- <args>]`,
+Where a user runs `iteron open [workspace] [command] [-- <args>]`,
 the CLI shall create or attach to a workspace session in the
 sandbox container, and positional argument resolution shall
-follow ([DR-002 §4](../decisions/002-iteron-cli-commands.md#4-iteron-open-agent-workspace----args)):
+follow ([DR-002 §4](../decisions/002-iteron-cli-commands.md#4-iteron-open-workspace-command----args)):
 
 - 0 args: default shell in `~`
-- 1 arg matching a configured agent: configured agent binary in `~`
-- 1 arg not matching a configured agent: default shell in
-  `~/<workspace>`
-- 2 args: first token as command/agent, second token as workspace
+- 1 arg: default shell in `~/<workspace>` (use `~` for home)
+- 2 args: first token as workspace, second token as command/agent
 - 2 args where workspace is `~`: home directory
-- 2 args where first token is not a configured agent: first token
-  treated as command name
+- 2 args where second token is a configured agent: agent binary
+- 2 args where second token is not a configured agent: second token
+  treated as raw command
 - Arguments after the first `--` are forwarded to the resolved command
+- Deprecated: old `iteron open <agent> [workspace]` form is detected
+  and executed with a migration hint on stderr
 
 ### WSX-002
 
-Where a user runs `iteron open <agent> <workspace>` and then
+Where a user runs `iteron open <workspace> <agent>` and then
 detaches (Ctrl-B D), when the user runs the same command again,
 the CLI shall reattach to the existing session without creating
 a duplicate
-([DR-002 §4](../decisions/002-iteron-cli-commands.md#4-iteron-open-agent-workspace----args)).
+([DR-002 §4](../decisions/002-iteron-cli-commands.md#4-iteron-open-workspace-command----args)).
 
 ## Listing Sessions
 

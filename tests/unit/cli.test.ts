@@ -30,8 +30,8 @@ describe('CLI smoke tests', () => {
 
   it('open --help shows argument descriptions', () => {
     const output = run(['open', '--help']);
-    expect(output).toContain('agent-or-workspace');
     expect(output).toContain('workspace');
+    expect(output).toContain('command');
   });
 
   it('ls --help shows command help', () => {

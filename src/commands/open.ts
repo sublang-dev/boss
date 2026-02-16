@@ -14,12 +14,45 @@ import { buildSessionName, validateSessionToken } from '../utils/session.js';
 const CONTAINER_HOME = '/home/iteron';
 
 /**
+ * Detect deprecated agent-first argument form and return swapped args.
+ *
+ * Old form: `iteron open <agent> [workspace]`
+ * New form: `iteron open <workspace> [command]`
+ *
+ * Returns swapped args and a hint message, or null if not deprecated.
+ */
+export function detectDeprecatedForm(
+  args: string[],
+  agents: IteronConfig['agents'],
+): { swapped: string[]; hint: string } | null {
+  if (args.length === 1 && agents[args[0]]) {
+    // `iteron open claude` → `iteron open ~ claude`
+    return {
+      swapped: ['~', args[0]],
+      hint: `Deprecated: use "iteron open ~ ${args[0]}" instead of "iteron open ${args[0]}". Old form will be removed in a future release.`,
+    };
+  }
+  if (args.length === 2 && agents[args[0]] && !agents[args[1]]) {
+    const wsErr = validateWorkspace(args[1]);
+    if (!wsErr || args[1] === '~') {
+      // `iteron open claude myproject` → `iteron open myproject claude`
+      return {
+        swapped: [args[1], args[0]],
+        hint: `Deprecated: use "iteron open ${args[1]} ${args[0]}" instead of "iteron open ${args[0]} ${args[1]}". Old form will be removed in a future release.`,
+      };
+    }
+  }
+  return null;
+}
+
+/**
  * Resolve arguments into command, session name, and working directory.
  *
+ * Grammar: `iteron open [workspace] [command] [-- args]`
+ *
  * - 0 args: shell in ~
- * - 1 arg matching agent name: agent in ~
- * - 1 arg not matching: shell in ~/workspace
- * - 2 args: first is agent/command, second is workspace
+ * - 1 arg: shell in workspace (~ for home, else ~/name)
+ * - 2 args: arg1=workspace, arg2=command (looked up in agents for binary)
  */
 export function resolveArgs(
   args: string[],
@@ -36,30 +69,25 @@ export function resolveArgs(
   }
 
   if (args.length === 1) {
-    const arg = args[0];
-    const agent = agents[arg];
-    if (agent) {
-      const tokenErr = validateSessionToken(arg, 'Agent name');
-      if (tokenErr) throw new Error(tokenErr);
-      // Known agent → run in home
+    const workspace = args[0];
+    if (workspace === '~') {
       return {
-        binary: agent.binary,
-        sessionName: buildSessionName(arg, '~'),
+        binary: defaultShell,
+        sessionName: buildSessionName(defaultShell, '~'),
         workDir: CONTAINER_HOME,
       };
     }
-    // Not an agent → shell in workspace
-    const err = validateWorkspace(arg);
+    const err = validateWorkspace(workspace);
     if (err) throw new Error(err);
     return {
       binary: defaultShell,
-      sessionName: buildSessionName(defaultShell, arg),
-      workDir: `${CONTAINER_HOME}/${arg}`,
+      sessionName: buildSessionName(defaultShell, workspace),
+      workDir: `${CONTAINER_HOME}/${workspace}`,
     };
   }
 
-  // 2 args: first is agent/command, second is workspace
-  const [commandArg, workspace] = args;
+  // 2 args: first is workspace, second is command
+  const [workspace, commandArg] = args;
   if (workspace !== '~') {
     const err = validateWorkspace(workspace);
     if (err) throw new Error(err);
@@ -68,13 +96,12 @@ export function resolveArgs(
   const tokenErr = validateSessionToken(commandArg, agent ? 'Agent name' : 'Command name');
   if (tokenErr) throw new Error(tokenErr);
   const binary = agent ? agent.binary : commandArg;
-  const commandName = commandArg; // Use the original name for session
   const location = workspace === '~' ? '~' : workspace;
   const workDir = workspace === '~' ? CONTAINER_HOME : `${CONTAINER_HOME}/${workspace}`;
 
   return {
     binary,
-    sessionName: buildSessionName(commandName, location),
+    sessionName: buildSessionName(commandArg, location),
     workDir,
   };
 }
@@ -86,10 +113,10 @@ export function extractPassthroughArgs(commandArgs: string[]): string[] {
 }
 
 export async function openCommand(
-  agentOrWorkspace?: string,
   workspace?: string,
+  command?: string,
   options?: { _: string[] },
-  command?: { args: string[] },
+  commandObj?: { args: string[] },
 ): Promise<void> {
   try {
     const config = await readConfig();
@@ -103,8 +130,16 @@ export async function openCommand(
 
     // Build positional args (0, 1, or 2)
     const positionalArgs: string[] = [];
-    if (agentOrWorkspace !== undefined) positionalArgs.push(agentOrWorkspace);
     if (workspace !== undefined) positionalArgs.push(workspace);
+    if (command !== undefined) positionalArgs.push(command);
+
+    // Detect deprecated agent-first form and swap args
+    const deprecated = detectDeprecatedForm(positionalArgs, config.agents);
+    if (deprecated) {
+      console.error(deprecated.hint);
+      positionalArgs.length = 0;
+      positionalArgs.push(...deprecated.swapped);
+    }
 
     const resolved = resolveArgs(positionalArgs, config.agents);
 
@@ -116,7 +151,7 @@ export async function openCommand(
     }
 
     // Pass through exactly what comes after the first `--`.
-    const extraArgs = extractPassthroughArgs(command?.args ?? []);
+    const extraArgs = extractPassthroughArgs(commandObj?.args ?? []);
 
     // Build tmux command
     const tmuxArgs = [

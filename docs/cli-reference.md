@@ -167,14 +167,14 @@ iteron stop
 
 ---
 
-## `iteron open [agent-or-workspace] [workspace] [-- args]`
+## `iteron open [workspace] [command] [-- args]`
 
 Open a workspace with an agent or shell. Attaches to an existing tmux session or creates a new one.
 
 ### Synopsis
 
 ```
-iteron open [agent-or-workspace] [workspace] [-- extra-args]
+iteron open [workspace] [command] [-- extra-args]
 ```
 
 ### Argument Resolution
@@ -182,27 +182,31 @@ iteron open [agent-or-workspace] [workspace] [-- extra-args]
 | Arguments | Command | Working Directory |
 | --- | --- | --- |
 | (none) | `bash` | `~` (home) |
-| `<agent-name>` | Agent binary | `~` (home) |
-| `<non-agent-name>` | `bash` | `~/workspace` |
-| `<agent> <workspace>` | Agent binary | `~/workspace` |
+| `<workspace>` | `bash` | `~/workspace` |
+| `<workspace> <agent>` | Agent binary | `~/workspace` |
+| `<workspace> <command>` | Command as-is | `~/workspace` |
 
-Agent names: `claude`, `codex`, `gemini`, `opencode` (from `~/.iteron/config.toml`). With a single argument, agent names take precedence. To open a shell in a workspace that shares a name with an agent, use the 2-arg form: `iteron open bash claude`.
+Use `~` as the workspace argument for the home directory. Agent names (`claude`, `codex`, `gemini`, `opencode`) are resolved to their configured binary from `~/.iteron/config.toml`.
 
 ### Pass-through Arguments
 
 Everything after `--` is passed to the agent binary:
 
 ```bash
-iteron open claude myproject -- --resume
+iteron open myproject claude -- --resume
 # Runs: claude --resume (in ~/myproject)
 ```
 
 ### Session Naming
 
-Sessions are named `{agent-or-command}@{location}`:
+Sessions are named `{command}@{location}`:
 - `claude@myproject`
 - `bash@~`
 - `codex@feature-x`
+
+### Deprecated Form
+
+The old `iteron open <agent> [workspace]` syntax is still recognized for backward compatibility. When detected, the CLI prints a migration hint to stderr and executes the intended command. This form will be removed in a future release.
 
 ### Examples
 
@@ -210,17 +214,17 @@ Sessions are named `{agent-or-command}@{location}`:
 # Open a shell in home directory
 iteron open
 
-# Open Claude Code in home directory
-iteron open claude
-
-# Open Codex CLI in a workspace
-iteron open codex myproject
-
 # Open a shell in a workspace
 iteron open myproject
 
+# Open Claude Code in home directory
+iteron open ~ claude
+
+# Open Codex CLI in a workspace
+iteron open myproject codex
+
 # Pass extra arguments to agent
-iteron open claude myproject -- --resume
+iteron open myproject claude -- --resume
 ```
 
 ### Exit Codes
