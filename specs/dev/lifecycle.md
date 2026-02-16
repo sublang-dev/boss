@@ -6,6 +6,25 @@
 This component defines implementation requirements for lifecycle
 commands that prepare and launch the local IterOn sandbox.
 
+## Initialization
+
+### LCD-003
+
+Where `iteron init` verifies the container runtime, initialization
+shall refuse to proceed if the runtime is not operating in rootless
+mode
+([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
+
+## Container Hardening
+
+### LCD-004
+
+Where `iteron start` launches the sandbox container, the container
+shall run with all Linux capabilities dropped, new-privilege
+acquisition disabled, and a read-only root filesystem with a writable
+tmpfs at `/tmp`
+([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
+
 ## Headless Authentication
 
 ### LCD-001

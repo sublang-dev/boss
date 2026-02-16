@@ -263,3 +263,31 @@ Where `iteron start` launches a container with a pre-existing
 completes, `/home/iteron/.local/bin` shall exist and be writable
 by the `iteron` user
 ([SBD-015](../dev/sandbox-image.md#sbd-015)).
+
+## Container Hardening
+
+### SBT-036
+
+Where `iteron start` has launched the container, container inspection
+shall show all Linux capabilities dropped
+([LCD-004](../dev/lifecycle.md#lcd-004)).
+
+### SBT-037
+
+Where `iteron start` has launched the container, container security
+options shall include no-new-privileges
+([LCD-004](../dev/lifecycle.md#lcd-004)).
+
+### SBT-038
+
+Where `iteron init` runs on a non-rootless container runtime, the
+command shall exit non-zero and refuse to proceed
+([LCD-003](../dev/lifecycle.md#lcd-003)).
+
+## Vulnerability Scanning
+
+### SBT-039
+
+Where the image is scanned with the accepted-CVE list applied as
+scanner exclusions, the scanner shall report zero CRITICAL or HIGH CVEs
+([SBD-018](../dev/sandbox-image.md#sbd-018)).

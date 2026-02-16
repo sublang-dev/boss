@@ -125,3 +125,28 @@ shall run `mkdir -p /home/iteron/.local/bin` inside the container
 after volume mount, ensuring the directory exists on pre-existing
 `iteron-data` volumes
 ([DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-layer)).
+
+## Vulnerability Scanning
+
+### SBD-016
+
+Where the image is built, globally installed npm packages and their
+transitive dependencies shall have no known CRITICAL or HIGH CVEs.
+
+### SBD-017
+
+Where an OS-level CVE in the base distribution has no available fix,
+the CVE ID and a justification shall be recorded in the accepted-CVE
+list at `image/.trivyignore`.
+
+### SBD-018
+
+Where the image CI workflow runs after a successful build, a
+vulnerability scanner shall fail the pipeline on any CRITICAL or HIGH
+CVE not listed in the accepted-CVE list.
+
+### SBD-019
+
+Where a local vulnerability scan is needed, `scripts/scan-image.sh`
+shall accept an optional image tag, apply the accepted-CVE list, and
+exit non-zero on any unaccepted CRITICAL or HIGH CVE.
