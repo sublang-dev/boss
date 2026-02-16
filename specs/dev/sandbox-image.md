@@ -108,3 +108,20 @@ Where the supported host OpenCode credential file is absent at
 container start, launch behavior shall omit any OpenCode
 credential file mapping
 ([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+## User-Local Tool Layer
+
+### SBD-014
+
+Where the image is built, the Dockerfile shall create
+`/home/iteron/.local/bin` owned by `iteron:iteron` and prepend it
+to `PATH` via `ENV`
+([DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-layer)).
+
+### SBD-015
+
+Where `iteron start` launches a container, the start sequence
+shall run `mkdir -p /home/iteron/.local/bin` inside the container
+after volume mount, ensuring the directory exists on pre-existing
+`iteron-data` volumes
+([DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-layer)).

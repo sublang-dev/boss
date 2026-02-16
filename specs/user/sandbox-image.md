@@ -88,3 +88,11 @@ credentials without a separate login; where credentials are absent,
 sandbox startup shall still succeed and provider API-key
 environment variables shall remain usable
 ([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
+
+## User-Local Tool Layer
+
+### SBX-011
+
+Where a user places a standalone binary in `~/.local/bin` inside
+the container, the binary shall be found by name on `PATH`
+([DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-layer)).

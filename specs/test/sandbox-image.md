@@ -240,3 +240,26 @@ repairing the known defect under test.
 Where an autonomous agent run fails an autonomous success
 criterion, emitted failure diagnostics shall include the run exit
 status and a bounded excerpt of captured run output.
+
+## User-Local Tool Layer
+
+### SBT-033
+
+Where `iteron-sandbox:<tag>` is built, `/home/iteron/.local/bin`
+shall exist and be writable by the `iteron` user
+([SBD-014](../dev/sandbox-image.md#sbd-014)).
+
+### SBT-034
+
+Where a standalone binary is placed in `/home/iteron/.local/bin`
+inside the container, the binary shall be executable by name
+without specifying its full path
+([SBX-011](../user/sandbox-image.md#sbx-011)).
+
+### SBT-035
+
+Where `iteron start` launches a container with a pre-existing
+`iteron-data` volume that lacks `~/.local/bin`, after start
+completes, `/home/iteron/.local/bin` shall exist and be writable
+by the `iteron` user
+([SBD-015](../dev/sandbox-image.md#sbd-015)).

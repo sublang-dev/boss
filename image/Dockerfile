@@ -44,6 +44,11 @@ RUN groupmod -n iteron node \
 # ---------- remove SUID/SGID ----------
 RUN find / -perm /6000 -type f -exec chmod a-s {} + 2>/dev/null || true
 
+# ---------- user-local tool layer ----------
+RUN mkdir -p /home/iteron/.local/bin \
+ && chown -R iteron:iteron /home/iteron/.local
+ENV PATH="/home/iteron/.local/bin:${PATH}"
+
 # ---------- container defaults ----------
 ENV NO_BROWSER=true
 

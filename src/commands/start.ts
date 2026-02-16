@@ -68,6 +68,9 @@ export async function startCommand(): Promise<void> {
     args.push(image, 'sleep', 'infinity');
     await podmanExec(args);
 
+    // Reconcile user-local tool directory (survives volume overlay on upgrade)
+    await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.local/bin']);
+
     // Verify
     if (await isContainerRunning(name)) {
       console.log(`Container "${name}" is running.`);
