@@ -10,8 +10,17 @@ import {
 import { readConfig, validateWorkspace } from '../utils/config.js';
 import type { IteronConfig } from '../utils/config.js';
 import { buildSessionName, validateSessionToken } from '../utils/session.js';
+import { homedir } from 'node:os';
 
 const CONTAINER_HOME = '/home/iteron';
+
+/**
+ * Normalize a workspace argument: if the shell expanded `~` to the
+ * host home directory, map it back to the literal `~` token.
+ */
+function normalizeHome(arg: string): string {
+  return arg === homedir() ? '~' : arg;
+}
 
 /**
  * Resolve arguments into command, session name, and working directory.
@@ -37,7 +46,7 @@ export function resolveArgs(
   }
 
   if (args.length === 1) {
-    const workspace = args[0];
+    const workspace = normalizeHome(args[0]);
     if (workspace === '~') {
       return {
         binary: defaultShell,
@@ -55,7 +64,8 @@ export function resolveArgs(
   }
 
   // 2 args: first is workspace, second is command
-  const [workspace, commandArg] = args;
+  const [rawWorkspace, commandArg] = args;
+  const workspace = normalizeHome(rawWorkspace);
   if (workspace !== '~') {
     const err = validateWorkspace(workspace);
     if (err) throw new Error(err);

@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { extractPassthroughArgs, resolveArgs } from '../../src/commands/open.js';
 import { validateWorkspace } from '../../src/utils/config.js';
 import type { IteronConfig } from '../../src/utils/config.js';
+import { homedir } from 'node:os';
 
 const agents: IteronConfig['agents'] = {
   claude: { binary: 'claude' },
@@ -25,6 +26,21 @@ describe('resolveArgs', () => {
     const result = resolveArgs(['~'], agents);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
+    expect(result.workDir).toBe('/home/iteron');
+  });
+
+  it('1 arg shell-expanded ~ → shell in home', () => {
+    // Shell expands unquoted ~ to $HOME before CLI sees it
+    const result = resolveArgs([homedir()], agents);
+    expect(result.binary).toBe('bash');
+    expect(result.sessionName).toBe('bash@~');
+    expect(result.workDir).toBe('/home/iteron');
+  });
+
+  it('2 args shell-expanded ~ and agent → agent in home', () => {
+    const result = resolveArgs([homedir(), 'claude'], agents);
+    expect(result.binary).toBe('claude');
+    expect(result.sessionName).toBe('claude@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
