@@ -68,7 +68,8 @@ exist:
 `/home/iteron/.claude/settings.json`,
 `/home/iteron/.codex/config.toml`,
 `/home/iteron/.gemini/settings.json`,
-`/home/iteron/.config/opencode/opencode.json`, and
+`/home/iteron/.config/opencode/opencode.json`,
+`/etc/tmux.conf`, and
 `/home/iteron/.tmux.conf`
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary),
 [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
@@ -291,3 +292,18 @@ command shall exit non-zero and refuse to proceed
 Where the image is scanned with the accepted-CVE list applied as
 scanner exclusions, the scanner shall report zero CRITICAL or HIGH CVEs
 ([SBD-018](../dev/sandbox-image.md#sbd-018)).
+
+## Tmux Configuration
+
+### SBT-040
+
+Where `iteron-sandbox:<tag>` is built, `/etc/tmux.conf` shall
+contain `set-clipboard on` and `allow-passthrough on`
+([SBD-020](../dev/sandbox-image.md#sbd-020)).
+
+### SBT-041
+
+Where `iteron-sandbox:<tag>` is built, the image-provided default
+`/home/iteron/.tmux.conf` shall contain only comment lines and blank
+lines
+([SBD-021](../dev/sandbox-image.md#sbd-021)).

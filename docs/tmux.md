@@ -10,9 +10,39 @@ IterOn runs each agent session inside a tmux session within the container. This 
 | Action | Keys / Command |
 | --- | --- |
 | Detach from session | `Ctrl-B D` |
-| Reattach to session | `iteron open <agent> <workspace>` |
+| Reattach to session | `iteron open <workspace> <agent>` |
 
 Detaching leaves the agent running in the background. Reattach at any time with the same `iteron open` command you used to start it.
+
+## Clipboard (Copy & Paste)
+
+The sandbox enables OSC 52 clipboard passthrough so text copied inside the container tmux session reaches the host system clipboard.
+
+**How it works:** programs inside tmux emit an OSC 52 escape sequence → tmux forwards it to the host terminal emulator → the terminal writes to the system clipboard.
+
+### Copying text
+
+- **Copy mode:** `Ctrl-B [` to enter copy mode, select text with arrow keys, press `Enter` to copy.
+- **Mouse:** select text with the mouse (mouse mode is enabled by default).
+
+### Pasting text
+
+Use your host terminal's paste shortcut:
+- macOS: `Cmd-V`
+- Linux / Windows: `Ctrl-Shift-V`
+
+### Compatible terminals
+
+Many modern terminals support OSC 52, including iTerm2, Windows Terminal, Alacritty, kitty, WezTerm, and foot. Support varies by terminal and version — check your terminal's documentation. If clipboard passthrough is blocked by your terminal or security settings, you can still select text with your terminal's native selection and copy with the usual shortcut.
+
+### Disabling clipboard
+
+Add to `~/.tmux.conf` inside the container:
+
+```
+set -g set-clipboard off
+set -g allow-passthrough off
+```
 
 ## Pane Splits
 
@@ -49,35 +79,37 @@ Mouse scrolling is enabled by default — scroll with your trackpad or mouse whe
 
 ## Default Configuration
 
-The sandbox ships with this tmux config (`~/.tmux.conf`):
+The sandbox uses a two-tier tmux configuration:
+
+1. **System config** (`/etc/tmux.conf`) — read-only defaults baked into the image:
 
 ```
-# Scrollback history
 set -g history-limit 10000
-
-# Terminal
-set -g default-terminal "screen-256color"
-
-# Mouse support
+set -g default-terminal "tmux-256color"
 set -g mouse on
-
-# Status bar
+set -g set-clipboard on
+set -g allow-passthrough on
 set -g status-left "[#{session_name}] "
 set -g status-right "%H:%M %Y-%m-%d"
 ```
+
+2. **User config** (`~/.tmux.conf`) — your overrides, persisted on the `iteron-data` volume.
+
+tmux loads the system config first, then the user config. Any setting in `~/.tmux.conf` overrides the corresponding system default.
 
 Key defaults:
 - **10,000 lines** of scrollback history
 - **256-color** terminal support
 - **Mouse mode** enabled (click panes, scroll, resize)
+- **Clipboard passthrough** enabled (OSC 52)
 - **Status bar** shows session name and timestamp
 
 ## Custom Configuration
 
-To override the default tmux config, create or edit `~/.tmux.conf` inside the container:
+To add or override tmux settings, edit `~/.tmux.conf` inside the container:
 
 ```bash
-iteron open
+iteron open ~
 # Now in a shell inside the container:
 vi ~/.tmux.conf
 ```
@@ -87,3 +119,5 @@ Changes persist across container restarts (stored on the `iteron-data` volume). 
 ```bash
 tmux source-file ~/.tmux.conf
 ```
+
+System defaults in `/etc/tmux.conf` are restored automatically on image updates.

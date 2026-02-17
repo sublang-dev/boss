@@ -59,6 +59,7 @@ COPY --chown=iteron:iteron conf/claude-settings.json  /home/iteron/.claude/setti
 COPY --chown=iteron:iteron conf/codex-config.toml     /home/iteron/.codex/config.toml
 COPY --chown=iteron:iteron conf/gemini-settings.json  /home/iteron/.gemini/settings.json
 COPY --chown=iteron:iteron conf/opencode.json         /home/iteron/.config/opencode/opencode.json
+COPY conf/tmux-system.conf                             /etc/tmux.conf
 COPY --chown=iteron:iteron conf/tmux.conf             /home/iteron/.tmux.conf
 
 USER iteron

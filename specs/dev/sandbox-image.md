@@ -48,7 +48,8 @@ provision default config files for agents and tmux at:
 `/home/iteron/.claude/settings.json`,
 `/home/iteron/.codex/config.toml`,
 `/home/iteron/.gemini/settings.json`,
-`/home/iteron/.config/opencode/opencode.json`, and
+`/home/iteron/.config/opencode/opencode.json`,
+`/etc/tmux.conf`, and
 `/home/iteron/.tmux.conf`
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary),
 [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
@@ -150,3 +151,17 @@ CVE not listed in the accepted-CVE list.
 Where a local vulnerability scan is needed, `scripts/scan-image.sh`
 shall accept an optional image tag, apply the accepted-CVE list, and
 exit non-zero on any unaccepted CRITICAL or HIGH CVE.
+
+## Tmux Configuration
+
+### SBD-020
+
+Where the image is built, tmux system configuration at `/etc/tmux.conf`
+shall enable OSC 52 clipboard passthrough (`set-clipboard on`,
+`allow-passthrough on`).
+
+### SBD-021
+
+Where the image is built, tmux user configuration at `~/.tmux.conf`
+shall contain only override directives, deferring defaults to the
+system configuration.
