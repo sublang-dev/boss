@@ -26,6 +26,7 @@ Authoring rules: [dev/style.md](dev/style.md).
 | DR-000 | [000-initial-specs-structure.md](decisions/000-initial-specs-structure.md) | Specs directory layout, GEARS syntax, naming conventions |
 | DR-001 | [001-sandbox-architecture.md](decisions/001-sandbox-architecture.md) | OCI container design, Podman, tmux mapping, auth strategies |
 | DR-002 | [002-iteron-cli-commands.md](decisions/002-iteron-cli-commands.md) | Workspace model and 6-command CLI (init/start/stop/open/ls/rm) |
+| DR-003 | [003-runtime-profiled-auth.md](decisions/003-runtime-profiled-auth.md) | Runtime-profiled auth: local (file mounts) vs AWS (Secrets Manager) |
 
 ## Iterations
 
