@@ -16,26 +16,28 @@ Detaching leaves the agent running in the background. Reattach at any time with 
 
 ## Clipboard (Copy & Paste)
 
-The sandbox enables OSC 52 clipboard passthrough so text copied inside the container tmux session reaches the host system clipboard.
+The sandbox enables OSC 52 clipboard passthrough (`set-clipboard on`, `allow-passthrough on`) so that mouse-drag and copy-mode selections reach the host system clipboard automatically. This works on terminals that support OSC 52, including iTerm2, WezTerm, Alacritty, kitty, and Windows Terminal.
 
-**How it works:** programs inside tmux emit an OSC 52 escape sequence → tmux forwards it to the host terminal emulator → the terminal writes to the system clipboard.
+### OSC 52 terminals (iTerm2, WezTerm, Alacritty, kitty, etc.)
 
-### Copying text
+Mouse drag copies automatically:
 
-- **Copy mode:** `Ctrl-B [` to enter copy mode, select text with arrow keys, press `Enter` to copy.
-- **Mouse:** select text with the mouse (mouse mode is enabled by default).
+1. **Drag** to select text.
+2. **Release** — copied to host clipboard.
+3. **Paste** with `Cmd-V` (macOS) or `Ctrl-Shift-V` (Linux/Windows).
 
-### Pasting text
+Keyboard copy mode also works: `Ctrl-B [`, select with arrow keys, `Enter` to copy.
 
-Use your host terminal's paste shortcut:
-- macOS: `Cmd-V`
-- Linux / Windows: `Ctrl-Shift-V`
+### Terminal.app (no OSC 52 support)
 
-### Compatible terminals
+Terminal.app does not support OSC 52. Use the mouse-mode toggle to do native selection:
 
-Many modern terminals support OSC 52, including iTerm2, Windows Terminal, Alacritty, kitty, WezTerm, and foot. Support varies by terminal and version — check your terminal's documentation. If clipboard passthrough is blocked by your terminal or security settings, you can still select text with your terminal's native selection and copy with the usual shortcut.
+1. `Ctrl-B m` — turn mouse mode **off** (global; affects all IterOn tmux sessions in this container).
+2. **Drag** to select text, `Cmd-C` to copy.
+3. `Ctrl-B m` — turn mouse mode **on** again.
+4. **Paste** with `Cmd-V`.
 
-### Disabling clipboard
+### Disabling clipboard passthrough
 
 Add to `~/.tmux.conf` inside the container:
 
@@ -89,6 +91,9 @@ set -g default-terminal "tmux-256color"
 set -g mouse on
 set -g set-clipboard on
 set -g allow-passthrough on
+bind-key -T copy-mode MouseDragEnd1Pane send-keys -X copy-selection-and-cancel
+bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-selection-and-cancel
+bind-key m if-shell -F '#{mouse}' 'set -g mouse off; display-message "Mouse off"' 'set -g mouse on; display-message "Mouse on"'
 set -g status-left "[#{session_name}] "
 set -g status-right "%H:%M %Y-%m-%d"
 ```
@@ -101,7 +106,9 @@ Key defaults:
 - **10,000 lines** of scrollback history
 - **256-color** terminal support
 - **Mouse mode** enabled (click panes, scroll, resize)
-- **Clipboard passthrough** enabled (OSC 52)
+- **Clipboard passthrough** enabled (OSC 52 for compatible terminals)
+- **Mouse drag copy** — drag to select, release to copy
+- **Mouse toggle** — `Ctrl-B m` to toggle mouse mode (for Terminal.app copy)
 - **Status bar** shows session name and timestamp
 
 ## Custom Configuration

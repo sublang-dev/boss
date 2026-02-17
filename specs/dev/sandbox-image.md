@@ -165,3 +165,10 @@ shall enable OSC 52 clipboard passthrough (`set-clipboard on`,
 Where the image is built, tmux user configuration at `~/.tmux.conf`
 shall contain only override directives, deferring defaults to the
 system configuration.
+
+### SBD-022
+
+Where the image is built, tmux system configuration shall bind
+`MouseDragEnd1Pane` to `copy-selection-and-cancel` in both
+`copy-mode` and `copy-mode-vi`, and bind a prefix key to toggle
+`mouse` mode on/off.

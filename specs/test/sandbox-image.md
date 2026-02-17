@@ -307,3 +307,11 @@ Where `iteron-sandbox:<tag>` is built, the image-provided default
 `/home/iteron/.tmux.conf` shall contain only comment lines and blank
 lines
 ([SBD-021](../dev/sandbox-image.md#sbd-021)).
+
+### SBT-042
+
+Where `iteron-sandbox:<tag>` is built, `/etc/tmux.conf` shall bind
+`MouseDragEnd1Pane` to `copy-selection-and-cancel` in both
+`copy-mode` and `copy-mode-vi`, and bind a prefix key to toggle
+mouse mode
+([SBD-022](../dev/sandbox-image.md#sbd-022)).
