@@ -28,11 +28,11 @@ Item IDs shall not be modified once committed; new items shall use higher IDs.
 
 ### STYLE-005
 
-Decision records shall follow [ADR](https://github.com/npryce/adr-tools) format with Status, Context, Decision, and Consequences sections.
+Decision records shall follow [ADR](https://github.com/npryce/adr-tools) format with Status, Context, Decision, and Consequences sections, written concisely.
 
 ### STYLE-006
 
-Decision records shall cite all external references with numbered markers (e.g., `[1]`) linked to specific URLs in a `## References` section that has no uncited entries.
+Decision records shall cite authoritative references (e.g., official docs) with numbered markers (e.g., `[1]`) linked to specific URLs in a `## References` section that has no uncited entries.
 
 ### STYLE-007
 
