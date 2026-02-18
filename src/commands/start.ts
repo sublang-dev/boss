@@ -86,12 +86,22 @@ export async function startCommand(): Promise<void> {
     // Reconcile user-local tool directory (survives volume overlay on upgrade)
     await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.local/bin']);
 
-    // DR-003 §2: write SSH config inside container when key is mounted
+    // DR-003 §2: reconcile managed SSH config in container
     if (sshKeyBasename) {
-      await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.ssh']);
+      // Write managed include file with IdentityFile directive
+      await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.ssh/config.d']);
       await podmanExec(['exec', name, 'sh', '-c',
-        `printf 'IdentityFile /run/iteron/ssh/${sshKeyBasename}\\n' > /home/iteron/.ssh/config`]);
-      await podmanExec(['exec', name, 'chmod', '0600', '/home/iteron/.ssh/config']);
+        'printf "IdentityFile %s\\n" "$1" > "$2"',
+        'iteron-ssh', `/run/iteron/ssh/${sshKeyBasename}`,
+        '/home/iteron/.ssh/config.d/iteron.conf']);
+      await podmanExec(['exec', name, 'chmod', '0600', '/home/iteron/.ssh/config.d/iteron.conf']);
+    } else {
+      // Remove stale managed config from a previous keyfile start
+      try {
+        await podmanExec(['exec', name, 'rm', '-f', '/home/iteron/.ssh/config.d/iteron.conf']);
+      } catch {
+        // config.d may not exist yet — nothing to clean
+      }
     }
 
     // Verify

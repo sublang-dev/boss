@@ -27,13 +27,22 @@ export interface AgentConfig {
   binary: string;
 }
 
+export type SshAuthMode = 'keyfile' | 'off';
+
+const VALID_SSH_MODES: ReadonlySet<SshAuthMode> = new Set(['keyfile', 'off']);
+
 export interface SshAuthConfig {
-  mode: 'keyfile' | 'off';
+  mode: SshAuthMode;
   keyfile?: string;
 }
 
+/** Profiles defined by DR-003 §1. Only 'local' is currently implemented. */
+export type AuthProfile = 'local' | 'aws';
+
+const SUPPORTED_AUTH_PROFILES: ReadonlySet<AuthProfile> = new Set(['local']);
+
 export interface AuthConfig {
-  profile: 'local';
+  profile: AuthProfile;
   ssh?: SshAuthConfig;
 }
 
@@ -159,6 +168,26 @@ export async function readConfig(): Promise<IteronConfig> {
     const err = validateSessionToken(agentName, 'Agent name');
     if (err) {
       throw new Error(`Invalid config [agents.${agentName}]: ${err}`);
+    }
+  }
+
+  if (config.auth?.profile && !SUPPORTED_AUTH_PROFILES.has(config.auth.profile)) {
+    throw new Error(
+      `Unsupported auth profile "${config.auth.profile}". Supported: ${[...SUPPORTED_AUTH_PROFILES].join(', ')}.`,
+    );
+  }
+
+  if (config.auth?.ssh) {
+    const { mode } = config.auth.ssh;
+    if (!mode) {
+      throw new Error(
+        `Missing required [auth.ssh] mode. Valid: ${[...VALID_SSH_MODES].join(', ')}.`,
+      );
+    }
+    if (!VALID_SSH_MODES.has(mode)) {
+      throw new Error(
+        `Invalid [auth.ssh] mode "${mode}". Valid: ${[...VALID_SSH_MODES].join(', ')}.`,
+      );
     }
   }
 

@@ -276,12 +276,12 @@ keyfile = "${keyPath}"
     const keyContent = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/id_ed25519']);
     expect(keyContent).toContain('fake-ssh-private-key-content');
 
-    // Verify ~/.ssh/config contains IdentityFile directive
-    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/iteron/.ssh/config']);
+    // Verify managed include file contains IdentityFile directive
+    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/iteron/.ssh/config.d/iteron.conf']);
     expect(sshConfig).toContain('IdentityFile /run/iteron/ssh/id_ed25519');
 
-    // Verify ~/.ssh/config has restrictive permissions
-    const perms = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'stat', '-c', '%a', '/home/iteron/.ssh/config']);
+    // Verify managed include file has restrictive permissions
+    const perms = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'stat', '-c', '%a', '/home/iteron/.ssh/config.d/iteron.conf']);
     expect(perms).toBe('600');
   });
 
@@ -292,6 +292,70 @@ keyfile = "${keyPath}"
 
   it('stops container after keyfile test', async () => {
     const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+  });
+
+  // Regression test for keyfile → off transition (self-contained)
+  it('cleans stale SSH config when switching from keyfile to off', async () => {
+    const keyPath = join(sshKeyDir, 'id_ed25519');
+
+    // Phase 1: start with keyfile to create managed config on volume
+    const keyfileToml = `[container]
+name = "${SSH_TEST_CONTAINER}"
+image = "${TEST_IMAGE}"
+memory = "512m"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+mode = "keyfile"
+keyfile = "${keyPath}"
+`;
+    writeFileSync(join(sshConfigDir, 'config.toml'), keyfileToml, 'utf-8');
+
+    const { startCommand } = await import('../../src/commands/start.js');
+    await startCommand();
+
+    // Confirm managed config was created
+    execFileSync('podman', ['exec', SSH_TEST_CONTAINER, 'test', '-f',
+      '/home/iteron/.ssh/config.d/iteron.conf'], { stdio: 'ignore' });
+
+    const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+
+    // Phase 2: switch to mode=off and restart
+    const offToml = `[container]
+name = "${SSH_TEST_CONTAINER}"
+image = "${TEST_IMAGE}"
+memory = "512m"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+mode = "off"
+`;
+    writeFileSync(join(sshConfigDir, 'config.toml'), offToml, 'utf-8');
+
+    await startCommand();
+
+    // The managed include file must not exist (cleaned up on start)
+    let exists = true;
+    try {
+      execFileSync('podman', ['exec', SSH_TEST_CONTAINER, 'test', '-f',
+        '/home/iteron/.ssh/config.d/iteron.conf'], { stdio: 'ignore' });
+    } catch {
+      exists = false;
+    }
+    expect(exists).toBe(false);
+
     await stopCommand();
   });
 
@@ -402,9 +466,10 @@ binary = "claude"
     expect(knownHosts).toContain('gitlab.com');
   });
 
-  it.skipIf(!HAS_SANDBOX_IMAGE)('has StrictHostKeyChecking yes in ssh_config.d', () => {
+  it.skipIf(!HAS_SANDBOX_IMAGE)('has StrictHostKeyChecking and managed Include in ssh_config.d', () => {
     const sshConf = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/etc/ssh/ssh_config.d/iteron.conf']);
     expect(sshConf).toContain('StrictHostKeyChecking yes');
+    expect(sshConf).toContain('Include /home/iteron/.ssh/config.d/*.conf');
   });
 
   it.skipIf(!HAS_SANDBOX_IMAGE)('stops container after sandbox-image tests', async () => {

@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 #
-# Enforce strict host-key checking (DR-003 §2).
+# Enforce strict host-key checking and include managed SSH config (DR-003 §2).
+# The glob silently matches nothing when no managed config exists.
 
 StrictHostKeyChecking yes
+Include /home/iteron/.ssh/config.d/*.conf

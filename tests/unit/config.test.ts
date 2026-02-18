@@ -271,6 +271,63 @@ binary = "claude"
     expect(config.auth!.ssh!.mode).toBe('off');
     expect(config.auth!.ssh!.keyfile).toBe('~/.ssh/id_ed25519');
   });
+
+  it('readConfig rejects unsupported auth profile', async () => {
+    const { readConfig } = await import('../../src/utils/config.js');
+    const toml = `[container]
+name = "iteron-sandbox"
+image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+memory = "16g"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "aws"
+`;
+    writeFileSync(join(tmpDir, 'config.toml'), toml, 'utf-8');
+    await expect(readConfig()).rejects.toThrow(/Unsupported auth profile "aws"/);
+  });
+
+  it('readConfig rejects invalid auth.ssh.mode', async () => {
+    const { readConfig } = await import('../../src/utils/config.js');
+    const toml = `[container]
+name = "iteron-sandbox"
+image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+memory = "16g"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+mode = "agent-forwarding"
+`;
+    writeFileSync(join(tmpDir, 'config.toml'), toml, 'utf-8');
+    await expect(readConfig()).rejects.toThrow(/Invalid \[auth\.ssh\] mode "agent-forwarding"/);
+  });
+
+  it('readConfig rejects [auth.ssh] with missing mode', async () => {
+    const { readConfig } = await import('../../src/utils/config.js');
+    const toml = `[container]
+name = "iteron-sandbox"
+image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+memory = "16g"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+keyfile = "~/.ssh/id_rsa"
+`;
+    writeFileSync(join(tmpDir, 'config.toml'), toml, 'utf-8');
+    await expect(readConfig()).rejects.toThrow(/Missing required \[auth\.ssh\] mode/);
+  });
 });
 
 describe('resolveSshKeyPath', () => {

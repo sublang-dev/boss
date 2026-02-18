@@ -57,9 +57,11 @@ keyfile = "~/.ssh/id_ed25519"  # host path; mounted read-only
 ```
 
 When `mode = "keyfile"`, `iteron start` bind-mounts the specified
-private key read-only into `/home/iteron/.ssh/<basename>` (mode 0600),
-preserving the original filename. An `IdentityFile` directive pointing
-to the mounted path is written to `/home/iteron/.ssh/config`.
+private key read-only into a staging tmpfs at `/run/iteron/ssh/<basename>`.
+An `IdentityFile` directive pointing to the mounted path is written
+to a managed include file (`~/.ssh/config.d/iteron.conf`), preserving
+any user SSH config. When mode is `"off"` or absent, the managed file
+is removed to prevent stale directives from persisting on the volume.
 
 The image pre-seeds `/etc/ssh/ssh_known_hosts` with host keys for
 GitHub \[1] and GitLab.com \[6]. Users can append additional host keys by
@@ -73,7 +75,11 @@ A reverse SSH tunnel workaround adds complexity disproportionate to
 the security benefit, given that agents already have full in-container
 permissions ([DR-001 §1](001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
-### 3. AWS profile
+### 3. AWS profile *(designed — not yet implemented)*
+
+> **Status:** The `aws` profile is specified here for architectural
+> completeness. The CLI currently rejects `profile = "aws"` at config
+> load time.
 
 **Agent API keys:** ECS task definition `secrets` field \[4] referencing
 Secrets Manager ARNs. Rotatable. Never stored in the image, repository,

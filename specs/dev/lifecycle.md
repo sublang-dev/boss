@@ -49,8 +49,10 @@ processes in the container environment
 
 Where `iteron start` is invoked with `[auth.ssh] mode = "keyfile"`,
 the command shall bind-mount the host key file read-only into the
-container and write an `IdentityFile` directive in the container SSH
-config pointing to the mounted path
+container and write an `IdentityFile` directive to a managed include
+file (`~/.ssh/config.d/iteron.conf`), preserving any user SSH config.
+When SSH is off or unconfigured, the managed file shall be removed to
+prevent stale `IdentityFile` directives from persisting on the volume
 ([DR-003 §2](../decisions/003-runtime-profiled-auth.md#2-local-profile)).
 
 ### LCD-006
