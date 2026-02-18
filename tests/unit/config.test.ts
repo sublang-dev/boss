@@ -462,4 +462,18 @@ describe('uniqueSshKeyNames', () => {
     expect(result.get('/home/user/gitlab/id_ed25519')).toBe('gitlab_id_ed25519');
     expect(result.get('/home/user/.ssh/id_rsa')).toBe('id_rsa');
   });
+
+  it('appends suffix when parent dir names also collide', async () => {
+    const { uniqueSshKeyNames } = await import('../../src/utils/config.js');
+    const result = uniqueSshKeyNames([
+      '/a/work/id_ed25519',
+      '/b/work/id_ed25519',
+    ]);
+    const names = [...result.values()];
+    // Both must be unique
+    expect(new Set(names).size).toBe(2);
+    // First gets work_id_ed25519, second gets work_id_ed25519_2
+    expect(result.get('/a/work/id_ed25519')).toBe('work_id_ed25519');
+    expect(result.get('/b/work/id_ed25519')).toBe('work_id_ed25519_2');
+  });
 });

@@ -246,13 +246,21 @@ export function uniqueSshKeyNames(paths: string[]): Map<string, string> {
     arr.push(p);
     groups.set(base, arr);
   }
+  const used = new Set<string>();
   for (const [base, members] of groups) {
     if (members.length === 1) {
       result.set(members[0], base);
+      used.add(base);
     } else {
       for (const p of members) {
-        const parent = basename(dirname(p));
-        result.set(p, `${parent}_${base}`);
+        let candidate = `${basename(dirname(p))}_${base}`;
+        if (used.has(candidate)) {
+          let i = 2;
+          while (used.has(`${candidate}_${i}`)) i++;
+          candidate = `${candidate}_${i}`;
+        }
+        result.set(p, candidate);
+        used.add(candidate);
       }
     }
   }
