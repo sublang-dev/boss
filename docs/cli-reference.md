@@ -186,7 +186,7 @@ iteron open [workspace] [command] [-- extra-args]
 | `<workspace> <agent>` | Agent binary | `~/workspace` |
 | `<workspace> <command>` | Command as-is | `~/workspace` |
 
-Use `~` as the workspace argument for the home directory. Agent names (`claude`, `codex`, `gemini`, `opencode`) are resolved to their configured binary from `~/.iteron/config.toml`.
+Use `~` as the workspace argument for the home directory. Agent names (`claude`, `codex`, `gemini`, `opencode`) are recognized as built-in agents; any other command is used as-is.
 
 ### Pass-through Arguments
 

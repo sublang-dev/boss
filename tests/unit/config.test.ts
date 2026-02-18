@@ -40,16 +40,9 @@ describe('defaultConfig', () => {
     expect(config.container.image).toBe('my-custom:image');
   });
 
-  it('includes all four agents', async () => {
-    const { defaultConfig } = await import('../../src/utils/config.js');
-    const config = defaultConfig();
-    expect(Object.keys(config.agents)).toEqual([
-      'claude', 'codex', 'gemini', 'opencode',
-    ]);
-    expect(config.agents['claude'].binary).toBe('claude');
-    expect(config.agents['codex'].binary).toBe('codex');
-    expect(config.agents['gemini'].binary).toBe('gemini');
-    expect(config.agents['opencode'].binary).toBe('opencode');
+  it('KNOWN_AGENTS contains all four agent names', async () => {
+    const { KNOWN_AGENTS } = await import('../../src/utils/config.js');
+    expect([...KNOWN_AGENTS]).toEqual(['claude', 'codex', 'gemini', 'opencode']);
   });
 });
 
@@ -62,7 +55,6 @@ describe('writeConfig / readConfig', () => {
     const config = await readConfig();
     expect(config.container.name).toBe('iteron-sandbox');
     expect(config.container.memory).toBe('16g');
-    expect(config.agents['claude'].binary).toBe('claude');
   });
 
   it('writeConfig is idempotent (returns false on second call)', async () => {
@@ -84,71 +76,6 @@ describe('writeConfig / readConfig', () => {
     await expect(readConfig()).rejects.toThrow(/Config not found/);
   });
 
-  it('readConfig migrates legacy agent keys to canonical names', async () => {
-    const { readConfig } = await import('../../src/utils/config.js');
-    const legacyToml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
-memory = "16g"
-
-[agents.claude-code]
-binary = "claude"
-
-[agents.codex-cli]
-binary = "codex"
-
-[agents.gemini-cli]
-binary = "gemini"
-
-[agents.opencode]
-binary = "opencode"
-`;
-    writeFileSync(join(tmpDir, 'config.toml'), legacyToml, 'utf-8');
-    const config = await readConfig();
-    expect(Object.keys(config.agents)).toEqual(
-      expect.arrayContaining(['claude', 'codex', 'gemini', 'opencode']),
-    );
-    expect(config.agents['claude'].binary).toBe('claude');
-    expect(config.agents['codex'].binary).toBe('codex');
-    expect(config.agents['gemini'].binary).toBe('gemini');
-    expect(config.agents['claude-code' as string]).toBeUndefined();
-    expect(config.agents['codex-cli' as string]).toBeUndefined();
-    expect(config.agents['gemini-cli' as string]).toBeUndefined();
-  });
-
-  it('readConfig preserves canonical keys when both legacy and canonical exist', async () => {
-    const { readConfig } = await import('../../src/utils/config.js');
-    // Edge case: config has both claude-code and claude (user partially migrated)
-    const mixedToml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
-memory = "16g"
-
-[agents.claude-code]
-binary = "old-binary"
-
-[agents.claude]
-binary = "claude"
-`;
-    writeFileSync(join(tmpDir, 'config.toml'), mixedToml, 'utf-8');
-    const config = await readConfig();
-    // Canonical key wins; legacy key left as-is (not overwritten)
-    expect(config.agents['claude'].binary).toBe('claude');
-  });
-
-  it('readConfig rejects agent names containing @', async () => {
-    const { readConfig } = await import('../../src/utils/config.js');
-    const badToml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
-memory = "16g"
-
-[agents."bad@agent"]
-binary = "bad"
-`;
-    writeFileSync(join(tmpDir, 'config.toml'), badToml, 'utf-8');
-    await expect(readConfig()).rejects.toThrow(/Agent name must not contain "@"/);
-  });
 });
 
 describe('reconcileConfigImage', () => {
@@ -230,9 +157,6 @@ name = "iteron-sandbox"
 image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
 memory = "16g"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "local"
 
@@ -255,9 +179,6 @@ name = "iteron-sandbox"
 image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
 memory = "16g"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "local"
 
@@ -278,9 +199,6 @@ name = "iteron-sandbox"
 image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
 memory = "16g"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "local"
 
@@ -298,9 +216,6 @@ keyfiles = []
 name = "iteron-sandbox"
 image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
 memory = "16g"
-
-[agents.claude]
-binary = "claude"
 `;
     writeFileSync(join(tmpDir, 'config.toml'), toml, 'utf-8');
     const config = await readConfig();
@@ -324,9 +239,6 @@ name = "iteron-sandbox"
 image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
 memory = "16g"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "aws"
 `;
@@ -340,9 +252,6 @@ profile = "aws"
 name = "iteron-sandbox"
 image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
 memory = "16g"
-
-[agents.claude]
-binary = "claude"
 
 [auth]
 profile = "local"
@@ -361,9 +270,6 @@ name = "iteron-sandbox"
 image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
 memory = "16g"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "local"
 
@@ -378,7 +284,7 @@ keyfile = "~/.ssh/id_rsa"
 describe('resolveSshKeyPaths', () => {
   it('returns empty array when auth is undefined', async () => {
     const { resolveSshKeyPaths } = await import('../../src/utils/config.js');
-    const result = resolveSshKeyPaths({ container: {} as never, agents: {} });
+    const result = resolveSshKeyPaths({ container: {} as never });
     expect(result).toEqual([]);
   });
 
@@ -386,7 +292,6 @@ describe('resolveSshKeyPaths', () => {
     const { resolveSshKeyPaths } = await import('../../src/utils/config.js');
     const result = resolveSshKeyPaths({
       container: {} as never,
-      agents: {},
       auth: { profile: 'local', ssh: { mode: 'off' } },
     });
     expect(result).toEqual([]);
@@ -396,7 +301,6 @@ describe('resolveSshKeyPaths', () => {
     const { resolveSshKeyPaths } = await import('../../src/utils/config.js');
     const result = resolveSshKeyPaths({
       container: {} as never,
-      agents: {},
       auth: { profile: 'local', ssh: { mode: 'keyfile', keyfiles: ['~/.ssh/id_ed25519', '~/.ssh/id_rsa'] } },
     });
     expect(result).toEqual([
@@ -409,7 +313,6 @@ describe('resolveSshKeyPaths', () => {
     const { resolveSshKeyPaths } = await import('../../src/utils/config.js');
     const result = resolveSshKeyPaths({
       container: {} as never,
-      agents: {},
       auth: { profile: 'local', ssh: { mode: 'keyfile', keyfile: '~/.ssh/id_rsa' } },
     });
     expect(result).toEqual([join(homedir(), '.ssh', 'id_rsa')]);
@@ -419,7 +322,6 @@ describe('resolveSshKeyPaths', () => {
     const { resolveSshKeyPaths } = await import('../../src/utils/config.js');
     const result = resolveSshKeyPaths({
       container: {} as never,
-      agents: {},
       auth: { profile: 'local', ssh: { mode: 'keyfile' } },
     });
     expect(result).toEqual([join(homedir(), '.ssh', 'id_ed25519')]);
@@ -429,7 +331,6 @@ describe('resolveSshKeyPaths', () => {
     const { resolveSshKeyPaths } = await import('../../src/utils/config.js');
     const result = resolveSshKeyPaths({
       container: {} as never,
-      agents: {},
       auth: { profile: 'local', ssh: { mode: 'keyfile', keyfiles: ['/tmp/my-key', '/opt/keys/deploy'] } },
     });
     expect(result).toEqual(['/tmp/my-key', '/opt/keys/deploy']);

@@ -69,18 +69,6 @@ describe('IR-005 headless auth (integration)', { timeout: 120_000, sequential: t
 name = "${TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
-
-[agents.claude]
-binary = "claude"
-
-[agents.codex]
-binary = "codex"
-
-[agents.gemini]
-binary = "gemini"
-
-[agents.opencode]
-binary = "opencode"
 `;
     writeFileSync(join(configDir, 'config.toml'), configToml, 'utf-8');
 
@@ -274,9 +262,6 @@ name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "local"
 
@@ -326,9 +311,6 @@ name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "local"
 
@@ -353,9 +335,6 @@ keyfiles = ["${keyPath}"]
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
-
-[agents.claude]
-binary = "claude"
 
 [auth]
 profile = "local"
@@ -386,9 +365,6 @@ name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "local"
 
@@ -414,9 +390,6 @@ mode = "off"
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
-
-[agents.claude]
-binary = "claude"
 `;
     writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
 
@@ -437,9 +410,6 @@ binary = "claude"
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
-
-[agents.claude]
-binary = "claude"
 
 [auth]
 profile = "local"
@@ -477,9 +447,6 @@ keyfiles = ["/nonexistent/path/id_ed25519"]
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
-
-[agents.claude]
-binary = "claude"
 
 [auth]
 profile = "local"
@@ -527,9 +494,6 @@ name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
 
-[agents.claude]
-binary = "claude"
-
 [auth]
 profile = "local"
 
@@ -565,9 +529,6 @@ keyfiles = ["${join(githubDir, 'id_ed25519')}", "${join(gitlabDir, 'id_ed25519')
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
-
-[agents.claude]
-binary = "claude"
 
 [auth]
 profile = "local"
@@ -607,9 +568,6 @@ keyfiles = ["${keyPath}", "/nonexistent/path/id_missing"]
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
-
-[agents.claude]
-binary = "claude"
 `;
     writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
 

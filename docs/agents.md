@@ -12,21 +12,7 @@
 | `gemini` | `gemini` | Google | `NO_BROWSER` PKCE OAuth | `GEMINI_API_KEY` |
 | `opencode` | `opencode` | OpenCode | Credential forwarding | `MOONSHOT_API_KEY` |
 
-Agent-to-binary mappings are defined in `~/.iteron/config.toml`:
-
-```toml
-[agents.claude]
-binary = "claude"
-
-[agents.codex]
-binary = "codex"
-
-[agents.gemini]
-binary = "gemini"
-
-[agents.opencode]
-binary = "opencode"
-```
+These four agent names are built-in — no configuration needed. The agent name is used as the binary name directly.
 
 ## Authentication
 

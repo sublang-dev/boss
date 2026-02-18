@@ -4,26 +4,18 @@
 import { describe, it, expect } from 'vitest';
 import { extractPassthroughArgs, resolveArgs } from '../../src/commands/open.js';
 import { validateWorkspace } from '../../src/utils/config.js';
-import type { IteronConfig } from '../../src/utils/config.js';
 import { homedir } from 'node:os';
-
-const agents: IteronConfig['agents'] = {
-  claude: { binary: 'claude' },
-  codex: { binary: 'codex' },
-  gemini: { binary: 'gemini' },
-  opencode: { binary: 'opencode' },
-};
 
 describe('resolveArgs', () => {
   it('0 args → shell in home', () => {
-    const result = resolveArgs([], agents);
+    const result = resolveArgs([]);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
   it('1 arg ~ → shell in home', () => {
-    const result = resolveArgs(['~'], agents);
+    const result = resolveArgs(['~']);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
     expect(result.workDir).toBe('/home/iteron');
@@ -31,35 +23,35 @@ describe('resolveArgs', () => {
 
   it('1 arg shell-expanded ~ → shell in home', () => {
     // Shell expands unquoted ~ to $HOME before CLI sees it
-    const result = resolveArgs([homedir()], agents);
+    const result = resolveArgs([homedir()]);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
   it('1 arg shell-expanded ~/ (trailing slash) → shell in home', () => {
-    const result = resolveArgs([`${homedir()}/`], agents);
+    const result = resolveArgs([`${homedir()}/`]);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
   it('2 args shell-expanded ~ and agent → agent in home', () => {
-    const result = resolveArgs([homedir(), 'claude'], agents);
+    const result = resolveArgs([homedir(), 'claude']);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
   it('2 args shell-expanded ~/ (trailing slash) and agent → agent in home', () => {
-    const result = resolveArgs([`${homedir()}/`, 'claude'], agents);
+    const result = resolveArgs([`${homedir()}/`, 'claude']);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
   it('1 arg workspace → shell in workspace', () => {
-    const result = resolveArgs(['myproject'], agents);
+    const result = resolveArgs(['myproject']);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@myproject');
     expect(result.workDir).toBe('/home/iteron/myproject');
@@ -67,7 +59,7 @@ describe('resolveArgs', () => {
 
   it('1 arg matching agent name → shell in workspace (no agent lookup)', () => {
     // With workspace-first grammar, a single arg is always a workspace
-    const result = resolveArgs(['claude'], agents);
+    const result = resolveArgs(['claude']);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@claude');
     expect(result.workDir).toBe('/home/iteron/claude');
@@ -75,64 +67,63 @@ describe('resolveArgs', () => {
 
   it('2 args old agent-first order → no swap, workspace=agent name', () => {
     // Regression: ensure no legacy rewriting of agent-first form
-    const result = resolveArgs(['claude', 'myproject'], agents);
+    const result = resolveArgs(['claude', 'myproject']);
     expect(result.binary).toBe('myproject');
     expect(result.sessionName).toBe('myproject@claude');
     expect(result.workDir).toBe('/home/iteron/claude');
   });
 
   it('2 args with ~ and known agent → agent in home', () => {
-    const result = resolveArgs(['~', 'claude'], agents);
+    const result = resolveArgs(['~', 'claude']);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
   it('2 args workspace and known agent → agent in workspace', () => {
-    const result = resolveArgs(['myproject', 'claude'], agents);
+    const result = resolveArgs(['myproject', 'claude']);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@myproject');
     expect(result.workDir).toBe('/home/iteron/myproject');
   });
 
   it('2 args workspace and unknown command → raw command in workspace', () => {
-    const result = resolveArgs(['myproject', 'vim'], agents);
+    const result = resolveArgs(['myproject', 'vim']);
     expect(result.binary).toBe('vim');
     expect(result.sessionName).toBe('vim@myproject');
     expect(result.workDir).toBe('/home/iteron/myproject');
   });
 
   it('2 args ~ and unknown command → raw command in home', () => {
-    const result = resolveArgs(['~', 'vim'], agents);
+    const result = resolveArgs(['~', 'vim']);
     expect(result.binary).toBe('vim');
     expect(result.sessionName).toBe('vim@~');
     expect(result.workDir).toBe('/home/iteron');
   });
 
   it('rejects traversal segment as workspace (1-arg)', () => {
-    expect(() => resolveArgs(['..'], agents)).toThrow('traversal');
+    expect(() => resolveArgs(['..'])).toThrow('traversal');
   });
 
   it('rejects traversal segment as workspace (2-arg)', () => {
-    expect(() => resolveArgs(['..', 'vim'], agents)).toThrow('traversal');
+    expect(() => resolveArgs(['..', 'vim'])).toThrow('traversal');
   });
 
   it('rejects absolute path as workspace', () => {
-    expect(() => resolveArgs(['/etc'], agents)).toThrow('absolute');
+    expect(() => resolveArgs(['/etc'])).toThrow('absolute');
   });
 
   it('rejects path with separators as workspace', () => {
-    expect(() => resolveArgs(['foo/bar'], agents)).toThrow('separator');
-    expect(() => resolveArgs(['a/b', 'vim'], agents)).toThrow('separator');
+    expect(() => resolveArgs(['foo/bar'])).toThrow('separator');
+    expect(() => resolveArgs(['a/b', 'vim'])).toThrow('separator');
   });
 
   it('rejects command containing @ (session delimiter)', () => {
-    expect(() => resolveArgs(['ws', 'foo@bar'], agents)).toThrow('@');
+    expect(() => resolveArgs(['ws', 'foo@bar'])).toThrow('@');
   });
 
-  it('rejects configured agent name containing @', () => {
-    const badAgents = { ...agents, 'bad@agent': { binary: 'bad' } };
-    expect(() => resolveArgs(['~', 'bad@agent'], badAgents)).toThrow('@');
+  it('rejects command containing @ even if it looks like an agent', () => {
+    expect(() => resolveArgs(['~', 'bad@agent'])).toThrow('@');
   });
 });
 

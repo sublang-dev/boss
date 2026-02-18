@@ -7,8 +7,7 @@ import {
   podmanSpawn,
   podmanErrorMessage,
 } from '../utils/podman.js';
-import { readConfig, validateWorkspace } from '../utils/config.js';
-import type { IteronConfig } from '../utils/config.js';
+import { readConfig, validateWorkspace, KNOWN_AGENTS } from '../utils/config.js';
 import { buildSessionName, validateSessionToken } from '../utils/session.js';
 import { homedir } from 'node:os';
 
@@ -30,11 +29,10 @@ function normalizeHome(arg: string): string {
  *
  * - 0 args: shell in ~
  * - 1 arg: shell in workspace (~ for home, else ~/name)
- * - 2 args: arg1=workspace, arg2=command (looked up in agents for binary)
+ * - 2 args: arg1=workspace, arg2=command (used as binary directly)
  */
 export function resolveArgs(
   args: string[],
-  agents: IteronConfig['agents'],
 ): { binary: string; sessionName: string; workDir: string } {
   const defaultShell = 'bash';
 
@@ -71,10 +69,10 @@ export function resolveArgs(
     const err = validateWorkspace(workspace);
     if (err) throw new Error(err);
   }
-  const agent = agents[commandArg];
-  const tokenErr = validateSessionToken(commandArg, agent ? 'Agent name' : 'Command name');
+  const isKnownAgent = KNOWN_AGENTS.has(commandArg);
+  const tokenErr = validateSessionToken(commandArg, isKnownAgent ? 'Agent name' : 'Command name');
   if (tokenErr) throw new Error(tokenErr);
-  const binary = agent ? agent.binary : commandArg;
+  const binary = commandArg;
   const location = workspace === '~' ? '~' : workspace;
   const workDir = workspace === '~' ? CONTAINER_HOME : `${CONTAINER_HOME}/${workspace}`;
 
@@ -112,7 +110,7 @@ export async function openCommand(
     if (workspace !== undefined) positionalArgs.push(workspace);
     if (command !== undefined) positionalArgs.push(command);
 
-    const resolved = resolveArgs(positionalArgs, config.agents);
+    const resolved = resolveArgs(positionalArgs);
 
     // Create workspace directory if needed
     if (resolved.workDir !== CONTAINER_HOME) {

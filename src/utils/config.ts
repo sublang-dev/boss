@@ -17,14 +17,13 @@ export const DEFAULT_CONTAINER_NAME = 'iteron-sandbox';
 export const DEFAULT_MEMORY = '16g';
 export const VOLUME_NAME = 'iteron-data';
 
+/** Built-in agent names. Binary === name in every case. */
+export const KNOWN_AGENTS: ReadonlySet<string> = new Set(['claude', 'codex', 'gemini', 'opencode']);
+
 export interface ContainerConfig {
   name: string;
   image: string;
   memory: string;
-}
-
-export interface AgentConfig {
-  binary: string;
 }
 
 export type SshAuthMode = 'keyfile' | 'off';
@@ -50,7 +49,6 @@ export interface AuthConfig {
 
 export interface IteronConfig {
   container: ContainerConfig;
-  agents: Record<string, AgentConfig>;
   auth?: AuthConfig;
 }
 
@@ -64,12 +62,6 @@ export function defaultConfig(image?: string): IteronConfig {
       name: DEFAULT_CONTAINER_NAME,
       image: image ?? DEFAULT_IMAGE,
       memory: DEFAULT_MEMORY,
-    },
-    agents: {
-      claude: { binary: 'claude' },
-      codex: { binary: 'codex' },
-      gemini: { binary: 'gemini' },
-      opencode: { binary: 'opencode' },
     },
     auth: {
       profile: 'local',
@@ -131,29 +123,6 @@ export async function reconcileConfigImage(
   return true;
 }
 
-/** Legacy agent key → canonical key. */
-const LEGACY_AGENT_KEYS: Record<string, string> = {
-  'claude-code': 'claude',
-  'codex-cli': 'codex',
-  'gemini-cli': 'gemini',
-};
-
-/**
- * Normalize legacy agent keys (claude-code → claude, etc.) in-place.
- * Returns the set of keys that were migrated (empty if none).
- */
-function reconcileAgentNames(agents: Record<string, AgentConfig>): Set<string> {
-  const migrated = new Set<string>();
-  for (const [legacy, canonical] of Object.entries(LEGACY_AGENT_KEYS)) {
-    if (legacy in agents && !(canonical in agents)) {
-      agents[canonical] = agents[legacy];
-      delete agents[legacy];
-      migrated.add(legacy);
-    }
-  }
-  return migrated;
-}
-
 export async function readConfig(): Promise<IteronConfig> {
   if (!existsSync(CONFIG_PATH)) {
     throw new Error('Config not found. Run "iteron init" first.');
@@ -161,17 +130,6 @@ export async function readConfig(): Promise<IteronConfig> {
   const { parse } = await loadToml();
   const content = await readFile(CONFIG_PATH, 'utf-8');
   const config = parse(content) as unknown as IteronConfig;
-
-  if (config.agents) {
-    reconcileAgentNames(config.agents);
-  }
-
-  for (const agentName of Object.keys(config.agents ?? {})) {
-    const err = validateSessionToken(agentName, 'Agent name');
-    if (err) {
-      throw new Error(`Invalid config [agents.${agentName}]: ${err}`);
-    }
-  }
 
   if (config.auth?.profile && !SUPPORTED_AUTH_PROFILES.has(config.auth.profile)) {
     throw new Error(

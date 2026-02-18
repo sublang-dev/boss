@@ -38,18 +38,6 @@ beforeAll(async () => {
 name = "${TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
-
-[agents.claude]
-binary = "claude"
-
-[agents.codex]
-binary = "codex"
-
-[agents.gemini]
-binary = "gemini"
-
-[agents.opencode]
-binary = "opencode"
 `;
   writeFileSync(join(configDir, 'config.toml'), configToml, 'utf-8');
 

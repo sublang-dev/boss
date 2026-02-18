@@ -24,7 +24,7 @@ Per [DR-002 §4](../decisions/002-iteron-cli-commands.md#4-iteron-open-workspace
   - 0 args: shell in `~`
   - 1 arg: shell in `~/<workspace>` (use `~` for home)
   - 2 args: first is workspace, second is command/agent
-- Agent name resolution: look up second arg (command) in `config.toml` `[agents.<name>]` to get `binary` value (see [IR-001 §2](001-oci-sandbox-image.md#2-agent-runtime-installation-and-name-mapping) and [IR-002 §5](002-container-lifecycle.md#5-config-file-schema)). If not found in config, use the argument as-is (raw command).
+- Agent name resolution: second arg (command) is checked against built-in agent names (`claude`, `codex`, `gemini`, `opencode`). The agent name is used as the binary directly. If not a known agent, the argument is used as-is (raw command).
 - Arguments after `--` are passed to the resolved command
 - Wraps: `podman exec -it iteron-sandbox tmux new-session -A -s <session> -c <path> <binary> [<args>]`
 - Session naming per [DR-002 Workspace Model](../decisions/002-iteron-cli-commands.md#workspace-model): `<agent-name>@<location>` (e.g., `claude@myproject`). For non-agent commands, use the command itself (e.g., `bash@~`, `vim@backend`). The `@` delimiter is used because tmux reserves `:` and silently replaces it with `_`.

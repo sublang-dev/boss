@@ -34,8 +34,6 @@ describe('iteron init (integration)', { timeout: 120_000 }, () => {
     expect(existsSync(configPath)).toBe(true);
     const configContent = readFileSync(configPath, 'utf-8');
     expect(configContent).toContain('[container]');
-    expect(configContent).toContain('[agents.claude]');
-    expect(configContent).toContain('binary = "claude"');
     expect(configContent).toContain(TEST_IMAGE);
 
     // IR-002 test 11: .env exists with expected keys
@@ -64,18 +62,6 @@ describe('iteron init (integration)', { timeout: 120_000 }, () => {
 name = "iteron-sandbox"
 image = "docker.io/library/alpine:latest"
 memory = "16g"
-
-[agents.claude]
-binary = "claude"
-
-[agents.codex]
-binary = "codex"
-
-[agents.gemini]
-binary = "gemini"
-
-[agents.opencode]
-binary = "opencode"
 `;
     const configPath = join(configDir, 'config.toml');
     writeFileSync(configPath, legacyToml, 'utf-8');
