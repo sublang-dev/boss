@@ -38,8 +38,8 @@ Per [DR-002 §1](../decisions/002-iteron-cli-commands.md#1-iteron-init):
 - Verify rootless mode is enabled (`podman info --format '{{.Host.Security.Rootless}}'`)
 - Pull multi-arch OCI image from [IR-001](001-oci-sandbox-image.md)
 - Create `iteron-data` Podman volume
-- Generate `~/.iteron/config.toml` with defaults (see Task 5), including the agent name mapping from [IR-001 §2](001-oci-sandbox-image.md#2-agent-runtime-installation-and-name-mapping)
-- If `~/.iteron/config.toml` already exists, preserve user settings and agent mappings, but reconcile `[container].image` when either:
+- Generate `~/.iteron/config.toml` with defaults (see Task 5)
+- If `~/.iteron/config.toml` already exists, preserve user settings but reconcile `[container].image` when either:
   - Current image is legacy default `docker.io/library/alpine:latest` (update to default sandbox image)
   - User passes `--image <url>` (update to the provided image)
 - Generate `~/.iteron/.env` template with placeholder keys

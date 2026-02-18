@@ -19,9 +19,9 @@ follow ([DR-002 §4](../decisions/002-iteron-cli-commands.md#4-iteron-open-works
 - 1 arg: default shell in `~/<workspace>` (use `~` for home)
 - 2 args: first token as workspace, second token as command/agent
 - 2 args where workspace is `~`: home directory
-- 2 args where second token is a configured agent: agent binary
-- 2 args where second token is not a configured agent: second token
-  treated as raw command
+- 2 args where second token is a built-in agent name (claude, codex,
+  gemini, opencode): used as binary directly
+- 2 args where second token is not a built-in agent: treated as raw command
 - Arguments after the first `--` are forwarded to the resolved command
 
 ### WSX-002

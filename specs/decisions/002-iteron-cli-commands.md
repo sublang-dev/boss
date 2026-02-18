@@ -76,7 +76,7 @@ Open a workspace with an agent or shell. Creates workspace directory and tmux se
 - `iteron open myproject claude` — Claude Code agent in `~/myproject` workspace
 - `iteron open myproject claude -- --resume` — Pass `--resume` to claude
 
-**Agent names**: claude, codex, gemini, opencode (from `~/.iteron/config.toml`). When the second argument matches a configured agent, the agent binary is used; otherwise the argument is run as-is.
+**Agent names**: claude, codex, gemini, opencode (built-in). The agent name is used as the binary directly; any other command is run as-is.
 
 **Tmux control**: Full tmux access once inside (split panes, customize via `~/.tmux.conf`)
 
