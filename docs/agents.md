@@ -101,6 +101,50 @@ Google Cloud service accounts via Vertex AI are an alternative for enterprise de
 MOONSHOT_API_KEY=...
 ```
 
+## SSH Keys
+
+Inject host SSH keys so agents can `git clone`/`push` over SSH and sign commits.
+
+Edit `~/.iteron/config.toml`:
+
+```toml
+[auth.ssh]
+mode = "keyfile"
+keyfiles = ["~/.ssh/id_ed25519"]
+```
+
+Multiple keys are supported. SSH tries them in listed order:
+
+```toml
+keyfiles = [
+  "~/.ssh/personal_ed25519",
+  "~/.ssh/work_ed25519",
+]
+```
+
+Then restart: `iteron stop && iteron start`.
+
+Keys are injected into an ephemeral tmpfs at `/run/iteron/ssh/` — never written to persistent storage. Verify inside the container:
+
+```bash
+ssh -T git@github.com
+# Expected: "Hi <user>! You've successfully authenticated..."
+# (exits non-zero — that's normal; GitHub rejects shell access)
+
+cat ~/.ssh/config.d/iteron.conf   # IdentityFile directives
+```
+
+**Commit signing** (optional) — use the actual path from `iteron.conf`:
+
+```bash
+git config --global gpg.format ssh
+git config --global user.signingKey /run/iteron/ssh/KEY_NAME
+git config --global commit.gpgsign true
+```
+
+For "Verified" badges, register the corresponding public key as a
+signing key on your Git provider (e.g. GitHub → Settings → SSH keys → "Signing Key").
+
 ## Autonomy Configuration
 
 The sandbox image includes pre-configured settings that allow agents to run autonomously without permission prompts:
