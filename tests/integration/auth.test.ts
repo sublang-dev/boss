@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { rm, mkdir } from 'node:fs/promises';
+import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 // ITERON_TEST_IMAGE overrides the default image for CI against the real sandbox image.
@@ -197,6 +197,217 @@ binary = "opencode"
     expect(output).toMatch(/auth|token|api.key|unauthorized|credential|log.?in/);
     expect(output).not.toContain('onboarding');
 
+    const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DR-003 §2: SSH key mount tests
+// ---------------------------------------------------------------------------
+
+const SSH_TEST_CONTAINER = 'iteron-test-ssh';
+
+let sshConfigDir: string;
+let sshXdgDir: string;
+let sshKeyDir: string;
+
+describe.skipIf(!HAS_PODMAN)('DR-003 SSH key mount (integration)', { timeout: 120_000, sequential: true }, () => {
+  async function sshCleanup(): Promise<void> {
+    try { execFileSync('podman', ['stop', '-t', '0', SSH_TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
+    try { execFileSync('podman', ['rm', '-f', SSH_TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
+  }
+
+  beforeAll(async () => {
+    await sshCleanup();
+
+    sshConfigDir = mkdtempSync(join(tmpdir(), 'iteron-ssh-test-'));
+    sshXdgDir = mkdtempSync(join(tmpdir(), 'iteron-ssh-xdg-'));
+    sshKeyDir = mkdtempSync(join(tmpdir(), 'iteron-ssh-keys-'));
+    process.env.ITERON_CONFIG_DIR = sshConfigDir;
+    process.env.XDG_DATA_HOME = sshXdgDir;
+
+    // Create a fake SSH key file
+    await writeFile(join(sshKeyDir, 'id_ed25519'), 'fake-ssh-private-key-content\n', { mode: 0o600 });
+
+    // Write .env (required by startCommand)
+    writeFileSync(join(sshConfigDir, '.env'), 'ANTHROPIC_API_KEY=sk-test-ssh\n', 'utf-8');
+
+    try { execFileSync('podman', ['pull', TEST_IMAGE], { stdio: 'ignore' }); } catch {}
+    try { execFileSync('podman', ['volume', 'create', 'iteron-data'], { stdio: 'ignore' }); } catch {}
+  });
+
+  afterAll(async () => {
+    await sshCleanup();
+    delete process.env.ITERON_CONFIG_DIR;
+    if (origXdg === undefined) {
+      delete process.env.XDG_DATA_HOME;
+    } else {
+      process.env.XDG_DATA_HOME = origXdg;
+    }
+    if (sshConfigDir) await rm(sshConfigDir, { recursive: true, force: true });
+    if (sshXdgDir) forceRmTempDir(sshXdgDir);
+    if (sshKeyDir) await rm(sshKeyDir, { recursive: true, force: true });
+  });
+
+  it('mounts SSH key and writes ssh config when mode=keyfile', async () => {
+    const keyPath = join(sshKeyDir, 'id_ed25519');
+    const configToml = `[container]
+name = "${SSH_TEST_CONTAINER}"
+image = "${TEST_IMAGE}"
+memory = "512m"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+mode = "keyfile"
+keyfile = "${keyPath}"
+`;
+    writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
+
+    const { startCommand } = await import('../../src/commands/start.js');
+    await startCommand();
+
+    // Verify key is mounted and readable at /run/iteron/ssh/id_ed25519
+    const keyContent = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/id_ed25519']);
+    expect(keyContent).toContain('fake-ssh-private-key-content');
+
+    // Verify ~/.ssh/config contains IdentityFile directive
+    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/iteron/.ssh/config']);
+    expect(sshConfig).toContain('IdentityFile /run/iteron/ssh/id_ed25519');
+
+    // Verify ~/.ssh/config has restrictive permissions
+    const perms = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'stat', '-c', '%a', '/home/iteron/.ssh/config']);
+    expect(perms).toBe('600');
+  });
+
+  it('SSH key mount visible in podman inspect', () => {
+    const mounts = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .Mounts}}']);
+    expect(mounts).toContain('id_ed25519');
+  });
+
+  it('stops container after keyfile test', async () => {
+    const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+  });
+
+  it('skips SSH mount when mode=off', async () => {
+    const configToml = `[container]
+name = "${SSH_TEST_CONTAINER}"
+image = "${TEST_IMAGE}"
+memory = "512m"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+mode = "off"
+`;
+    writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
+
+    const { startCommand } = await import('../../src/commands/start.js');
+    await startCommand();
+
+    const mounts = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .Mounts}}']);
+    expect(mounts).not.toContain('id_ed25519');
+    expect(mounts).not.toContain('/run/iteron/ssh');
+  });
+
+  it('stops container after mode=off test', async () => {
+    const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+  });
+
+  it('skips SSH mount when [auth.ssh] absent', async () => {
+    const configToml = `[container]
+name = "${SSH_TEST_CONTAINER}"
+image = "${TEST_IMAGE}"
+memory = "512m"
+
+[agents.claude]
+binary = "claude"
+`;
+    writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
+
+    const { startCommand } = await import('../../src/commands/start.js');
+    await startCommand();
+
+    const mounts = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .Mounts}}']);
+    expect(mounts).not.toContain('/run/iteron/ssh');
+  });
+
+  it('stops container after absent-auth test', async () => {
+    const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+  });
+
+  it('warns and skips mount when keyfile does not exist on host', async () => {
+    const configToml = `[container]
+name = "${SSH_TEST_CONTAINER}"
+image = "${TEST_IMAGE}"
+memory = "512m"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+mode = "keyfile"
+keyfile = "/nonexistent/path/id_ed25519"
+`;
+    writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
+
+    // Capture stderr for warning
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { startCommand } = await import('../../src/commands/start.js');
+    await startCommand();
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('not found on host'));
+    warnSpy.mockRestore();
+
+    const mounts = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .Mounts}}']);
+    expect(mounts).not.toContain('id_ed25519');
+
+    const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+  });
+
+  // Sandbox-image-only tests for pre-seeded SSH config
+  it.skipIf(!HAS_SANDBOX_IMAGE)('has pre-seeded ssh_known_hosts with GitHub and GitLab keys', async () => {
+    const configToml = `[container]
+name = "${SSH_TEST_CONTAINER}"
+image = "${TEST_IMAGE}"
+memory = "512m"
+
+[agents.claude]
+binary = "claude"
+`;
+    writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
+
+    const { startCommand } = await import('../../src/commands/start.js');
+    await startCommand();
+
+    const knownHosts = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/etc/ssh/ssh_known_hosts']);
+    expect(knownHosts).toContain('github.com');
+    expect(knownHosts).toContain('gitlab.com');
+  });
+
+  it.skipIf(!HAS_SANDBOX_IMAGE)('has StrictHostKeyChecking yes in ssh_config.d', () => {
+    const sshConf = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/etc/ssh/ssh_config.d/iteron.conf']);
+    expect(sshConf).toContain('StrictHostKeyChecking yes');
+  });
+
+  it.skipIf(!HAS_SANDBOX_IMAGE)('stops container after sandbox-image tests', async () => {
     const { stopCommand } = await import('../../src/commands/stop.js');
     await stopCommand();
   });

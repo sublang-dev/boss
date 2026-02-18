@@ -6,7 +6,7 @@ FROM node:22-bookworm-slim
 # ---------- system packages ----------
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      tini tmux bash git curl jq ca-certificates \
+      tini tmux bash git curl jq ca-certificates openssh-client \
  && rm -rf /var/lib/apt/lists/*
 
 # ---------- npm agents ----------
@@ -59,6 +59,10 @@ COPY --chown=iteron:iteron conf/claude-settings.json  /home/iteron/.claude/setti
 COPY --chown=iteron:iteron conf/codex-config.toml     /home/iteron/.codex/config.toml
 COPY --chown=iteron:iteron conf/gemini-settings.json  /home/iteron/.gemini/settings.json
 COPY --chown=iteron:iteron conf/opencode.json         /home/iteron/.config/opencode/opencode.json
+# ---------- SSH known hosts + strict checking (DR-003 §2) ----------
+COPY conf/ssh_known_hosts                               /etc/ssh/ssh_known_hosts
+COPY conf/ssh_config                                    /etc/ssh/ssh_config.d/iteron.conf
+
 COPY conf/tmux-system.conf                             /etc/tmux.conf
 COPY --chown=iteron:iteron conf/tmux.conf             /home/iteron/.tmux.conf
 

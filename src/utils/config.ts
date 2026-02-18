@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { validateSessionToken } from './session.js';
@@ -27,9 +27,20 @@ export interface AgentConfig {
   binary: string;
 }
 
+export interface SshAuthConfig {
+  mode: 'keyfile' | 'off';
+  keyfile?: string;
+}
+
+export interface AuthConfig {
+  profile: 'local';
+  ssh?: SshAuthConfig;
+}
+
 export interface IteronConfig {
   container: ContainerConfig;
   agents: Record<string, AgentConfig>;
+  auth?: AuthConfig;
 }
 
 async function loadToml(): Promise<{ stringify: (obj: Record<string, unknown>) => string; parse: (str: string) => Record<string, unknown> }> {
@@ -48,6 +59,13 @@ export function defaultConfig(image?: string): IteronConfig {
       codex: { binary: 'codex' },
       gemini: { binary: 'gemini' },
       opencode: { binary: 'opencode' },
+    },
+    auth: {
+      profile: 'local',
+      ssh: {
+        mode: 'off',
+        keyfile: '~/.ssh/id_ed25519',
+      },
     },
   };
 }
@@ -145,6 +163,20 @@ export async function readConfig(): Promise<IteronConfig> {
   }
 
   return config;
+}
+
+/**
+ * Resolve the SSH key path from config. Returns the absolute host path
+ * when mode is "keyfile", or null when SSH is off or unconfigured.
+ */
+export function resolveSshKeyPath(config: IteronConfig): string | null {
+  const ssh = config.auth?.ssh;
+  if (!ssh || ssh.mode !== 'keyfile') return null;
+  const keyfile = ssh.keyfile ?? '~/.ssh/id_ed25519';
+  const expanded = keyfile.startsWith('~/')
+    ? join(homedir(), keyfile.slice(2))
+    : resolve(keyfile);
+  return expanded;
 }
 
 const ENV_TEMPLATE = `# Headless agent authentication

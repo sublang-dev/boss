@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtempSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { rm } from 'node:fs/promises';
 
 let tmpDir: string;
@@ -208,5 +208,115 @@ describe('writeEnvTemplate', () => {
     await writeEnvTemplate();
     const second = await writeEnvTemplate();
     expect(second).toBe(false);
+  });
+});
+
+describe('auth config (DR-003)', () => {
+  it('defaultConfig includes auth section with SSH off', async () => {
+    const { defaultConfig } = await import('../../src/utils/config.js');
+    const config = defaultConfig();
+    expect(config.auth).toBeDefined();
+    expect(config.auth!.profile).toBe('local');
+    expect(config.auth!.ssh).toBeDefined();
+    expect(config.auth!.ssh!.mode).toBe('off');
+    expect(config.auth!.ssh!.keyfile).toBe('~/.ssh/id_ed25519');
+  });
+
+  it('readConfig parses [auth] and [auth.ssh] sections', async () => {
+    const { readConfig } = await import('../../src/utils/config.js');
+    const toml = `[container]
+name = "iteron-sandbox"
+image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+memory = "16g"
+
+[agents.claude]
+binary = "claude"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+mode = "keyfile"
+keyfile = "~/.ssh/id_rsa"
+`;
+    writeFileSync(join(tmpDir, 'config.toml'), toml, 'utf-8');
+    const config = await readConfig();
+    expect(config.auth).toBeDefined();
+    expect(config.auth!.profile).toBe('local');
+    expect(config.auth!.ssh!.mode).toBe('keyfile');
+    expect(config.auth!.ssh!.keyfile).toBe('~/.ssh/id_rsa');
+  });
+
+  it('readConfig handles missing [auth] for backward compat', async () => {
+    const { readConfig } = await import('../../src/utils/config.js');
+    const toml = `[container]
+name = "iteron-sandbox"
+image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+memory = "16g"
+
+[agents.claude]
+binary = "claude"
+`;
+    writeFileSync(join(tmpDir, 'config.toml'), toml, 'utf-8');
+    const config = await readConfig();
+    // auth is undefined — no crash
+    expect(config.auth).toBeUndefined();
+  });
+
+  it('writeConfig round-trips auth section through TOML', async () => {
+    const { writeConfig, readConfig } = await import('../../src/utils/config.js');
+    await writeConfig();
+    const config = await readConfig();
+    expect(config.auth!.profile).toBe('local');
+    expect(config.auth!.ssh!.mode).toBe('off');
+    expect(config.auth!.ssh!.keyfile).toBe('~/.ssh/id_ed25519');
+  });
+});
+
+describe('resolveSshKeyPath', () => {
+  it('returns null when auth is undefined', async () => {
+    const { resolveSshKeyPath } = await import('../../src/utils/config.js');
+    const result = resolveSshKeyPath({ container: {} as never, agents: {} });
+    expect(result).toBeNull();
+  });
+
+  it('returns null when mode is off', async () => {
+    const { resolveSshKeyPath } = await import('../../src/utils/config.js');
+    const result = resolveSshKeyPath({
+      container: {} as never,
+      agents: {},
+      auth: { profile: 'local', ssh: { mode: 'off' } },
+    });
+    expect(result).toBeNull();
+  });
+
+  it('expands ~ in keyfile path', async () => {
+    const { resolveSshKeyPath } = await import('../../src/utils/config.js');
+    const result = resolveSshKeyPath({
+      container: {} as never,
+      agents: {},
+      auth: { profile: 'local', ssh: { mode: 'keyfile', keyfile: '~/.ssh/id_ed25519' } },
+    });
+    expect(result).toBe(join(homedir(), '.ssh', 'id_ed25519'));
+  });
+
+  it('uses default keyfile when keyfile is omitted', async () => {
+    const { resolveSshKeyPath } = await import('../../src/utils/config.js');
+    const result = resolveSshKeyPath({
+      container: {} as never,
+      agents: {},
+      auth: { profile: 'local', ssh: { mode: 'keyfile' } },
+    });
+    expect(result).toBe(join(homedir(), '.ssh', 'id_ed25519'));
+  });
+
+  it('resolves absolute path as-is', async () => {
+    const { resolveSshKeyPath } = await import('../../src/utils/config.js');
+    const result = resolveSshKeyPath({
+      container: {} as never,
+      agents: {},
+      auth: { profile: 'local', ssh: { mode: 'keyfile', keyfile: '/tmp/my-key' } },
+    });
+    expect(result).toBe('/tmp/my-key');
   });
 });

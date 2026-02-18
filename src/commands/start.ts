@@ -3,7 +3,7 @@
 
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { detectPlatform, needsMachine } from '../utils/platform.js';
 import {
   isMachineRunning,
@@ -13,7 +13,7 @@ import {
   podmanExec,
   podmanErrorMessage,
 } from '../utils/podman.js';
-import { readConfig, ENV_PATH } from '../utils/config.js';
+import { readConfig, resolveSshKeyPath, ENV_PATH } from '../utils/config.js';
 
 /** Resolve OpenCode auth file honoring XDG_DATA_HOME. */
 export function opencodeAuthPath(): string {
@@ -65,11 +65,34 @@ export async function startCommand(): Promise<void> {
       args.push('-v', `${opencodeAuth}:/home/iteron/.local/share/opencode/auth.json:U`);
     }
 
+    // DR-003 §2: opt-in SSH key mount (local profile)
+    const sshKeyPath = resolveSshKeyPath(config);
+    let sshKeyBasename: string | undefined;
+    if (sshKeyPath) {
+      if (existsSync(sshKeyPath)) {
+        sshKeyBasename = basename(sshKeyPath);
+        args.push(
+          '--tmpfs', '/run/iteron/ssh:size=4k,mode=0700,uid=1000,gid=1000',
+          '-v', `${sshKeyPath}:/run/iteron/ssh/${sshKeyBasename}:ro`,
+        );
+      } else {
+        console.warn(`Warning: SSH keyfile "${sshKeyPath}" not found on host; skipping SSH mount.`);
+      }
+    }
+
     args.push(image, 'sleep', 'infinity');
     await podmanExec(args);
 
     // Reconcile user-local tool directory (survives volume overlay on upgrade)
     await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.local/bin']);
+
+    // DR-003 §2: write SSH config inside container when key is mounted
+    if (sshKeyBasename) {
+      await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.ssh']);
+      await podmanExec(['exec', name, 'sh', '-c',
+        `printf 'IdentityFile /run/iteron/ssh/${sshKeyBasename}\\n' > /home/iteron/.ssh/config`]);
+      await podmanExec(['exec', name, 'chmod', '0600', '/home/iteron/.ssh/config']);
+    }
 
     // Verify
     if (await isContainerRunning(name)) {

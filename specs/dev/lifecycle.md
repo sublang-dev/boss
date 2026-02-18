@@ -42,3 +42,20 @@ authentication variables from `~/.iteron/.env` shall be exposed to
 processes in the container environment
 ([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication),
 [DR-002 §2](../decisions/002-iteron-cli-commands.md#2-iteron-start)).
+
+## SSH Authentication
+
+### LCD-005
+
+Where `iteron start` is invoked with `[auth.ssh] mode = "keyfile"`,
+the command shall bind-mount the host key file read-only into the
+container and write an `IdentityFile` directive in the container SSH
+config pointing to the mounted path
+([DR-003 §2](../decisions/003-runtime-profiled-auth.md#2-local-profile)).
+
+### LCD-006
+
+The sandbox image shall pre-seed `/etc/ssh/ssh_known_hosts` with
+GitHub and GitLab.com host keys and enforce `StrictHostKeyChecking yes`
+via `/etc/ssh/ssh_config.d/iteron.conf`
+([DR-003 §2](../decisions/003-runtime-profiled-auth.md#2-local-profile)).
