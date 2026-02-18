@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 
 import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { detectPlatform, needsMachine } from '../utils/platform.js';
@@ -66,15 +67,14 @@ export async function startCommand(): Promise<void> {
     }
 
     // DR-003 §2: opt-in SSH key mount (local profile)
+    // Key is injected post-start via exec (not bind-mounted) to avoid
+    // ownership issues in rootless Podman with --cap-drop ALL.
     const sshKeyPath = resolveSshKeyPath(config);
     let sshKeyBasename: string | undefined;
     if (sshKeyPath) {
       if (existsSync(sshKeyPath)) {
         sshKeyBasename = basename(sshKeyPath);
-        args.push(
-          '--tmpfs', '/run/iteron/ssh:size=4k,mode=0700,uid=1000,gid=1000',
-          '-v', `${sshKeyPath}:/run/iteron/ssh/${sshKeyBasename}:ro`,
-        );
+        args.push('--tmpfs', '/run/iteron/ssh:size=4k');
       } else {
         console.warn(`Warning: SSH keyfile "${sshKeyPath}" not found on host; skipping SSH mount.`);
       }
@@ -88,11 +88,18 @@ export async function startCommand(): Promise<void> {
 
     // DR-003 §2: reconcile managed SSH config in container
     if (sshKeyBasename) {
+      // Inject key into tmpfs as iteron (exec runs as container user) so
+      // the file is owned by iteron with 0600 — no CAP_CHOWN needed.
+      const keyData = await readFile(sshKeyPath!, 'utf-8');
+      const keyDest = `/run/iteron/ssh/${sshKeyBasename}`;
+      await podmanExec(['exec', name, 'sh', '-c',
+        'printf "%s" "$1" > "$2" && chmod 0600 "$2"',
+        'iteron-ssh', keyData, keyDest]);
       // Write managed include file with IdentityFile directive
       await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.ssh/config.d']);
       await podmanExec(['exec', name, 'sh', '-c',
         'printf "IdentityFile %s\\n" "$1" > "$2"',
-        'iteron-ssh', `/run/iteron/ssh/${sshKeyBasename}`,
+        'iteron-ssh', keyDest,
         '/home/iteron/.ssh/config.d/iteron.conf']);
       await podmanExec(['exec', name, 'chmod', '0600', '/home/iteron/.ssh/config.d/iteron.conf']);
     } else {

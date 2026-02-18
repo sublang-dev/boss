@@ -48,7 +48,7 @@ processes in the container environment
 ### LCD-005
 
 Where `iteron start` is invoked with `[auth.ssh] mode = "keyfile"`,
-the command shall bind-mount the host key file read-only into the
+the command shall inject the host key into an ephemeral tmpfs inside the
 container and write an `IdentityFile` directive to a managed include
 file (`~/.ssh/config.d/iteron.conf`), preserving any user SSH config.
 When SSH is off or unconfigured, the managed file shall be removed to

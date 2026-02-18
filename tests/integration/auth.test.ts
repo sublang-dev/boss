@@ -85,7 +85,7 @@ binary = "opencode"
 
     try { execFileSync('podman', ['pull', TEST_IMAGE], { stdio: 'ignore' }); } catch {}
     try { execFileSync('podman', ['volume', 'create', 'iteron-data'], { stdio: 'ignore' }); } catch {}
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await cleanup();
@@ -97,7 +97,7 @@ binary = "opencode"
     }
     if (configDir) await rm(configDir, { recursive: true, force: true });
     if (xdgDataDir) forceRmTempDir(xdgDataDir);
-  });
+  }, 120_000);
 
   // IR-005 test 1: CLAUDE_CODE_OAUTH_TOKEN propagates to container
   it('propagates CLAUDE_CODE_OAUTH_TOKEN to container', async () => {
@@ -219,6 +219,10 @@ describe.skipIf(!HAS_PODMAN)('DR-003 SSH key mount (integration)', { timeout: 12
   }
 
   beforeAll(async () => {
+    // Clear module cache so config.ts re-evaluates CONFIG_DIR with
+    // the updated ITERON_CONFIG_DIR (stale from the IR-005 suite).
+    vi.resetModules();
+
     await sshCleanup();
 
     sshConfigDir = mkdtempSync(join(tmpdir(), 'iteron-ssh-test-'));
@@ -235,7 +239,7 @@ describe.skipIf(!HAS_PODMAN)('DR-003 SSH key mount (integration)', { timeout: 12
 
     try { execFileSync('podman', ['pull', TEST_IMAGE], { stdio: 'ignore' }); } catch {}
     try { execFileSync('podman', ['volume', 'create', 'iteron-data'], { stdio: 'ignore' }); } catch {}
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await sshCleanup();
@@ -248,7 +252,7 @@ describe.skipIf(!HAS_PODMAN)('DR-003 SSH key mount (integration)', { timeout: 12
     if (sshConfigDir) await rm(sshConfigDir, { recursive: true, force: true });
     if (sshXdgDir) forceRmTempDir(sshXdgDir);
     if (sshKeyDir) await rm(sshKeyDir, { recursive: true, force: true });
-  });
+  }, 120_000);
 
   it('mounts SSH key and writes ssh config when mode=keyfile', async () => {
     const keyPath = join(sshKeyDir, 'id_ed25519');
@@ -272,9 +276,13 @@ keyfile = "${keyPath}"
     const { startCommand } = await import('../../src/commands/start.js');
     await startCommand();
 
-    // Verify key is mounted and readable at /run/iteron/ssh/id_ed25519
+    // Verify key is injected and readable at /run/iteron/ssh/id_ed25519
     const keyContent = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/id_ed25519']);
     expect(keyContent).toContain('fake-ssh-private-key-content');
+
+    // Verify key has SSH-compatible permissions (0600, owned by iteron)
+    const keyPerms = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'stat', '-c', '%a:%U', '/run/iteron/ssh/id_ed25519']);
+    expect(keyPerms).toBe('600:iteron');
 
     // Verify managed include file contains IdentityFile directive
     const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/iteron/.ssh/config.d/iteron.conf']);
@@ -285,9 +293,9 @@ keyfile = "${keyPath}"
     expect(perms).toBe('600');
   });
 
-  it('SSH key mount visible in podman inspect', () => {
-    const mounts = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .Mounts}}']);
-    expect(mounts).toContain('id_ed25519');
+  it('SSH key tmpfs visible in podman inspect', () => {
+    const tmpfs = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .HostConfig.Tmpfs}}']);
+    expect(tmpfs).toContain('/run/iteron/ssh');
   });
 
   it('stops container after keyfile test', async () => {
@@ -380,7 +388,6 @@ mode = "off"
     await startCommand();
 
     const mounts = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .Mounts}}']);
-    expect(mounts).not.toContain('id_ed25519');
     expect(mounts).not.toContain('/run/iteron/ssh');
   });
 
@@ -440,7 +447,7 @@ keyfile = "/nonexistent/path/id_ed25519"
     warnSpy.mockRestore();
 
     const mounts = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .Mounts}}']);
-    expect(mounts).not.toContain('id_ed25519');
+    expect(mounts).not.toContain('/run/iteron/ssh');
 
     const { stopCommand } = await import('../../src/commands/stop.js');
     await stopCommand();

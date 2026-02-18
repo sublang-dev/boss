@@ -56,8 +56,8 @@ mode = "off"                   # "keyfile" | "off"
 keyfile = "~/.ssh/id_ed25519"  # host path; mounted read-only
 ```
 
-When `mode = "keyfile"`, `iteron start` bind-mounts the specified
-private key read-only into a staging tmpfs at `/run/iteron/ssh/<basename>`.
+When `mode = "keyfile"`, `iteron start` injects the specified
+private key into a staging tmpfs at `/run/iteron/ssh/<basename>`.
 An `IdentityFile` directive pointing to the mounted path is written
 to a managed include file (`~/.ssh/config.d/iteron.conf`), preserving
 any user SSH config. When mode is `"off"` or absent, the managed file
