@@ -5,12 +5,12 @@
 
 ## Goal
 
-Validate that the local sandbox passes security hardening checks, has no unfixed critical/high CVEs (accepted OS CVEs with no upstream fix are tracked in `image/.trivyignore`), and is fully documented for end users.
+Validate that the local sandbox passes security hardening checks, has no unfixed critical/high CVEs (accepted CVEs with no applicable fix are tracked in `image/.trivyignore`), and is fully documented for end users.
 
 ## Deliverables
 
 - [x] Security hardening validated (rootless, cap-drop, read-only, no-new-privileges)
-- [x] Vulnerability scan clean (no critical/high CVEs) — npm CVEs fixed; 5 accepted OS CVEs in `image/.trivyignore`
+- [x] Vulnerability scan clean (no critical/high CVEs outside accepted list) — 7 accepted CVEs in `image/.trivyignore`
 - [x] Documentation: installation guide, CLI reference, agent configuration, workspace guide, troubleshooting
 - [x] User-local binary directory (`~/.local/bin`) on PATH
 
@@ -39,7 +39,7 @@ Already covered by integration tests in `tests/integration/start-stop.test.ts` (
 
 **Scan results** (local rebuild, 2026-02-16, Trivy 0.69.1):
 
-npm CVEs (tar, glob) fixed by pinning npm@11.10.0 in Dockerfile. Remaining OS-level CVEs have no fix in Debian Bookworm:
+npm CVEs with upstream fixes (minimatch 10.2.1, tar 7.5.8) suppressed in `.trivyignore` — npm 11.10.0 (latest) hasn't updated its transitive deps, and patching in-place fails because npm's `package.json` references private `@npmcli` packages not on the public registry. Remaining OS-level CVEs have no fix in Debian Bookworm:
 
 | CVE | Severity | Package | Installed | Fixed | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -48,8 +48,10 @@ npm CVEs (tar, glob) fixed by pinning npm@11.10.0 in Dockerfile. Remaining OS-le
 | CVE-2025-48384 | HIGH | git | 1:2.39.5-0+deb12u3 | n/a | No Bookworm fix; requires crafted repo (residual risk: no enforcement prevents cloning untrusted repos) |
 | CVE-2025-48385 | HIGH | git | 1:2.39.5-0+deb12u3 | n/a | No Bookworm fix; same as above |
 | CVE-2026-0861 | HIGH | libc-bin | 2.36-9+deb12u13 | n/a | No Bookworm fix; mitigated by container isolation |
+| CVE-2026-26996 | HIGH | minimatch (npm) | 10.1.2, 9.0.5 | 10.2.1 | npm 11.10.0 hasn't updated; can't patch in-place (private @npmcli deps) |
+| CVE-2026-26960 | HIGH | tar (npm) | 7.5.7 | 7.5.8 | npm 11.10.0 hasn't updated; can't patch in-place (private @npmcli deps) |
 
-**Mitigation:** All 5 CVEs are in OS packages with no upstream Bookworm fix. Container hardening (cap-drop ALL, read-only rootfs, no-new-privileges, rootless mode) limits exploitability. Reassess on base image upgrade to Debian Trixie or Node 24.
+**Mitigation:** OS CVEs (5) have no upstream Bookworm fix. npm CVEs (2) have upstream fixes but npm 11.10.0 (latest) hasn't incorporated them; in-place patching fails because npm's `package.json` references private `@npmcli` packages. Container hardening (cap-drop ALL, read-only rootfs, no-new-privileges, rootless mode) limits exploitability. Reassess OS CVEs on base image upgrade to Debian Trixie or Node 24; reassess npm CVEs on next npm release.
 
 ### 3. Documentation
 

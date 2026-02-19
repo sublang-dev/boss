@@ -20,3 +20,15 @@ CVE-2025-48385
 
 # glibc: integer overflow in memalign
 CVE-2026-0861
+
+# npm transitive deps — fixes exist (minimatch 10.2.1, tar 7.5.8) but
+# npm 11.10.0 (latest) hasn't updated. Can't patch in-place because npm's
+# package.json references private @npmcli packages not on public registry.
+# Mitigated: read-only rootfs at runtime, agents don't invoke npm.
+# Reassess on next npm release.
+
+# minimatch: ReDoS via repeated wildcards (fixed in 10.2.1)
+CVE-2026-26996
+
+# tar: hardlink target escape via symlink chain (fixed in 7.5.8)
+CVE-2026-26960

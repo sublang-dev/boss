@@ -133,13 +133,18 @@ after volume mount, ensuring the directory exists on pre-existing
 ### SBD-016
 
 Where the image is built, globally installed npm packages and their
-transitive dependencies shall have no known CRITICAL or HIGH CVEs.
+transitive dependencies shall have no known CRITICAL or HIGH CVEs
+except as permitted by [SBD-017](#sbd-017).
 
 ### SBD-017
 
-Where an OS-level CVE in the base distribution has no available fix,
-the CVE ID and a justification shall be recorded in the accepted-CVE
-list at `image/.trivyignore`.
+Where a CRITICAL or HIGH CVE has no available fix in the base
+distribution, or where a fix exists upstream but cannot be applied
+without breaking the dependent package (e.g., npm internal
+dependencies referencing private registries), the CVE ID, a
+justification, and a concrete reassessment trigger (e.g., next
+upstream release, base image upgrade) shall be recorded in the
+accepted-CVE list at `image/.trivyignore`.
 
 ### SBD-018
 
