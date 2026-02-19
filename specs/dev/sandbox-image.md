@@ -36,8 +36,9 @@ shall be:
 ### SBD-004
 
 Where the image is built, runtime defaults shall include user
-`iteron` (`uid=1000`, `gid=1000`), `tini` as PID 1, and `bash`
-as the default command
+`iteron` (`uid=1000`, `gid=1000`), `tini` as PID 1, `bash`
+as the default command, and `en_US.UTF-8` locale (`LANG` and
+`LC_ALL`)
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
 ### SBD-005

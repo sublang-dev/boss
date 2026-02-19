@@ -40,6 +40,12 @@ Where `iteron-sandbox:<tag>` is built, when `tmux -V` runs in the
 container, the command shall exit 0 and print a tmux version
 ([DR-001 §2](../decisions/001-sandbox-architecture.md#2-tmux-mapping)).
 
+### SBT-045
+
+Where `iteron-sandbox:<tag>` is built, when `locale` runs in the
+container, `LANG` and `LC_ALL` shall both be `en_US.UTF-8`
+([SBD-004](../dev/sandbox-image.md#sbd-004)).
+
 ## Security and Defaults
 
 ### SBT-005

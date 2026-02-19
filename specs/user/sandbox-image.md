@@ -32,6 +32,13 @@ processes write outside `/tmp` and `/home/iteron`, the writes
 shall fail
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
+### SBX-012
+
+Where a user opens a shell or agent session in the container,
+the locale shall be `en_US.UTF-8` so that Unicode characters
+render correctly
+([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
+
 ### SBX-004
 
 Where a user attaches to tmux in the container, tmux shall have

@@ -23,7 +23,8 @@ Build a multi-arch OCI container image that packages all four agent runtimes (Cl
 ### 1. Dockerfile: base image and utilities
 
 - Base: `node:22-bookworm-slim` (Debian Bookworm, ~30 MB) per [DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)
-- Install system packages: `tini`, `tmux`, `bash`, `git`, `curl`, `jq`
+- Install system packages: `tini`, `tmux`, `bash`, `git`, `curl`, `jq`, `locales`
+- Generate `en_US.UTF-8` locale; set `LANG` and `LC_ALL` to `en_US.UTF-8`
 - Create non-root user `iteron` (UID 1000, GID 1000, home `/home/iteron`)
 - Set `ENTRYPOINT ["/usr/bin/tini", "--"]` and `CMD ["bash"]`
 - Set `USER iteron` and `WORKDIR /home/iteron`
