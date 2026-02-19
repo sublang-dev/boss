@@ -104,28 +104,37 @@ describe('iteron start/stop (integration)', { timeout: 120_000, sequential: true
   it('persists data across restart via volume', async () => {
     // Use a unique filename to avoid false-pass from stale volume state
     const marker = `persist-test-${Date.now()}`;
-    // Create a file in the volume
-    execFileSync('podman', ['exec', TEST_CONTAINER, 'touch', `/home/iteron/${marker}`], { stdio: 'ignore' });
-
-    // Stop
-    const { stopCommand } = await import('../../src/commands/stop.js');
-    await stopCommand();
-
-    // Verify stopped
     try {
-      podmanExecSync(['inspect', TEST_CONTAINER, '--format', '{{.State.Running}}']);
-      // If inspect succeeds, container still exists but should not be running
-      expect(true).toBe(false); // should have thrown since container is removed
-    } catch {
-      // Expected: container removed after stop
+      // Create a file in the volume
+      execFileSync('podman', ['exec', TEST_CONTAINER, 'touch', `/home/iteron/${marker}`], { stdio: 'ignore' });
+
+      // Stop
+      const { stopCommand } = await import('../../src/commands/stop.js');
+      await stopCommand();
+
+      // Verify stopped
+      try {
+        podmanExecSync(['inspect', TEST_CONTAINER, '--format', '{{.State.Running}}']);
+        // If inspect succeeds, container still exists but should not be running
+        expect(true).toBe(false); // should have thrown since container is removed
+      } catch {
+        // Expected: container removed after stop
+      }
+
+      // Restart
+      const { startCommand } = await import('../../src/commands/start.js');
+      await startCommand();
+
+      // Verify file persists (test -f exits 0 if file exists, throws otherwise)
+      execFileSync('podman', ['exec', TEST_CONTAINER, 'test', '-f', `/home/iteron/${marker}`], { stdio: 'ignore' });
+    } finally {
+      // Best-effort cleanup: marker is only for verification, not fixture state.
+      try {
+        execFileSync('podman', ['exec', TEST_CONTAINER, 'rm', '-f', `/home/iteron/${marker}`], { stdio: 'ignore' });
+      } catch {
+        // Container may not be running if the test failed before restart.
+      }
     }
-
-    // Restart
-    const { startCommand } = await import('../../src/commands/start.js');
-    await startCommand();
-
-    // Verify file persists (test -f exits 0 if file exists, throws otherwise)
-    execFileSync('podman', ['exec', TEST_CONTAINER, 'test', '-f', `/home/iteron/${marker}`], { stdio: 'ignore' });
   });
 
   // SBT-035: ~/.local/bin reconciled on start with pre-existing volume
