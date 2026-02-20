@@ -73,7 +73,7 @@ RUN mise trust /etc/mise/config.toml \
 
 # ---------- verify agent binaries ----------
 RUN claude --version \
- && codex --version \
+ && codex --help > /dev/null \
  && gemini --version \
  && opencode --version
 
