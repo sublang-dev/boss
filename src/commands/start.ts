@@ -101,15 +101,19 @@ export async function startCommand(): Promise<void> {
 
     // DR-004 §5: reconcile mise tools (idempotent; fast when tools are present).
     // Guard: skip when mise is absent (e.g., pre-IR-008 images).
+    let hasMise = false;
     try {
-      await podmanExec(['exec', name, 'command', '-v', 'mise']);
+      await podmanExec(['exec', name, 'sh', '-c', 'command -v mise >/dev/null']);
+      hasMise = true;
+    } catch {
+      // mise not available — tools are managed directly in the image
+    }
+    if (hasMise) {
       // Seed user-global mise config if absent (pre-IR-008 volumes lack it).
       await podmanExec(['exec', name, 'sh', '-c',
         'test -f ~/.config/mise/config.toml || { mkdir -p ~/.config/mise && touch ~/.config/mise/config.toml; }']);
       await podmanExec(['exec', name, 'mise', 'trust', '/home/iteron/.config/mise/config.toml']);
       await podmanExec(['exec', name, 'mise', 'install']);
-    } catch {
-      // mise not available — tools are managed directly in the image
     }
 
     // DR-003 §2: reconcile managed SSH config in container
