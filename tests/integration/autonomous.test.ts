@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { mkdtempSync, writeFileSync, chmodSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, chmodSync, rmSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { tmpdir, homedir } from 'node:os';
 import { rm, mkdir } from 'node:fs/promises';
 import { spawnSync, execFileSync } from 'node:child_process';
 
@@ -19,12 +19,37 @@ const PERMISSION_PATTERNS = /\[Y\/n\]|\bAllow\b|\bapprove\b|permission to |Do yo
 
 let configDir: string;
 
-/** At least one agent auth key must be set for autonomous tests to be meaningful. */
+/** All agent auth keys used for secret registration and env merging. */
 const AUTH_KEYS = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'CODEX_API_KEY', 'GEMINI_API_KEY', 'MOONSHOT_API_KEY'];
-const HAS_AUTH = AUTH_KEYS.some((k) => !!process.env[k]);
 
-/** Flip to false once Codex / Gemini / OpenCode API keys are funded. */
-const SKIP_UNPAID_AGENTS = true;
+/**
+ * All four agent providers must have credentials for autonomous tests (IR-006).
+ * Claude accepts either OAuth token or API key; other agents each need one key.
+ * Checks both process.env and ~/.iteron/.env so local dev isn't skipped.
+ */
+const REQUIRED_CREDS: string[][] = [
+  ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY'],  // either suffices
+  ['CODEX_API_KEY'],
+  ['GEMINI_API_KEY'],
+  ['MOONSHOT_API_KEY'],
+];
+
+function hasAllAgentCreds(): boolean {
+  const available = new Set<string>();
+  for (const k of AUTH_KEYS) {
+    if (process.env[k]) available.add(k);
+  }
+  try {
+    const envContent = readFileSync(join(homedir(), '.iteron', '.env'), 'utf-8');
+    for (const line of envContent.split('\n')) {
+      const match = line.match(/^([A-Z_][A-Z0-9_]*)=(.+)$/);
+      if (match && AUTH_KEYS.includes(match[1])) available.add(match[1]);
+    }
+  } catch { /* no .env file */ }
+  return REQUIRED_CREDS.every((group) => group.some((k) => available.has(k)));
+}
+const HAS_AUTH = hasAllAgentCreds();
+
 const SECRET_VALUES = new Set<string>();
 
 function registerSecretValue(raw: string | undefined): void {
@@ -149,7 +174,7 @@ describe('autonomous log redaction helpers', () => {
   });
 });
 
-// Skip when no auth keys — these tests need real agents.
+// Skip unless all four agent providers have credentials (IR-006).
 describe.skipIf(!HAS_AUTH)(
   'IR-006 autonomous execution (integration)',
   { timeout: 300_000, sequential: true },
@@ -219,6 +244,16 @@ memory = "2g"
 
       const { startCommand } = await import('../../src/commands/start.js');
       await startCommand();
+
+      // Pre-warm OpenCode's one-time database migration so it doesn't eat test time.
+      try {
+        execFileSync('podman', ['exec', TEST_CONTAINER, 'opencode', 'version'], {
+          encoding: 'utf-8',
+          timeout: 60_000,
+        });
+      } catch (err) {
+        console.warn('Warning: OpenCode pre-warm failed:', (err as Error).message?.split('\n')[0] ?? err);
+      }
     });
 
     afterAll(async () => {
@@ -269,7 +304,7 @@ memory = "2g"
 
     let codexLog = '';
 
-    it.skipIf(SKIP_UNPAID_AGENTS)('Codex CLI autonomously fixes the bug', () => {
+    it('Codex CLI autonomously fixes the bug', () => {
       setupFixture('test-codex');
 
       const agent = runAgent(
@@ -285,7 +320,7 @@ memory = "2g"
       expect(result.output).toContain('PASS');
     });
 
-    it.skipIf(SKIP_UNPAID_AGENTS)('Codex CLI log has no permission prompts', () => {
+    it('Codex CLI log has no permission prompts', () => {
       expect(codexLog).not.toMatch(PERMISSION_PATTERNS);
     });
 
@@ -293,7 +328,7 @@ memory = "2g"
 
     let geminiLog = '';
 
-    it.skipIf(SKIP_UNPAID_AGENTS)('Gemini CLI autonomously fixes the bug', () => {
+    it('Gemini CLI autonomously fixes the bug', () => {
       setupFixture('test-gemini');
 
       const agent = runAgent(
@@ -309,7 +344,7 @@ memory = "2g"
       expect(result.output).toContain('PASS');
     });
 
-    it.skipIf(SKIP_UNPAID_AGENTS)('Gemini CLI log has no permission prompts', () => {
+    it('Gemini CLI log has no permission prompts', () => {
       expect(geminiLog).not.toMatch(PERMISSION_PATTERNS);
     });
 
@@ -317,12 +352,13 @@ memory = "2g"
 
     let opencodeLog = '';
 
-    it.skipIf(SKIP_UNPAID_AGENTS)('OpenCode autonomously fixes the bug', () => {
+    it('OpenCode autonomously fixes the bug', () => {
       setupFixture('test-opencode');
 
       const agent = runAgent(
         'test-opencode',
         'opencode run -m moonshotai-cn/kimi-k2.5 "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."',
+        180_000,
       );
       opencodeLog = agent.log;
       dumpAgentLog('opencode', agent.log);
@@ -334,7 +370,7 @@ memory = "2g"
       expect(result.output).toContain('PASS');
     });
 
-    it.skipIf(SKIP_UNPAID_AGENTS)('OpenCode log has no permission prompts', () => {
+    it('OpenCode log has no permission prompts', () => {
       expect(opencodeLog).not.toMatch(PERMISSION_PATTERNS);
     });
   },
