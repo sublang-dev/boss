@@ -55,6 +55,19 @@ FULL_TAG="${IMAGE_NAME}:${TAG}"
 echo "Runtime: ${RUNTIME}"
 echo "Image:   ${FULL_TAG}"
 
+# Optional: forward GITHUB_TOKEN as a build secret to avoid API rate limits
+# during mise lock (github backend resolves releases via GitHub API).
+# Accept GH_TOKEN (gh CLI default) as fallback.
+GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+SECRET_ARGS=()
+if [[ -n "${GITHUB_TOKEN}" ]]; then
+  if [[ "${RUNTIME}" == podman ]]; then
+    SECRET_ARGS+=(--secret "id=GITHUB_TOKEN,env=GITHUB_TOKEN")
+  else
+    SECRET_ARGS+=(--secret "id=GITHUB_TOKEN")
+  fi
+fi
+
 if [[ "${MULTI_ARCH}" == true ]]; then
   if [[ "${PUSH}" != true ]]; then
     echo "Error: --multi-arch requires --push (multi-platform builds cannot be loaded locally)" >&2
@@ -63,8 +76,8 @@ if [[ "${MULTI_ARCH}" == true ]]; then
   echo "Platform: linux/amd64,linux/arm64"
   if [[ "${RUNTIME}" == podman ]]; then
     # Podman: build per-arch, then create and push a manifest list
-    podman build --platform linux/amd64 -t "${FULL_TAG}-amd64" "${IMAGE_DIR}"
-    podman build --platform linux/arm64 -t "${FULL_TAG}-arm64" "${IMAGE_DIR}"
+    podman build "${SECRET_ARGS[@]}" --platform linux/amd64 -t "${FULL_TAG}-amd64" "${IMAGE_DIR}"
+    podman build "${SECRET_ARGS[@]}" --platform linux/arm64 -t "${FULL_TAG}-arm64" "${IMAGE_DIR}"
     podman manifest create "${FULL_TAG}" \
       "${FULL_TAG}-amd64" "${FULL_TAG}-arm64"
     podman manifest push "${FULL_TAG}" "docker://${FULL_TAG}"
@@ -77,6 +90,7 @@ if [[ "${MULTI_ARCH}" == true ]]; then
       docker buildx use "${BUILDER}"
     fi
     docker buildx build \
+      "${SECRET_ARGS[@]}" \
       --platform linux/amd64,linux/arm64 \
       -t "${FULL_TAG}" \
       --push \
@@ -84,7 +98,7 @@ if [[ "${MULTI_ARCH}" == true ]]; then
   fi
 else
   echo "Platform: native"
-  ${RUNTIME} build -t "${FULL_TAG}" "${IMAGE_DIR}"
+  ${RUNTIME} build "${SECRET_ARGS[@]}" -t "${FULL_TAG}" "${IMAGE_DIR}"
   if [[ "${PUSH}" == true ]]; then
     ${RUNTIME} push "${FULL_TAG}"
   fi

@@ -7,7 +7,7 @@
 [![Node.js](https://img.shields.io/node/v/@sublang/iteron)](https://nodejs.org/)
 [![CI](https://github.com/sublang-dev/iteron/actions/workflows/ci.yml/badge.svg)](https://github.com/sublang-dev/iteron/actions/workflows/ci.yml)
 
-Delegate dev loops to Claude Code, Codex CLI, OpenCode or any AI coder. Runs autonomously for hours. No costly API keys.
+Delegate dev loops to Claude Code, Codex CLI, Gemini CLI, OpenCode or any AI coder. Runs autonomously for hours in an isolated Podman sandbox. Subscription/device auth is primary; API keys are supported fallback.
 
 ## Quick Start
 
@@ -40,7 +40,7 @@ Install IterOn globally to launch AI agents in an isolated Podman container.
 
 - Node.js >= 18
 - Podman (installed automatically by `iteron init`, or install manually)
-- At least one API key (`ANTHROPIC_API_KEY`, `CODEX_API_KEY`, or `GEMINI_API_KEY`)
+- One auth method for the agent(s) you use: subscription/device auth (recommended) or API key fallback
 
 #### Setup
 
@@ -51,8 +51,8 @@ npm install -g @sublang/iteron
 # Initialize Podman, pull sandbox image, create config
 iteron init
 
-# Add your API keys
-# Edit ~/.iteron/.env and fill in at least one key
+# Optional fallback API keys
+# Edit ~/.iteron/.env if you prefer key-based auth
 ```
 
 #### Run
@@ -74,23 +74,29 @@ iteron ls
 iteron -h
 ```
 
+Then authenticate in-session (recommended), or set fallback API keys in `~/.iteron/.env`.
+
+If any step fails, see [Troubleshooting](docs/troubleshooting.md).
+
 #### Supported Agents
 
 Built-in (no configuration needed):
 
-| Agent Name | Binary | Provider |
-| --- | --- | --- |
-| `claude` | `claude` | Anthropic |
-| `codex` | `codex` | OpenAI |
-| `gemini` | `gemini` | Google |
-| `opencode` | `opencode` | OpenCode |
+| Agent Name | Binary | Provider | Primary Auth | Fallback Env Var |
+| --- | --- | --- | --- | --- |
+| `claude` | `claude` | Anthropic | `claude setup-token` | `ANTHROPIC_API_KEY` |
+| `codex` | `codex` | OpenAI | `codex login --device-auth` | `CODEX_API_KEY` |
+| `gemini` | `gemini` | Google | `NO_BROWSER` OAuth flow | `GEMINI_API_KEY` |
+| `opencode` | `opencode` | OpenCode | Host credential forwarding | `MOONSHOT_API_KEY` |
+
+For full auth details and caveats, see [Agent Configuration](docs/agents.md).
 
 #### Configuration
 
 | File | Purpose |
 | --- | --- |
 | `~/.iteron/config.toml` | Container settings, [SSH keys](docs/agents.md#ssh-keys) |
-| `~/.iteron/.env` | API keys (loaded into container on `start`) |
+| `~/.iteron/.env` | Auth env vars (subscription tokens and API-key fallbacks; loaded on `start`) |
 
 ## Workflow
 

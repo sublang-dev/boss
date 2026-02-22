@@ -40,7 +40,11 @@ ENV PATH="/home/iteron/.local/share/mise/shims:/home/iteron/.local/bin:${PATH}"
 
 # ---------- mise system config + lockfile (root phase) ----------
 COPY conf/mise-system.toml /etc/mise/config.toml
-RUN mise lock
+RUN --mount=type=secret,id=GITHUB_TOKEN \
+    if [ -f /run/secrets/GITHUB_TOKEN ]; then \
+      export GITHUB_TOKEN="$(cat /run/secrets/GITHUB_TOKEN)"; \
+    fi \
+ && mise lock
 
 # ---------- container defaults ----------
 ENV NO_BROWSER=true
