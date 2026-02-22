@@ -76,8 +76,8 @@ if [[ "${MULTI_ARCH}" == true ]]; then
   echo "Platform: linux/amd64,linux/arm64"
   if [[ "${RUNTIME}" == podman ]]; then
     # Podman: build per-arch, then create and push a manifest list
-    podman build "${SECRET_ARGS[@]}" --platform linux/amd64 -t "${FULL_TAG}-amd64" "${IMAGE_DIR}"
-    podman build "${SECRET_ARGS[@]}" --platform linux/arm64 -t "${FULL_TAG}-arm64" "${IMAGE_DIR}"
+    podman build ${SECRET_ARGS[@]+"${SECRET_ARGS[@]}"} --platform linux/amd64 -t "${FULL_TAG}-amd64" "${IMAGE_DIR}"
+    podman build ${SECRET_ARGS[@]+"${SECRET_ARGS[@]}"} --platform linux/arm64 -t "${FULL_TAG}-arm64" "${IMAGE_DIR}"
     podman manifest create "${FULL_TAG}" \
       "${FULL_TAG}-amd64" "${FULL_TAG}-arm64"
     podman manifest push "${FULL_TAG}" "docker://${FULL_TAG}"
@@ -90,7 +90,7 @@ if [[ "${MULTI_ARCH}" == true ]]; then
       docker buildx use "${BUILDER}"
     fi
     docker buildx build \
-      "${SECRET_ARGS[@]}" \
+      ${SECRET_ARGS[@]+"${SECRET_ARGS[@]}"} \
       --platform linux/amd64,linux/arm64 \
       -t "${FULL_TAG}" \
       --push \
@@ -98,7 +98,7 @@ if [[ "${MULTI_ARCH}" == true ]]; then
   fi
 else
   echo "Platform: native"
-  ${RUNTIME} build "${SECRET_ARGS[@]}" -t "${FULL_TAG}" "${IMAGE_DIR}"
+  ${RUNTIME} build ${SECRET_ARGS[@]+"${SECRET_ARGS[@]}"} -t "${FULL_TAG}" "${IMAGE_DIR}"
   if [[ "${PUSH}" == true ]]; then
     ${RUNTIME} push "${FULL_TAG}"
   fi

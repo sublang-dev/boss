@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { mkdtempSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -14,6 +14,7 @@ let configDir: string;
 const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
 
 beforeAll(() => {
+  expect(process.env.BOSS_TEST_IMAGE, 'BOSS_TEST_IMAGE must be set by globalSetup').toBeTruthy();
   configDir = mkdtempSync(join(tmpdir(), 'boss-init-test-'));
   process.env.BOSS_CONFIG_DIR = configDir;
 });
@@ -57,7 +58,7 @@ describe('boss init (integration)', { timeout: 120_000 }, () => {
     expect(existsSync(configPath)).toBe(true);
   });
 
-  it('updates legacy image in existing config to default image', async () => {
+  it('auto-migrates legacy default image on plain init', async () => {
     const legacyToml = `[container]
 name = "boss-sandbox"
 image = "docker.io/library/alpine:latest"
@@ -66,12 +67,25 @@ memory = "16g"
     const configPath = join(configDir, 'config.toml');
     writeFileSync(configPath, legacyToml, 'utf-8');
 
-    const { initCommand } = await import('../../src/commands/init.js');
-    const { DEFAULT_IMAGE } = await import('../../src/utils/config.js');
-    await initCommand({ yes: true });
+    // Mock DEFAULT_IMAGE to TEST_IMAGE so the pull step succeeds with
+    // the locally-built CI image, while still exercising the
+    // isLegacyDefault auto-migration path (force=false).
+    vi.doMock('../../src/utils/config.js', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('../../src/utils/config.js')>();
+      return { ...actual, DEFAULT_IMAGE: TEST_IMAGE };
+    });
+    vi.resetModules();
+
+    try {
+      const { initCommand } = await import('../../src/commands/init.js');
+      await initCommand({ yes: true });
+    } finally {
+      vi.doUnmock('../../src/utils/config.js');
+      vi.resetModules();
+    }
 
     const configContent = readFileSync(configPath, 'utf-8');
-    expect(configContent).toContain(DEFAULT_IMAGE);
+    expect(configContent).toContain(TEST_IMAGE);
     expect(configContent).not.toContain('docker.io/library/alpine:latest');
   });
 });
