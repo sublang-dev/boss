@@ -167,6 +167,12 @@ Where the image is built, tmux system configuration at `/etc/tmux.conf`
 shall enable OSC 52 clipboard passthrough (`set-clipboard on`,
 `allow-passthrough on`).
 
+### SBD-028
+
+Where the image is built, tmux system configuration shall set
+`default-terminal` to `screen-256color` for agent TUI compatibility
+([DR-001 §2](../decisions/001-sandbox-architecture.md#2-tmux-mapping)).
+
 ### SBD-021
 
 Where the image is built, tmux user configuration at `~/.tmux.conf`

@@ -307,6 +307,12 @@ Where `iteron-sandbox:<tag>` is built, `/etc/tmux.conf` shall
 contain `set-clipboard on` and `allow-passthrough on`
 ([SBD-020](../dev/sandbox-image.md#sbd-020)).
 
+### SBT-050
+
+Where `iteron-sandbox:<tag>` is built, `/etc/tmux.conf` shall
+contain `set -g default-terminal "screen-256color"`
+([SBD-028](../dev/sandbox-image.md#sbd-028)).
+
 ### SBT-041
 
 Where `iteron-sandbox:<tag>` is built, the image-provided default

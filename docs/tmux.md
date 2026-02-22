@@ -89,7 +89,9 @@ The sandbox uses a two-tier tmux configuration:
 
 ```
 set -g history-limit 10000
-set -g default-terminal "tmux-256color"
+# screen-256color (not tmux-256color) — some agent CLIs render
+# > and single-quote chars as underscores under tmux-256color.
+set -g default-terminal "screen-256color"
 set -g mouse off
 set -g set-clipboard on
 set -g allow-passthrough on
