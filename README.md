@@ -9,14 +9,6 @@
 
 Delegate dev loops to Claude Code, Codex CLI, OpenCode or any AI coder. Runs autonomously for hours. No costly API keys.
 
-> **Status:**
->
-> - [x] Stage 1 — Spec scaffolding (`iteron scaffold`)
-> - [x] Stage 2 — OCI sandbox image with Claude Code, Codex CLI, Gemini CLI, OpenCode
-> - [x] Stage 3 — Container lifecycle (`iteron init`, `start`, `stop`)
-> - [x] Stage 4 — Workspace interaction (`iteron open`, `ls`, `rm`)
-> - [ ] Stage 5 — Headless authentication  — in progress
-
 ## Quick Start
 
 Pick the path that fits your setup:

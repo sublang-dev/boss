@@ -11,7 +11,7 @@ Verify that each agent can complete a real coding task autonomously — no permi
 
 - [x] Test fixture script that creates a reproducible project inside the container
 - [x] Per-agent test scripts that run the agent, wait for completion, and check artifacts
-- [ ] All four agents pass the coding task without human interaction
+- [x] All four agents pass the coding task without human interaction
 
 ## Tasks
 

@@ -9,14 +9,14 @@ Migrate agent CLI installation from direct npm/binary installs to mise-managed p
 
 ## Deliverables
 
-- [ ] mise binary installed in sandbox image (pinned version)
-- [ ] System config `/etc/mise/config.toml` with baseline agent declarations and backend denylist
-- [ ] Lockfile `/etc/mise/mise.lock` baked into image layer
-- [ ] Agent CLIs preinstalled via `mise install` during image build
-- [ ] mise shims on `PATH` for non-interactive tool invocation
-- [ ] User-global config template at `~/.config/mise/config.toml`
-- [ ] Start-time reconciliation in `iteron start`
-- [ ] Dev, test, and user spec updates
+- [x] mise binary installed in sandbox image (pinned version)
+- [x] System config `/etc/mise/config.toml` with baseline agent declarations and backend denylist
+- [x] Lockfile `/etc/mise/mise.lock` baked into image layer
+- [x] Agent CLIs preinstalled via `mise install` during image build
+- [x] mise shims on `PATH` for non-interactive tool invocation
+- [x] User-global config template at `~/.config/mise/config.toml`
+- [x] Start-time reconciliation in `iteron start`
+- [x] Dev, test, and user spec updates
 
 ## Tasks
 
