@@ -8,9 +8,9 @@ import { tmpdir, homedir } from 'node:os';
 import { rm, mkdir } from 'node:fs/promises';
 import { spawnSync, execFileSync } from 'node:child_process';
 
-// Guaranteed by globalSetup (builds iteron-sandbox:dev locally when unset).
-const TEST_IMAGE = process.env.ITERON_TEST_IMAGE!;
-const TEST_CONTAINER = 'iteron-test-sandbox';
+// Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
+const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
+const TEST_CONTAINER = 'boss-test-sandbox';
 
 const SETUP_FIXTURE = join(import.meta.dirname, '..', 'setup-fixture.sh');
 
@@ -25,7 +25,7 @@ const AUTH_KEYS = ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY', 'CODEX_API_KE
 /**
  * All four agent providers must have credentials for autonomous tests (IR-006).
  * Claude accepts either OAuth token or API key; other agents each need one key.
- * Checks both process.env and ~/.iteron/.env so local dev isn't skipped.
+ * Checks both process.env and ~/.boss/.env so local dev isn't skipped.
  */
 const REQUIRED_CREDS: string[][] = [
   ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_API_KEY'],  // either suffices
@@ -40,7 +40,7 @@ function hasAllAgentCreds(): boolean {
     if (process.env[k]) available.add(k);
   }
   try {
-    const envContent = readFileSync(join(homedir(), '.iteron', '.env'), 'utf-8');
+    const envContent = readFileSync(join(homedir(), '.boss', '.env'), 'utf-8');
     for (const line of envContent.split('\n')) {
       const match = line.match(/^([A-Z_][A-Z0-9_]*)=(.+)$/);
       if (match && AUTH_KEYS.includes(match[1])) available.add(match[1]);
@@ -89,7 +89,7 @@ function runAgent(
 ): { exitCode: number; log: string } {
   const result = spawnSync(
     'podman',
-    ['exec', TEST_CONTAINER, 'bash', '-c', `cd /home/iteron/${workspace} && ${agentCmd}`],
+    ['exec', TEST_CONTAINER, 'bash', '-c', `cd /home/boss/${workspace} && ${agentCmd}`],
     { encoding: 'utf-8', timeout },
   );
   return {
@@ -144,7 +144,7 @@ function setupFixture(workspace: string): void {
 function verifyNpmTest(workspace: string): { exitCode: number; output: string } {
   try {
     const stdout = containerExec(
-      ['bash', '-c', `cd /home/iteron/${workspace} && npm test`],
+      ['bash', '-c', `cd /home/boss/${workspace} && npm test`],
       { timeout: 30_000 },
     );
     return { exitCode: 0, output: stdout };
@@ -164,7 +164,7 @@ async function cleanup(): Promise<void> {
 
 describe('autonomous log redaction helpers', () => {
   it('masks registered secret values', () => {
-    const secret = '__ITERON_TEST_SECRET_0123456789__';
+    const secret = '__BOSS_TEST_SECRET_0123456789__';
     SECRET_VALUES.add(secret);
     try {
       expect(redactSecrets(`prefix ${secret} suffix`)).toBe('prefix *** suffix');
@@ -182,8 +182,8 @@ describe.skipIf(!HAS_AUTH)(
     beforeAll(async () => {
       await cleanup();
 
-      configDir = mkdtempSync(join(tmpdir(), 'iteron-autonomous-test-'));
-      process.env.ITERON_CONFIG_DIR = configDir;
+      configDir = mkdtempSync(join(tmpdir(), 'boss-autonomous-test-'));
+      process.env.BOSS_CONFIG_DIR = configDir;
 
       await mkdir(configDir, { recursive: true });
 
@@ -195,13 +195,13 @@ memory = "2g"
       writeFileSync(join(configDir, 'config.toml'), configToml, 'utf-8');
 
       // .env must supply valid auth tokens; tests rely on IR-005 headless auth.
-      // Start from ~/.iteron/.env as baseline, then overlay process.env values
+      // Start from ~/.boss/.env as baseline, then overlay process.env values
       // so CI-injected secrets and local credentials merge correctly.
       const envFile = join(configDir, '.env');
       const envMap = new Map<string, string>();
 
-      // Baseline: copy from ~/.iteron/.env if it exists.
-      const realEnv = join(process.env.HOME ?? '', '.iteron', '.env');
+      // Baseline: copy from ~/.boss/.env if it exists.
+      const realEnv = join(process.env.HOME ?? '', '.boss', '.env');
       try {
         const envContent = execFileSync('cat', [realEnv], { encoding: 'utf-8' });
         for (const line of envContent.split('\n')) {
@@ -239,8 +239,8 @@ memory = "2g"
       });
 
       // Remove stale volume so image autonomy configs propagate to a fresh one.
-      try { execFileSync('podman', ['volume', 'rm', '-f', 'iteron-data'], { stdio: 'ignore' }); } catch {}
-      try { execFileSync('podman', ['volume', 'create', 'iteron-data'], { stdio: 'ignore' }); } catch {}
+      try { execFileSync('podman', ['volume', 'rm', '-f', 'boss-data'], { stdio: 'ignore' }); } catch {}
+      try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
 
       const { startCommand } = await import('../../src/commands/start.js');
       await startCommand();
@@ -258,8 +258,8 @@ memory = "2g"
 
     afterAll(async () => {
       await cleanup();
-      try { execFileSync('podman', ['volume', 'rm', '-f', 'iteron-data'], { stdio: 'ignore' }); } catch {}
-      delete process.env.ITERON_CONFIG_DIR;
+      try { execFileSync('podman', ['volume', 'rm', '-f', 'boss-data'], { stdio: 'ignore' }); } catch {}
+      delete process.env.BOSS_CONFIG_DIR;
       if (configDir) await rm(configDir, { recursive: true, force: true });
     });
 
@@ -273,7 +273,7 @@ memory = "2g"
       expect(result.output).toMatch(/AssertionError|AssertionError/i);
 
       // Cleanup
-      try { containerExec(['rm', '-rf', '/home/iteron/test-precheck']); } catch {}
+      try { containerExec(['rm', '-rf', '/home/boss/test-precheck']); } catch {}
     });
 
     // ── Verification #2–3: Claude Code ──────────────────────────────────

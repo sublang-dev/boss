@@ -14,17 +14,17 @@ Add automated unit and integration tests for the CLI utilities and container lif
 - [x] Integration tests for `init`, `start`, `stop` with real Podman
 - [x] CI: unit tests on Node 20/22, integration tests on Ubuntu with Podman
 - [x] CI: integration tests against prebuilt sandbox image on Ubuntu
-- [x] `ITERON_CONFIG_DIR` env var override for test isolation
-- [x] `ITERON_TEST_IMAGE` env var override for CI against real sandbox image
+- [x] `BOSS_CONFIG_DIR` env var override for test isolation
+- [x] `BOSS_TEST_IMAGE` env var override for CI against real sandbox image
 
 ## Tasks
 
 ### 1. Production code change
 
-Make `CONFIG_DIR` respect `ITERON_CONFIG_DIR` env var so tests can use isolated temp directories without polluting `~/.iteron`:
+Make `CONFIG_DIR` respect `BOSS_CONFIG_DIR` env var so tests can use isolated temp directories without polluting `~/.boss`:
 
 ```typescript
-export const CONFIG_DIR = process.env.ITERON_CONFIG_DIR ?? join(homedir(), '.iteron');
+export const CONFIG_DIR = process.env.BOSS_CONFIG_DIR ?? join(homedir(), '.boss');
 ```
 
 ### 2. Test framework setup
@@ -49,7 +49,7 @@ export const CONFIG_DIR = process.env.ITERON_CONFIG_DIR ?? join(homedir(), '.ite
 - `detectPlatform()`: mock `process.platform`/`process.arch`/`readFileSync` for macOS, linux, wsl, unsupported
 - `detectInstallMethod()`: mock `execFileSync` (the `which` calls)
 
-**`tests/unit/config.test.ts`** (uses temp dir via `ITERON_CONFIG_DIR`):
+**`tests/unit/config.test.ts`** (uses temp dir via `BOSS_CONFIG_DIR`):
 
 - `defaultConfig()` returns correct structure with/without custom image
 - `writeConfig()` → `readConfig()` round-trip
@@ -88,7 +88,7 @@ export const CONFIG_DIR = process.env.ITERON_CONFIG_DIR ?? join(homedir(), '.ite
 - Env propagation — IR-002 test 12
 - Volume persistence across restart — IR-002 test 13
 
-Integration tests respect `ITERON_TEST_IMAGE` env var (defaults to `alpine:latest` for fast local runs). Use 120s timeout and run sequentially via `--fileParallelism=false` (shared Podman state). Robust `afterAll` cleanup.
+Integration tests respect `BOSS_TEST_IMAGE` env var (defaults to `alpine:latest` for fast local runs). Use 120s timeout and run sequentially via `--fileParallelism=false` (shared Podman state). Robust `afterAll` cleanup.
 
 ### 5. CI updates
 
@@ -97,7 +97,7 @@ Extend `.github/workflows/ci.yml` with four jobs:
 - **build**: existing — `npm run build` on Node [18, 20, 22]
 - **test-unit**: parallel with build — `npm test` on Node [20, 22] (Vitest 4 requires Node >=20)
 - **test-integration**: after build — `npm run test:integration` on Ubuntu, Node 22 only, `alpine:latest` (fast smoke test, Podman pre-installed)
-- **test-integration-image**: after build — `npm run test:integration` on Ubuntu, Node 22, with `ITERON_TEST_IMAGE=ghcr.io/sublang-dev/iteron-sandbox:dev-latest` (validates CLI against real sandbox image; macOS omitted because GitHub Actions runners lack nested virtualization for Podman machine)
+- **test-integration-image**: after build — `npm run test:integration` on Ubuntu, Node 22, with `BOSS_TEST_IMAGE=ghcr.io/sublang-dev/boss-sandbox:dev-latest` (validates CLI against real sandbox image; macOS omitted because GitHub Actions runners lack nested virtualization for Podman machine)
 
 ## Verification
 

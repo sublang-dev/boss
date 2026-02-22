@@ -4,15 +4,15 @@
 
 # Creates the IR-006 test fixture (buggy Node.js project) inside a container.
 # Usage: setup-fixture.sh <container> <workspace>
-#   container  — Podman container name (e.g. iteron-test-sandbox)
-#   workspace  — Target directory name under /home/iteron (e.g. test-cc)
+#   container  — Podman container name (e.g. boss-test-sandbox)
+#   workspace  — Target directory name under /home/boss (e.g. test-cc)
 
 set -euo pipefail
 
 CONTAINER="${1:?Usage: setup-fixture.sh <container> <workspace>}"
 WORKSPACE="${2:?Usage: setup-fixture.sh <container> <workspace>}"
 
-DIR="/home/iteron/${WORKSPACE}"
+DIR="/home/boss/${WORKSPACE}"
 
 # Clean any previous fixture
 podman exec "$CONTAINER" rm -rf "$DIR"

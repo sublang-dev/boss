@@ -135,7 +135,7 @@ export async function inspectContainer(name: string, format: string): Promise<st
 export function podmanErrorMessage(error: unknown): string {
   const err = error as { code?: string; stderr?: string; message?: string };
   if (err.code === 'ENOENT') {
-    return 'Podman is not installed. Run "iteron init" to set up your environment.';
+    return 'Podman is not installed. Run "boss init" to set up your environment.';
   }
   if (err.stderr) {
     const lines = err.stderr.trim().split('\n');

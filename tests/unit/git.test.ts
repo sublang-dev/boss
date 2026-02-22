@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtempSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { rm } from 'node:fs/promises';
@@ -11,7 +11,7 @@ import { findGitRoot } from '../../src/utils/git.js';
 const tempDirs: string[] = [];
 
 function makeTempDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'iteron-git-test-'));
+  const dir = mkdtempSync(join(tmpdir(), 'boss-git-test-'));
   tempDirs.push(dir);
   return dir;
 }
@@ -25,11 +25,11 @@ afterEach(async () => {
 
 describe('findGitRoot', () => {
   it('finds git root from repo directory', () => {
-    // The IterOn project itself is a git repo — use it.
+    // The project itself is a git repo — use it.
     const root = findGitRoot(__dirname);
     expect(root).toBeTruthy();
     // Root should contain package.json
-    expect(root).toMatch(/IterOn$/);
+    expect(existsSync(join(root!, 'package.json'))).toBe(true);
   });
 
   it('returns null from a temp dir without .git', () => {

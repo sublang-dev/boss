@@ -13,7 +13,7 @@ Projects need a standardized structure and format for specifications to support 
 
 ## Decision
 
-Use `iteron scaffold` to create the following.
+Use `boss scaffold` to create the following.
 
 ### Records
 

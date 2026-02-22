@@ -15,8 +15,8 @@ runtime tool provisioning. The next design must satisfy these priorities:
 
 1. **Easy install and upgrade**: Users and agents need a single workflow for
    adding and upgrading CLIs without rebuilding the base image.
-2. **Persistence across restarts**: Installed tools must survive `iteron stop`
-   and `iteron start` because `/home/iteron` is volume-backed.
+2. **Persistence across restarts**: Installed tools must survive `boss stop`
+   and `boss start` because `/home/boss` is volume-backed.
 3. **Easy foundation image upgrades**: New base images must not require manual
    reinstall choreography.
 4. **Future local/AWS parity**: Declarative intent should sync; machine-local
@@ -35,12 +35,12 @@ Tools are separated by lifecycle:
 | Layer | Contents | Storage | Change cadence |
 | --- | --- | --- | --- |
 | **Image** | OS base, `mise`, `/etc/mise/config.toml` (baseline agent declarations) | OCI image | Slow |
-| **Manifest** | `~/.config/mise/config.toml` and `~/.config/mise/mise.lock` (user-global declarations and lockfile) | `iteron-data` volume | As needed |
-| **Installed tools** | `~/.local/share/mise/` installs/downloads/shims (agent and user tool artifacts) | `iteron-data` volume | Reconciled |
+| **Manifest** | `~/.config/mise/config.toml` and `~/.config/mise/mise.lock` (user-global declarations and lockfile) | `boss-data` volume | As needed |
+| **Installed tools** | `~/.local/share/mise/` installs/downloads/shims (agent and user tool artifacts) | `boss-data` volume | Reconciled |
 
 ### 2. mise as the package manager
 
-IterOn uses **mise** \[1] as the user-space tool manager. It supports a global
+Boss uses **mise** \[1] as the user-space tool manager. It supports a global
 manifest, multiple backends (including npm and GitHub), and lockfile-based
 resolution \[2]\[3]\[4].
 
@@ -63,18 +63,18 @@ it works for interactive sessions and non-interactive agent execution.
 
 Inside the running container, users and CLI agents can manage tools with mise
 commands (for example, `mise use -g ...`, `mise install`, `mise upgrade`)
-\[7]\[8]\[9]. Installed artifacts remain under `/home/iteron`, so they persist
+\[7]\[8]\[9]. Installed artifacts remain under `/home/boss`, so they persist
 across restarts.
 
 ### 5. Reconciliation policy on container start
 
-`iteron start` shall run reconciliation:
+`boss start` shall run reconciliation:
 
 - `mise trust /etc/mise/config.toml` \[10]
 - `mise trust ~/.config/mise/config.toml` \[10]
 - `mise install --locked` \[5]\[11]
 
-Trust state lives under `/home/iteron` (on the persistent volume) and may be
+Trust state lives under `/home/boss` (on the persistent volume) and may be
 empty on first start or stale after image upgrades, so both configs are
 re-trusted unconditionally. `--locked` is required because the container
 rootfs is read-only and the system lockfile at `/etc/mise/mise.lock` cannot be
@@ -88,7 +88,7 @@ upgrades when the volume has stale artifacts.
 
 ### 6. Locking and reproducibility
 
-IterOn uses lockfile mode for reproducibility \[2]\[11]. For global config, the
+Boss uses lockfile mode for reproducibility \[2]\[11]. For global config, the
 lockfile path is `~/.config/mise/mise.lock`; for project config (`mise.toml`)
 the lockfile path is also `mise.lock` \[11]\[17].
 
@@ -119,7 +119,7 @@ To preserve local/AWS parity while avoiding architecture leaks:
 
 To reduce drift and constrain resolution behavior:
 
-- **Backend denylist policy**: IterOn-managed global config
+- **Backend denylist policy**: Boss-managed global config
   (`/etc/mise/config.toml`) and recommended user-global config
   (`~/.config/mise/config.toml`) shall enforce "only `npm:` and `github:`"
   by disabling all other backends with `disable_backends` \[12]\[18].
@@ -143,7 +143,7 @@ To reduce drift and constrain resolution behavior:
 | Alternative | Reason |
 | --- | --- |
 | Custom provisioner script | Reimplements version, backend, and idempotency logic already solved by mature tooling |
-| Nix | Default store path is `/nix/store` \[13]. With IterOn's read-only root filesystem ([DR-001 §1](001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)), that requires a dedicated writable `/nix` mount (extra volume design). DeterminateSystems `nix-installer --init none` documents root-only support for non-root workflows \[14]. Multi-user setup adds additional daemon/ownership operational surface \[15]. |
+| Nix | Default store path is `/nix/store` \[13]. With Boss's read-only root filesystem ([DR-001 §1](001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)), that requires a dedicated writable `/nix` mount (extra volume design). DeterminateSystems `nix-installer --init none` documents root-only support for non-root workflows \[14]. Multi-user setup adds additional daemon/ownership operational surface \[15]. |
 | Direct npm only | Cannot cover non-npm binary tools in one declarative workflow |
 
 ## Consequences
@@ -151,7 +151,7 @@ To reduce drift and constrain resolution behavior:
 - **Uniform workflow**: one manager for preinstalled agent tools and runtime
   user/agent tool installs.
 - **Persistent local behavior**: runtime installs survive restart because they
-  live under `/home/iteron`.
+  live under `/home/boss`.
 - **Clean image upgrades**: startup reconciliation restores expected tools.
 - **Parity-friendly**: sync config/lock only; rehydrate platform artifacts in
   each environment.

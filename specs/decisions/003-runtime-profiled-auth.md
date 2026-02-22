@@ -9,7 +9,7 @@ Accepted
 
 ## Context
 
-IterOn must authenticate two categories of credentials from inside the
+Boss must authenticate two categories of credentials from inside the
 sandbox: **agent API keys** (covered by [DR-001 §3](001-sandbox-architecture.md#3-authentication))
 and **git SSH/HTTPS credentials** for cloning private repositories.
 
@@ -25,7 +25,7 @@ locally.
 
 ### 1. Runtime profiles
 
-IterOn defines two **auth profiles** that select the credential backend:
+Boss defines two **auth profiles** that select the credential backend:
 
 | Profile | Credential source | Deployment target |
 | --- | --- | --- |
@@ -40,11 +40,11 @@ profile = "local"   # "local" | "aws"
 ```
 
 The CLI UX is identical regardless of profile. Commands like
-`iteron auth ssh test` work the same way; only the backend differs.
+`boss auth ssh test` work the same way; only the backend differs.
 
 ### 2. Local profile
 
-**Agent API keys:** `.env` file at `~/.iteron/.env`, injected as
+**Agent API keys:** `.env` file at `~/.boss/.env`, injected as
 container environment variables at start
 ([DR-001 §3](001-sandbox-architecture.md#3-authentication)).
 
@@ -56,10 +56,10 @@ mode = "off"                          # "keyfile" | "off"
 keyfiles = ["~/.ssh/id_ed25519"]      # host paths; injected into container
 ```
 
-When `mode = "keyfile"`, `iteron start` injects each specified
-private key into a staging tmpfs at `/run/iteron/ssh/`. An
+When `mode = "keyfile"`, `boss start` injects each specified
+private key into a staging tmpfs at `/run/boss/ssh/`. An
 `IdentityFile` directive for each key is written to a managed include
-file (`~/.ssh/config.d/iteron.conf`), preserving any user SSH config.
+file (`~/.ssh/config.d/boss.conf`), preserving any user SSH config.
 SSH tries keys in listed order. When mode is `"off"` or absent, the
 managed file is removed to prevent stale directives from persisting
 on the volume.
@@ -69,7 +69,7 @@ on the volume.
 
 The image pre-seeds `/etc/ssh/ssh_known_hosts` with host keys for
 GitHub \[1] and GitLab.com \[6]. Users can append additional host keys by
-writing to `~/.ssh/known_hosts` (persisted on the `iteron-data`
+writing to `~/.ssh/known_hosts` (persisted on the `boss-data`
 volume). `StrictHostKeyChecking yes` is enforced.
 
 SSH agent forwarding was considered but rejected: on macOS, Podman
@@ -101,8 +101,8 @@ to EFS.
 ### 4. Credential hygiene (both profiles)
 
 - No credentials baked into the image or committed to the repository.
-- No long-lived secrets on persistent storage (EFS volumes, `iteron-data`).
-- Local `.env` is `.gitignore`d and created by `iteron init` with
+- No long-lived secrets on persistent storage (EFS volumes, `boss-data`).
+- Local `.env` is `.gitignore`d and created by `boss init` with
   placeholder values.
 - AWS secrets are injected ephemerally and rotated independently of
   deployments.

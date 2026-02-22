@@ -18,7 +18,7 @@ flows
 ### WSD-002
 
 Where a session identity is parsed from tmux output, including
-non-IterOn or legacy names, the rightmost `@` shall define the
+non-Boss or legacy names, the rightmost `@` shall define the
 command/location split. Where no valid delimiter is present, the full
 name shall be treated as command and location shall default to `~`.
 
@@ -28,7 +28,7 @@ name shall be treated as command and location shall default to `~`.
 
 Where agent names, command names, or workspace names are used in
 session identity, each shall reject the reserved delimiter `@`
-([DR-002 §4](../decisions/002-iteron-cli-commands.md#4-iteron-open-workspace-command----args)).
+([DR-002 §4](../decisions/002-iteron-cli-commands.md#4-boss-open-workspace-command----args)).
 
 ### WSD-004
 
@@ -40,21 +40,21 @@ absolute paths, path separators (`/`, `\`), and traversal segments
 
 ### WSD-005
 
-Where `iteron open` targets a non-home workspace and that directory
+Where `boss open` targets a non-home workspace and that directory
 is absent, the CLI shall create it before launching the session.
 
 ## Ls Behavior
 
 ### WSD-006
 
-Where `iteron ls` returns running sessions, including non-IterOn or
+Where `boss ls` returns running sessions, including non-Boss or
 legacy names, it shall tolerate malformed session metadata by ignoring
 invalid rows rather than failing the command
-([DR-002 §5](../decisions/002-iteron-cli-commands.md#5-iteron-ls)).
+([DR-002 §5](../decisions/002-iteron-cli-commands.md#5-boss-ls)).
 
 ### WSD-007
 
-Where `iteron ls` formats output, it shall include both active sessions
+Where `boss ls` formats output, it shall include both active sessions
 and discovered workspace directories, including workspaces with no
 active sessions. Tree view shall list `~/ (home)` first, then
 workspaces alphabetically

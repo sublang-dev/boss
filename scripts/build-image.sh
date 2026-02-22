@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 IMAGE_DIR="${SCRIPT_DIR}/../image"
-IMAGE_NAME="iteron-sandbox"
+IMAGE_NAME="boss-sandbox"
 TAG="dev"
 MULTI_ARCH=false
 PUSH=false
@@ -15,7 +15,7 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Build the IterOn sandbox OCI image.
+Build the Boss sandbox OCI image.
 
 Options:
   --tag TAG         Image tag (default: dev)
@@ -83,7 +83,7 @@ if [[ "${MULTI_ARCH}" == true ]]; then
     podman manifest push "${FULL_TAG}" "docker://${FULL_TAG}"
   else
     # Docker: requires buildx with docker-container driver
-    BUILDER="iteron-multiarch"
+    BUILDER="boss-multiarch"
     if ! docker buildx inspect "${BUILDER}" &>/dev/null; then
       docker buildx create --name "${BUILDER}" --driver docker-container --use
     else

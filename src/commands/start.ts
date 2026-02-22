@@ -55,7 +55,7 @@ export async function startCommand(): Promise<void> {
       '--security-opt', 'no-new-privileges',
       '--read-only',
       '--tmpfs', '/tmp',
-      '-v', 'iteron-data:/home/iteron:U',
+      '-v', 'boss-data:/home/boss:U',
       '--env-file', ENV_PATH,
       '--memory', memory,
       '--init',
@@ -64,7 +64,7 @@ export async function startCommand(): Promise<void> {
     // IR-005: forward OpenCode credentials with UID remap for token refresh
     const opencodeAuth = opencodeAuthPath();
     if (existsSync(opencodeAuth)) {
-      args.push('-v', `${opencodeAuth}:/home/iteron/.local/share/opencode/auth.json:U`);
+      args.push('-v', `${opencodeAuth}:/home/boss/.local/share/opencode/auth.json:U`);
     }
 
     // DR-003 §2: opt-in SSH key mount (local profile)
@@ -78,7 +78,7 @@ export async function startCommand(): Promise<void> {
     });
 
     if (existingKeyPaths.length > 0) {
-      args.push('--tmpfs', `/run/iteron/ssh:size=${64 * existingKeyPaths.length}k`);
+      args.push('--tmpfs', `/run/boss/ssh:size=${64 * existingKeyPaths.length}k`);
     }
 
     args.push(image, 'sleep', 'infinity');
@@ -97,7 +97,7 @@ export async function startCommand(): Promise<void> {
     }
 
     // Reconcile user-local tool directory (survives volume overlay on upgrade)
-    await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.local/bin']);
+    await podmanExec(['exec', name, 'mkdir', '-p', '/home/boss/.local/bin']);
 
     // DR-004 §5: reconcile mise tools (idempotent; fast when tools are present).
     // Guard: skip when mise is absent (e.g., pre-IR-008 images).
@@ -119,7 +119,7 @@ export async function startCommand(): Promise<void> {
         await podmanExec(['exec', '-e', 'MISE_VERBOSE=1', name,
           'mise', 'trust', '/etc/mise/config.toml']);
         await podmanExec(['exec', '-e', 'MISE_VERBOSE=1', name,
-          'mise', 'trust', '/home/iteron/.config/mise/config.toml']);
+          'mise', 'trust', '/home/boss/.config/mise/config.toml']);
         // --locked: use the image's lockfile read-only (rootfs is read-only at runtime).
         await podmanExec(['exec', '-e', 'MISE_VERBOSE=1', name,
           'mise', 'install', '--locked']);
@@ -134,30 +134,30 @@ export async function startCommand(): Promise<void> {
       const identityLines: string[] = [];
 
       for (const keyPath of existingKeyPaths) {
-        // Inject key into tmpfs as iteron (exec runs as container user) so
-        // the file is owned by iteron with 0600 — no CAP_CHOWN needed.
+        // Inject key into tmpfs as boss (exec runs as container user) so
+        // the file is owned by boss with 0600 — no CAP_CHOWN needed.
         // Key data is piped over stdin to avoid exposing it in argv.
         const keyData = await readFile(keyPath, 'utf-8');
-        const keyDest = `/run/iteron/ssh/${keyNames.get(keyPath)}`;
+        const keyDest = `/run/boss/ssh/${keyNames.get(keyPath)}`;
         await podmanExecStdin(
-          ['exec', '-i', name, 'sh', '-c', `cat > "$1" && chmod 0600 "$1"`, 'iteron-ssh', keyDest],
+          ['exec', '-i', name, 'sh', '-c', `cat > "$1" && chmod 0600 "$1"`, 'boss-ssh', keyDest],
           keyData,
         );
         identityLines.push(`IdentityFile ${keyDest}`);
       }
 
       // Write managed include file with all IdentityFile directives
-      await podmanExec(['exec', name, 'mkdir', '-p', '/home/iteron/.ssh/config.d']);
+      await podmanExec(['exec', name, 'mkdir', '-p', '/home/boss/.ssh/config.d']);
       const confContent = identityLines.join('\n') + '\n';
       await podmanExecStdin(
         ['exec', '-i', name, 'sh', '-c',
-          'cat > /home/iteron/.ssh/config.d/iteron.conf && chmod 0600 /home/iteron/.ssh/config.d/iteron.conf'],
+          'cat > /home/boss/.ssh/config.d/boss.conf && chmod 0600 /home/boss/.ssh/config.d/boss.conf'],
         confContent,
       );
     } else {
       // Remove stale managed config from a previous keyfile start
       try {
-        await podmanExec(['exec', name, 'rm', '-f', '/home/iteron/.ssh/config.d/iteron.conf']);
+        await podmanExec(['exec', name, 'rm', '-f', '/home/boss/.ssh/config.d/boss.conf']);
       } catch {
         // config.d may not exist yet — nothing to clean
       }

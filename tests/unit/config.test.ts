@@ -8,19 +8,19 @@ import { homedir, tmpdir } from 'node:os';
 import { rm } from 'node:fs/promises';
 
 let tmpDir: string;
-const origEnv = process.env.ITERON_CONFIG_DIR;
+const origEnv = process.env.BOSS_CONFIG_DIR;
 
 beforeEach(() => {
   vi.resetModules();
-  tmpDir = mkdtempSync(join(tmpdir(), 'iteron-test-'));
-  process.env.ITERON_CONFIG_DIR = tmpDir;
+  tmpDir = mkdtempSync(join(tmpdir(), 'boss-test-'));
+  process.env.BOSS_CONFIG_DIR = tmpDir;
 });
 
 afterEach(async () => {
   if (origEnv === undefined) {
-    delete process.env.ITERON_CONFIG_DIR;
+    delete process.env.BOSS_CONFIG_DIR;
   } else {
-    process.env.ITERON_CONFIG_DIR = origEnv;
+    process.env.BOSS_CONFIG_DIR = origEnv;
   }
   await rm(tmpDir, { recursive: true, force: true });
 });
@@ -33,7 +33,7 @@ describe('exported constants', () => {
 
   it('DEFAULT_IMAGE points to GHCR sandbox', async () => {
     const { DEFAULT_IMAGE } = await import('../../src/utils/config.js');
-    expect(DEFAULT_IMAGE).toBe('ghcr.io/sublang-dev/iteron-sandbox:latest');
+    expect(DEFAULT_IMAGE).toBe('ghcr.io/sublang-dev/boss-sandbox:latest');
   });
 });
 
@@ -44,7 +44,7 @@ describe('writeConfig / readConfig', () => {
     expect(created).toBe(true);
 
     const config = await readConfig();
-    expect(config.container.name).toBe('iteron-sandbox');
+    expect(config.container.name).toBe('boss-sandbox');
     expect(config.container.memory).toBe('16g');
   });
 
@@ -96,11 +96,11 @@ describe('reconcileConfigImage', () => {
     const { writeConfig, reconcileConfigImage, readConfig } = await import('../../src/utils/config.js');
     await writeConfig('my-custom:image');
 
-    const updated = await reconcileConfigImage('ghcr.io/sublang-dev/iteron-sandbox:canary', { force: true });
+    const updated = await reconcileConfigImage('ghcr.io/sublang-dev/boss-sandbox:canary', { force: true });
     expect(updated).toBe(true);
 
     const config = await readConfig();
-    expect(config.container.image).toBe('ghcr.io/sublang-dev/iteron-sandbox:canary');
+    expect(config.container.image).toBe('ghcr.io/sublang-dev/boss-sandbox:canary');
   });
 });
 
@@ -145,8 +145,8 @@ describe('auth config (DR-003)', () => {
   it('readConfig parses [auth.ssh] with keyfiles array', async () => {
     const { readConfig } = await import('../../src/utils/config.js');
     const toml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+name = "boss-sandbox"
+image = "ghcr.io/sublang-dev/boss-sandbox:latest"
 memory = "16g"
 
 [auth]
@@ -167,8 +167,8 @@ keyfiles = ["~/.ssh/id_rsa", "~/.ssh/id_ed25519"]
   it('readConfig migrates legacy keyfile to keyfiles array', async () => {
     const { readConfig } = await import('../../src/utils/config.js');
     const toml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+name = "boss-sandbox"
+image = "ghcr.io/sublang-dev/boss-sandbox:latest"
 memory = "16g"
 
 [auth]
@@ -187,8 +187,8 @@ keyfile = "~/.ssh/id_rsa"
   it('readConfig rejects empty keyfiles array when mode=keyfile', async () => {
     const { readConfig } = await import('../../src/utils/config.js');
     const toml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+name = "boss-sandbox"
+image = "ghcr.io/sublang-dev/boss-sandbox:latest"
 memory = "16g"
 
 [auth]
@@ -205,8 +205,8 @@ keyfiles = []
   it('readConfig handles missing [auth] for backward compat', async () => {
     const { readConfig } = await import('../../src/utils/config.js');
     const toml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+name = "boss-sandbox"
+image = "ghcr.io/sublang-dev/boss-sandbox:latest"
 memory = "16g"
 `;
     writeFileSync(join(tmpDir, 'config.toml'), toml, 'utf-8');
@@ -228,8 +228,8 @@ memory = "16g"
   it('readConfig rejects unsupported auth profile', async () => {
     const { readConfig } = await import('../../src/utils/config.js');
     const toml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+name = "boss-sandbox"
+image = "ghcr.io/sublang-dev/boss-sandbox:latest"
 memory = "16g"
 
 [auth]
@@ -242,8 +242,8 @@ profile = "aws"
   it('readConfig rejects invalid auth.ssh.mode', async () => {
     const { readConfig } = await import('../../src/utils/config.js');
     const toml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+name = "boss-sandbox"
+image = "ghcr.io/sublang-dev/boss-sandbox:latest"
 memory = "16g"
 
 [auth]
@@ -259,8 +259,8 @@ mode = "agent-forwarding"
   it('readConfig rejects [auth.ssh] with missing mode', async () => {
     const { readConfig } = await import('../../src/utils/config.js');
     const toml = `[container]
-name = "iteron-sandbox"
-image = "ghcr.io/sublang-dev/iteron-sandbox:latest"
+name = "boss-sandbox"
+image = "ghcr.io/sublang-dev/boss-sandbox:latest"
 memory = "16g"
 
 [auth]

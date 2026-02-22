@@ -15,7 +15,7 @@ Migrate agent CLI installation from direct npm/binary installs to mise-managed p
 - [x] Agent CLIs preinstalled via `mise install` during image build
 - [x] mise shims on `PATH` for non-interactive tool invocation
 - [x] User-global config template at `~/.config/mise/config.toml`
-- [x] Start-time reconciliation in `iteron start`
+- [x] Start-time reconciliation in `boss start`
 - [x] Dev, test, and user spec updates
 
 ## Tasks
@@ -81,9 +81,9 @@ Remove from the Dockerfile:
 - The Codex standalone binary download block (`ARG CODEX_VERSION`, `curl | tar`)
 - The binary verification block (`claude --version && codex --version ...`)
 
-Replace with a two-phase build sequence. The root phase generates the lockfile at `/etc/mise/mise.lock` (root-owned directory). The iteron phase installs tools into `~/.local/share/mise/` using the pre-resolved lockfile.
+Replace with a two-phase build sequence. The root phase generates the lockfile at `/etc/mise/mise.lock` (root-owned directory). The boss phase installs tools into `~/.local/share/mise/` using the pre-resolved lockfile.
 
-**Root phase** (before `USER iteron`):
+**Root phase** (before `USER boss`):
 
 ```dockerfile
 COPY conf/mise-system.toml /etc/mise/config.toml
@@ -94,19 +94,19 @@ This resolves `latest` versions from upstream registries and writes `/etc/mise/m
 
 If `mise lock` cannot resolve without install artifacts, alternative: run `mise install` as root into a temporary `MISE_DATA_DIR`, copy the resulting lockfile to `/etc/mise/mise.lock`, and clean up before switching users.
 
-**Iteron phase** (after `USER iteron`):
+**Iteron phase** (after `USER boss`):
 
 ```dockerfile
-USER iteron
-WORKDIR /home/iteron
+USER boss
+WORKDIR /home/boss
 RUN mise trust /etc/mise/config.toml \
  && mise install --locked \
  && mise reshim
 ```
 
-`mise install --locked` reads the system config, enforces the pre-resolved lockfile (no version re-resolution of `latest`), and installs the exact versions captured by `mise lock`. `mise reshim` generates shims at `~/.local/share/mise/shims/`. Non-locked mode is reserved for runtime reconciliation on `iteron start`, where the volume may need rehydration from updated declarations.
+`mise install --locked` reads the system config, enforces the pre-resolved lockfile (no version re-resolution of `latest`), and installs the exact versions captured by `mise lock`. `mise reshim` generates shims at `~/.local/share/mise/shims/`. Non-locked mode is reserved for runtime reconciliation on `boss start`, where the volume may need rehydration from updated declarations.
 
-**Verification** (still as iteron):
+**Verification** (still as boss):
 
 ```dockerfile
 RUN claude --version \
@@ -120,7 +120,7 @@ RUN claude --version \
 Prepend mise shims directory to `PATH` via `ENV`:
 
 ```dockerfile
-ENV PATH="/home/iteron/.local/share/mise/shims:/home/iteron/.local/bin:${PATH}"
+ENV PATH="/home/boss/.local/share/mise/shims:/home/boss/.local/bin:${PATH}"
 ```
 
 Per [DR-004 §3](../decisions/004-user-tool-provisioning.md), shims are used instead of shell activation hooks so tools work in both interactive sessions and non-interactive agent execution.
@@ -132,8 +132,8 @@ The shims directory must come before `~/.local/bin` so mise-managed tools take p
 Create an empty user-global config at `~/.config/mise/config.toml` during image build:
 
 ```dockerfile
-RUN mkdir -p /home/iteron/.config/mise
-COPY --chown=iteron:iteron conf/mise-user.toml /home/iteron/.config/mise/config.toml
+RUN mkdir -p /home/boss/.config/mise
+COPY --chown=boss:boss conf/mise-user.toml /home/boss/.config/mise/config.toml
 ```
 
 The template file (`image/conf/mise-user.toml`):
@@ -155,12 +155,12 @@ Per [DR-004 §8](../decisions/004-user-tool-provisioning.md), the backend denyli
 
 ### 6. Start-time reconciliation
 
-Per [DR-004 §5](../decisions/004-user-tool-provisioning.md), `iteron start` shall run reconciliation after the container starts:
+Per [DR-004 §5](../decisions/004-user-tool-provisioning.md), `boss start` shall run reconciliation after the container starts:
 
 ```typescript
 // DR-004: reconcile mise tools (idempotent, locked mode)
 await podmanExec(['exec', name, 'mise', 'trust', '/etc/mise/config.toml']);
-await podmanExec(['exec', name, 'mise', 'trust', '/home/iteron/.config/mise/config.toml']);
+await podmanExec(['exec', name, 'mise', 'trust', '/home/boss/.config/mise/config.toml']);
 await podmanExec(['exec', name, 'mise', 'install', '--locked']);
 ```
 
@@ -190,16 +190,16 @@ Update existing:
 
 Add:
 
-- **LCD-007**: Where `iteron start` launches the sandbox container, the start sequence shall run `mise trust` on the system and user-global configs and `mise install --locked` to reconcile tool installations ([DR-004 §5](../decisions/004-user-tool-provisioning.md)).
+- **LCD-007**: Where `boss start` launches the sandbox container, the start sequence shall run `mise trust` on the system and user-global configs and `mise install --locked` to reconcile tool installations ([DR-004 §5](../decisions/004-user-tool-provisioning.md)).
 
 #### Test specs (`specs/test/sandbox-image.md`)
 
 Add:
 
-- **SBT-046**: Where `iteron-sandbox:<tag>` is built, `mise --version` in the container shall exit 0 and print the pinned version ([SBD-024](../dev/sandbox-image.md#sbd-024)).
-- **SBT-047**: Where `iteron-sandbox:<tag>` is built, `/etc/mise/config.toml` shall declare `npm:@anthropic-ai/claude-code`, `npm:@google/gemini-cli`, `npm:opencode-ai`, and `github:openai/codex` ([SBD-025](../dev/sandbox-image.md#sbd-025)).
-- **SBT-048**: Where `iteron-sandbox:<tag>` is built, `/etc/mise/mise.lock` shall exist and contain version entries for all declared tools ([SBD-026](../dev/sandbox-image.md#sbd-026)).
-- **SBT-049**: Where `iteron-sandbox:<tag>` is built, `claude --version`, `codex --help`, `gemini --version`, and `opencode --version` shall each exit 0 via mise shims ([SBD-027](../dev/sandbox-image.md#sbd-027)).
+- **SBT-046**: Where `boss-sandbox:<tag>` is built, `mise --version` in the container shall exit 0 and print the pinned version ([SBD-024](../dev/sandbox-image.md#sbd-024)).
+- **SBT-047**: Where `boss-sandbox:<tag>` is built, `/etc/mise/config.toml` shall declare `npm:@anthropic-ai/claude-code`, `npm:@google/gemini-cli`, `npm:opencode-ai`, and `github:openai/codex` ([SBD-025](../dev/sandbox-image.md#sbd-025)).
+- **SBT-048**: Where `boss-sandbox:<tag>` is built, `/etc/mise/mise.lock` shall exist and contain version entries for all declared tools ([SBD-026](../dev/sandbox-image.md#sbd-026)).
+- **SBT-049**: Where `boss-sandbox:<tag>` is built, `claude --version`, `codex --help`, `gemini --version`, and `opencode --version` shall each exit 0 via mise shims ([SBD-027](../dev/sandbox-image.md#sbd-027)).
 
 #### User specs (`specs/user/sandbox-image.md`)
 
@@ -222,7 +222,7 @@ Add a "Tool Management" section explaining:
 
 Add troubleshooting entries:
 
-- "Agent binary not found after image upgrade" → run `mise install` inside the container or restart with `iteron stop && iteron start`
+- "Agent binary not found after image upgrade" → run `mise install` inside the container or restart with `boss stop && boss start`
 - "mise install fails during start" → check network connectivity; mise needs to download tools on first start after image upgrade
 
 #### IR-001 (`specs/iterations/001-oci-sandbox-image.md`)
@@ -248,8 +248,8 @@ Add IR-008 row to the Iterations table.
 | 9 | `podman run --rm <image> which claude` | Path contains `mise/shims` |
 | 10 | `podman run --rm <image> mise ls` | Lists all four agents with installed versions |
 | 11 | Start container, `podman exec <name> mise install` | Idempotent, exits 0 quickly |
-| 12 | Fresh volume + `iteron start`, `podman exec <name> claude --version` | Exit 0 (reconciliation installed tools) |
-| 13 | `podman run --rm <image> cat /home/iteron/.config/mise/config.toml` | Contains `disable_backends` |
+| 12 | Fresh volume + `boss start`, `podman exec <name> claude --version` | Exit 0 (reconciliation installed tools) |
+| 13 | `podman run --rm <image> cat /home/boss/.config/mise/config.toml` | Contains `disable_backends` |
 | 14 | Image size with mise vs previous | Increase ≤ 50 MB compressed (mise binary ~30 MB) |
 
 ## Risks
@@ -265,5 +265,5 @@ Add IR-008 row to the Iterations table.
 
 - [DR-004](../decisions/004-user-tool-provisioning.md) approved
 - [IR-001](001-oci-sandbox-image.md) (base image structure)
-- [IR-002](002-container-lifecycle.md) (`iteron start` reconciliation hook)
+- [IR-002](002-container-lifecycle.md) (`boss start` reconciliation hook)
 - [IR-007](007-reliability-security.md) (vulnerability scanning must pass after change)

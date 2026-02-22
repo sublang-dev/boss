@@ -1,11 +1,11 @@
 {
-  "name": "@sublang/iteron",
-  "version": "0.1.3",
+  "name": "@sublang/boss",
+  "version": "0.2.0",
   "description": "Delegate dev loops to Claude Code + Codex CLI. Iterates for hours. No API keys.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "iteron": "bin/iteron.js"
+    "boss": "bin/boss.js"
   },
   "scripts": {
     "build": "tsc",
@@ -27,11 +27,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sublang-dev/IterOn.git"
+    "url": "git+https://github.com/sublang-dev/boss.git"
   },
-  "homepage": "https://github.com/sublang-dev/IterOn#readme",
+  "homepage": "https://github.com/sublang-dev/boss#readme",
   "bugs": {
-    "url": "https://github.com/sublang-dev/IterOn/issues"
+    "url": "https://github.com/sublang-dev/boss/issues"
   },
   "license": "Apache-2.0",
   "publishConfig": {

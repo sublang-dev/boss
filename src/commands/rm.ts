@@ -25,12 +25,12 @@ export async function rmCommand(
 ): Promise<void> {
   try {
     if (!workspace) {
-      console.error('Usage: iteron rm <workspace>');
+      console.error('Usage: boss rm <workspace>');
       process.exit(1);
     }
 
     if (workspace === '~') {
-      console.error('Error: cannot remove the home directory. Use `iteron stop` to shut down the container.');
+      console.error('Error: cannot remove the home directory. Use `boss stop` to shut down the container.');
       process.exit(1);
     }
 
@@ -44,7 +44,7 @@ export async function rmCommand(
     const { name } = config.container;
 
     if (!(await isContainerRunning(name))) {
-      console.error(`Container ${name} is not running. Run \`iteron start\` first.`);
+      console.error(`Container ${name} is not running. Run \`boss start\` first.`);
       process.exit(1);
     }
 
@@ -89,7 +89,7 @@ export async function rmCommand(
     // Remove workspace directory
     try {
       await podmanExec([
-        'exec', name, 'rm', '-rf', `/home/iteron/${workspace}`,
+        'exec', name, 'rm', '-rf', `/home/boss/${workspace}`,
       ]);
     } catch {
       // Directory may not exist

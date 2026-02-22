@@ -8,9 +8,9 @@ import { tmpdir } from 'node:os';
 import { rm, mkdir } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-// Guaranteed by globalSetup (builds iteron-sandbox:dev locally when unset).
-const TEST_IMAGE = process.env.ITERON_TEST_IMAGE!;
-const TEST_CONTAINER = 'iteron-test-sandbox';
+// Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
+const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
+const TEST_CONTAINER = 'boss-test-sandbox';
 
 let configDir: string;
 
@@ -21,14 +21,14 @@ function podmanExecSync(args: string[]): string {
 async function cleanup(): Promise<void> {
   try { execFileSync('podman', ['stop', '-t', '0', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
   try { execFileSync('podman', ['rm', '-f', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
-  // Do NOT remove the volume — it may contain real user data (iteron-data is shared).
+  // Do NOT remove the volume — it may contain real user data (boss-data is shared).
 }
 
 beforeAll(async () => {
   await cleanup();
 
-  configDir = mkdtempSync(join(tmpdir(), 'iteron-start-test-'));
-  process.env.ITERON_CONFIG_DIR = configDir;
+  configDir = mkdtempSync(join(tmpdir(), 'boss-start-test-'));
+  process.env.BOSS_CONFIG_DIR = configDir;
 
   // Ensure config dir exists
   await mkdir(configDir, { recursive: true });
@@ -45,16 +45,16 @@ memory = "512m"
   writeFileSync(join(configDir, '.env'), 'ANTHROPIC_API_KEY=sk-test-123\n', 'utf-8');
 
   // Ensure volume exists (image is guaranteed by globalSetup)
-  try { execFileSync('podman', ['volume', 'create', 'iteron-data'], { stdio: 'ignore' }); } catch {}
+  try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
 });
 
 afterAll(async () => {
   await cleanup();
-  delete process.env.ITERON_CONFIG_DIR;
+  delete process.env.BOSS_CONFIG_DIR;
   if (configDir) await rm(configDir, { recursive: true, force: true });
 });
 
-describe('iteron start/stop (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }, () => {
   it('starts a container', async () => {
     const { startCommand } = await import('../../src/commands/start.js');
     await startCommand();
@@ -106,7 +106,7 @@ describe('iteron start/stop (integration)', { timeout: 120_000, sequential: true
     const marker = `persist-test-${Date.now()}`;
     try {
       // Create a file in the volume
-      execFileSync('podman', ['exec', TEST_CONTAINER, 'touch', `/home/iteron/${marker}`], { stdio: 'ignore' });
+      execFileSync('podman', ['exec', TEST_CONTAINER, 'touch', `/home/boss/${marker}`], { stdio: 'ignore' });
 
       // Stop
       const { stopCommand } = await import('../../src/commands/stop.js');
@@ -126,11 +126,11 @@ describe('iteron start/stop (integration)', { timeout: 120_000, sequential: true
       await startCommand();
 
       // Verify file persists (test -f exits 0 if file exists, throws otherwise)
-      execFileSync('podman', ['exec', TEST_CONTAINER, 'test', '-f', `/home/iteron/${marker}`], { stdio: 'ignore' });
+      execFileSync('podman', ['exec', TEST_CONTAINER, 'test', '-f', `/home/boss/${marker}`], { stdio: 'ignore' });
     } finally {
       // Best-effort cleanup: marker is only for verification, not fixture state.
       try {
-        execFileSync('podman', ['exec', TEST_CONTAINER, 'rm', '-f', `/home/iteron/${marker}`], { stdio: 'ignore' });
+        execFileSync('podman', ['exec', TEST_CONTAINER, 'rm', '-f', `/home/boss/${marker}`], { stdio: 'ignore' });
       } catch {
         // Container may not be running if the test failed before restart.
       }
@@ -140,8 +140,8 @@ describe('iteron start/stop (integration)', { timeout: 120_000, sequential: true
   // SBT-035: ~/.local/bin reconciled on start with pre-existing volume
   // TODO: Use an isolated test volume once the volume name is configurable in start.ts
   it('reconciles ~/.local/bin on start with pre-existing volume', async () => {
-    const BIN_DIR = '/home/iteron/.local/bin';
-    const BACKUP  = `/home/iteron/.local/bin.test-backup-${Date.now()}`;
+    const BIN_DIR = '/home/boss/.local/bin';
+    const BACKUP  = `/home/boss/.local/bin.test-backup-${Date.now()}`;
 
     // Check if directory currently exists (separate from move to avoid masking mv failures)
     let hadExisting = false;

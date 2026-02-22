@@ -8,9 +8,9 @@ import { tmpdir } from 'node:os';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-// Guaranteed by globalSetup (builds iteron-sandbox:dev locally when unset).
-const TEST_IMAGE = process.env.ITERON_TEST_IMAGE!;
-const TEST_CONTAINER = 'iteron-test-sandbox';
+// Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
+const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
+const TEST_CONTAINER = 'boss-test-sandbox';
 
 let configDir: string;
 let xdgDataDir: string;
@@ -40,10 +40,10 @@ function forceRmTempDir(dir: string): void {
  *
  * On native Linux, redirecting XDG_DATA_HOME moves rootless Podman's
  * graphRoot to an empty temp dir.  CI builds a commit-scoped image and
- * exports it to a tar (ITERON_TEST_IMAGE_TAR).  Load it into the
+ * exports it to a tar (BOSS_TEST_IMAGE_TAR).  Load it into the
  * redirected store so `podman run` can find it.
  */
-const TEST_IMAGE_TAR = process.env.ITERON_TEST_IMAGE_TAR || '';
+const TEST_IMAGE_TAR = process.env.BOSS_TEST_IMAGE_TAR || '';
 
 function ensureImageLoaded(): void {
   if (!TEST_IMAGE_TAR) return;
@@ -58,9 +58,9 @@ describe('IR-005 headless auth (integration)', { timeout: 120_000, sequential: t
   beforeAll(async () => {
     await cleanup();
 
-    configDir = mkdtempSync(join(tmpdir(), 'iteron-auth-test-'));
-    xdgDataDir = mkdtempSync(join(tmpdir(), 'iteron-xdg-test-'));
-    process.env.ITERON_CONFIG_DIR = configDir;
+    configDir = mkdtempSync(join(tmpdir(), 'boss-auth-test-'));
+    xdgDataDir = mkdtempSync(join(tmpdir(), 'boss-xdg-test-'));
+    process.env.BOSS_CONFIG_DIR = configDir;
 
     await mkdir(configDir, { recursive: true });
 
@@ -79,12 +79,12 @@ memory = "512m"
     );
 
     // Ensure volume exists (image is guaranteed by globalSetup)
-    try { execFileSync('podman', ['volume', 'create', 'iteron-data'], { stdio: 'ignore' }); } catch {}
+    try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
   }, 120_000);
 
   afterAll(async () => {
     await cleanup();
-    delete process.env.ITERON_CONFIG_DIR;
+    delete process.env.BOSS_CONFIG_DIR;
     if (origXdg === undefined) {
       delete process.env.XDG_DATA_HOME;
     } else {
@@ -115,7 +115,7 @@ memory = "512m"
 
   // IR-005 test 3: hasCompletedOnboarding is true
   it('has hasCompletedOnboarding in claude.json', () => {
-    const content = podmanExecSync(['exec', TEST_CONTAINER, 'cat', '/home/iteron/.claude.json']);
+    const content = podmanExecSync(['exec', TEST_CONTAINER, 'cat', '/home/boss/.claude.json']);
     const json = JSON.parse(content);
     expect(json.hasCompletedOnboarding).toBe(true);
   });
@@ -139,7 +139,7 @@ memory = "512m"
     await startCommand();
 
     // Verify file is actually readable by container user
-    const content = podmanExecSync(['exec', TEST_CONTAINER, 'cat', '/home/iteron/.local/share/opencode/auth.json']);
+    const content = podmanExecSync(['exec', TEST_CONTAINER, 'cat', '/home/boss/.local/share/opencode/auth.json']);
     expect(content).toContain('oc-test');
 
     // Clean up for next test
@@ -150,7 +150,7 @@ memory = "512m"
   // IR-005 test 5: OpenCode mount skipped when host file absent
   it('skips opencode mount when auth.json absent', async () => {
     // Point XDG_DATA_HOME to empty dir (no opencode/auth.json)
-    const emptyXdg = mkdtempSync(join(tmpdir(), 'iteron-xdg-empty-'));
+    const emptyXdg = mkdtempSync(join(tmpdir(), 'boss-xdg-empty-'));
     process.env.XDG_DATA_HOME = emptyXdg;
     ensureImageLoaded();
 
@@ -205,7 +205,7 @@ memory = "512m"
 // DR-003 §2: SSH key mount tests
 // ---------------------------------------------------------------------------
 
-const SSH_TEST_CONTAINER = 'iteron-test-ssh';
+const SSH_TEST_CONTAINER = 'boss-test-ssh';
 
 let sshConfigDir: string;
 let sshXdgDir: string;
@@ -219,15 +219,15 @@ describe('DR-003 SSH key mount (integration)', { timeout: 120_000, sequential: t
 
   beforeAll(async () => {
     // Clear module cache so config.ts re-evaluates CONFIG_DIR with
-    // the updated ITERON_CONFIG_DIR (stale from the IR-005 suite).
+    // the updated BOSS_CONFIG_DIR (stale from the IR-005 suite).
     vi.resetModules();
 
     await sshCleanup();
 
-    sshConfigDir = mkdtempSync(join(tmpdir(), 'iteron-ssh-test-'));
-    sshXdgDir = mkdtempSync(join(tmpdir(), 'iteron-ssh-xdg-'));
-    sshKeyDir = mkdtempSync(join(tmpdir(), 'iteron-ssh-keys-'));
-    process.env.ITERON_CONFIG_DIR = sshConfigDir;
+    sshConfigDir = mkdtempSync(join(tmpdir(), 'boss-ssh-test-'));
+    sshXdgDir = mkdtempSync(join(tmpdir(), 'boss-ssh-xdg-'));
+    sshKeyDir = mkdtempSync(join(tmpdir(), 'boss-ssh-keys-'));
+    process.env.BOSS_CONFIG_DIR = sshConfigDir;
     process.env.XDG_DATA_HOME = sshXdgDir;
     ensureImageLoaded();
 
@@ -238,12 +238,12 @@ describe('DR-003 SSH key mount (integration)', { timeout: 120_000, sequential: t
     writeFileSync(join(sshConfigDir, '.env'), 'ANTHROPIC_API_KEY=sk-test-ssh\n', 'utf-8');
 
     // Ensure volume exists (image is guaranteed by globalSetup)
-    try { execFileSync('podman', ['volume', 'create', 'iteron-data'], { stdio: 'ignore' }); } catch {}
+    try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
   }, 120_000);
 
   afterAll(async () => {
     await sshCleanup();
-    delete process.env.ITERON_CONFIG_DIR;
+    delete process.env.BOSS_CONFIG_DIR;
     if (origXdg === undefined) {
       delete process.env.XDG_DATA_HOME;
     } else {
@@ -273,26 +273,26 @@ keyfiles = ["${keyPath}"]
     const { startCommand } = await import('../../src/commands/start.js');
     await startCommand();
 
-    // Verify key is injected and readable at /run/iteron/ssh/id_ed25519
-    const keyContent = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/id_ed25519']);
+    // Verify key is injected and readable at /run/boss/ssh/id_ed25519
+    const keyContent = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/boss/ssh/id_ed25519']);
     expect(keyContent).toContain('fake-ssh-private-key-content');
 
-    // Verify key has SSH-compatible permissions (0600, owned by iteron)
-    const keyPerms = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'stat', '-c', '%a:%U', '/run/iteron/ssh/id_ed25519']);
-    expect(keyPerms).toBe('600:iteron');
+    // Verify key has SSH-compatible permissions (0600, owned by boss)
+    const keyPerms = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'stat', '-c', '%a:%U', '/run/boss/ssh/id_ed25519']);
+    expect(keyPerms).toBe('600:boss');
 
     // Verify managed include file contains IdentityFile directive
-    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/iteron/.ssh/config.d/iteron.conf']);
-    expect(sshConfig).toContain('IdentityFile /run/iteron/ssh/id_ed25519');
+    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/boss/.ssh/config.d/boss.conf']);
+    expect(sshConfig).toContain('IdentityFile /run/boss/ssh/id_ed25519');
 
     // Verify managed include file has restrictive permissions
-    const perms = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'stat', '-c', '%a', '/home/iteron/.ssh/config.d/iteron.conf']);
+    const perms = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'stat', '-c', '%a', '/home/boss/.ssh/config.d/boss.conf']);
     expect(perms).toBe('600');
   });
 
   it('SSH key tmpfs visible in podman inspect', () => {
     const tmpfs = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .HostConfig.Tmpfs}}']);
-    expect(tmpfs).toContain('/run/iteron/ssh');
+    expect(tmpfs).toContain('/run/boss/ssh');
   });
 
   it('stops container after keyfile test', async () => {
@@ -324,7 +324,7 @@ keyfiles = ["${keyPath}"]
 
     // Confirm managed config was created
     execFileSync('podman', ['exec', SSH_TEST_CONTAINER, 'test', '-f',
-      '/home/iteron/.ssh/config.d/iteron.conf'], { stdio: 'ignore' });
+      '/home/boss/.ssh/config.d/boss.conf'], { stdio: 'ignore' });
 
     const { stopCommand } = await import('../../src/commands/stop.js');
     await stopCommand();
@@ -349,7 +349,7 @@ mode = "off"
     let exists = true;
     try {
       execFileSync('podman', ['exec', SSH_TEST_CONTAINER, 'test', '-f',
-        '/home/iteron/.ssh/config.d/iteron.conf'], { stdio: 'ignore' });
+        '/home/boss/.ssh/config.d/boss.conf'], { stdio: 'ignore' });
     } catch {
       exists = false;
     }
@@ -376,7 +376,7 @@ mode = "off"
     await startCommand();
 
     const tmpfs = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .HostConfig.Tmpfs}}']);
-    expect(tmpfs).not.toContain('/run/iteron/ssh');
+    expect(tmpfs).not.toContain('/run/boss/ssh');
   });
 
   it('stops container after mode=off test', async () => {
@@ -396,7 +396,7 @@ memory = "512m"
     await startCommand();
 
     const tmpfs = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .HostConfig.Tmpfs}}']);
-    expect(tmpfs).not.toContain('/run/iteron/ssh');
+    expect(tmpfs).not.toContain('/run/boss/ssh');
   });
 
   it('stops container after absent-auth test', async () => {
@@ -429,7 +429,7 @@ keyfiles = ["/nonexistent/path/id_ed25519"]
     warnSpy.mockRestore();
 
     const tmpfs = podmanExecSync(['inspect', SSH_TEST_CONTAINER, '--format', '{{json .HostConfig.Tmpfs}}']);
-    expect(tmpfs).not.toContain('/run/iteron/ssh');
+    expect(tmpfs).not.toContain('/run/boss/ssh');
 
     const { stopCommand } = await import('../../src/commands/stop.js');
     await stopCommand();
@@ -460,18 +460,18 @@ keyfiles = ["${keyPath1}", "${keyPath2}"]
     await startCommand();
 
     // Verify both keys injected
-    const key1 = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/id_ed25519']);
+    const key1 = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/boss/ssh/id_ed25519']);
     expect(key1).toContain('fake-ssh-private-key-content');
-    const key2 = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/id_rsa']);
+    const key2 = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/boss/ssh/id_rsa']);
     expect(key2).toContain('fake-rsa-key-content');
 
-    // Verify iteron.conf contains both IdentityFile directives in order
-    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/iteron/.ssh/config.d/iteron.conf']);
-    expect(sshConfig).toContain('IdentityFile /run/iteron/ssh/id_ed25519');
-    expect(sshConfig).toContain('IdentityFile /run/iteron/ssh/id_rsa');
+    // Verify boss.conf contains both IdentityFile directives in order
+    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/boss/.ssh/config.d/boss.conf']);
+    expect(sshConfig).toContain('IdentityFile /run/boss/ssh/id_ed25519');
+    expect(sshConfig).toContain('IdentityFile /run/boss/ssh/id_rsa');
     // Verify order: id_ed25519 before id_rsa
-    const idx1 = sshConfig.indexOf('IdentityFile /run/iteron/ssh/id_ed25519');
-    const idx2 = sshConfig.indexOf('IdentityFile /run/iteron/ssh/id_rsa');
+    const idx1 = sshConfig.indexOf('IdentityFile /run/boss/ssh/id_ed25519');
+    const idx2 = sshConfig.indexOf('IdentityFile /run/boss/ssh/id_rsa');
     expect(idx1).toBeLessThan(idx2);
 
     const { stopCommand } = await import('../../src/commands/stop.js');
@@ -506,15 +506,15 @@ keyfiles = ["${join(githubDir, 'id_ed25519')}", "${join(gitlabDir, 'id_ed25519')
     await startCommand();
 
     // Verify disambiguated filenames in container
-    const key1 = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/github_id_ed25519']);
+    const key1 = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/boss/ssh/github_id_ed25519']);
     expect(key1).toContain('github-key-content');
-    const key2 = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/gitlab_id_ed25519']);
+    const key2 = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/boss/ssh/gitlab_id_ed25519']);
     expect(key2).toContain('gitlab-key-content');
 
-    // Verify iteron.conf references disambiguated names
-    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/iteron/.ssh/config.d/iteron.conf']);
-    expect(sshConfig).toContain('IdentityFile /run/iteron/ssh/github_id_ed25519');
-    expect(sshConfig).toContain('IdentityFile /run/iteron/ssh/gitlab_id_ed25519');
+    // Verify boss.conf references disambiguated names
+    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/boss/.ssh/config.d/boss.conf']);
+    expect(sshConfig).toContain('IdentityFile /run/boss/ssh/github_id_ed25519');
+    expect(sshConfig).toContain('IdentityFile /run/boss/ssh/gitlab_id_ed25519');
 
     const { stopCommand } = await import('../../src/commands/stop.js');
     await stopCommand();
@@ -549,12 +549,12 @@ keyfiles = ["${keyPath}", "/nonexistent/path/id_missing"]
     warnSpy.mockRestore();
 
     // Existing key still mounted
-    const keyContent = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/iteron/ssh/id_ed25519']);
+    const keyContent = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/run/boss/ssh/id_ed25519']);
     expect(keyContent).toContain('fake-ssh-private-key-content');
 
     // Only one IdentityFile directive (for existing key)
-    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/iteron/.ssh/config.d/iteron.conf']);
-    expect(sshConfig).toContain('IdentityFile /run/iteron/ssh/id_ed25519');
+    const sshConfig = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/home/boss/.ssh/config.d/boss.conf']);
+    expect(sshConfig).toContain('IdentityFile /run/boss/ssh/id_ed25519');
     expect(sshConfig).not.toContain('id_missing');
 
     const { stopCommand } = await import('../../src/commands/stop.js');
@@ -579,9 +579,9 @@ memory = "512m"
   });
 
   it('has StrictHostKeyChecking and managed Include in ssh_config.d', () => {
-    const sshConf = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/etc/ssh/ssh_config.d/iteron.conf']);
+    const sshConf = podmanExecSync(['exec', SSH_TEST_CONTAINER, 'cat', '/etc/ssh/ssh_config.d/boss.conf']);
     expect(sshConf).toContain('StrictHostKeyChecking yes');
-    expect(sshConf).toContain('Include /home/iteron/.ssh/config.d/*.conf');
+    expect(sshConf).toContain('Include /home/boss/.ssh/config.d/*.conf');
   });
 
   it('stops container after sandbox-image tests', async () => {

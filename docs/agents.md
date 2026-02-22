@@ -16,7 +16,7 @@ These four agent names are built-in — no configuration needed. The agent name 
 
 ## Authentication
 
-IterOn supports two auth strategies: **subscription auth** (primary) and **API keys** (fallback). Subscription auth uses your existing Pro/Max/Teams/Enterprise plan without separate API billing.
+Boss supports two auth strategies: **subscription auth** (primary) and **API keys** (fallback). Subscription auth uses your existing Pro/Max/Teams/Enterprise plan without separate API billing.
 
 ### Claude Code
 
@@ -27,7 +27,7 @@ IterOn supports two auth strategies: **subscription auth** (primary) and **API k
 claude setup-token
 ```
 
-This produces a long-lived OAuth token (~1 year). Add it to `~/.iteron/.env`:
+This produces a long-lived OAuth token (~1 year). Add it to `~/.boss/.env`:
 
 ```
 CLAUDE_CODE_OAUTH_TOKEN=<token>
@@ -46,7 +46,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 **Subscription auth (recommended):** Run the device-code flow inside the container:
 
 ```bash
-iteron open ~ codex
+boss open ~ codex
 # In the tmux session:
 codex login --device-auth
 ```
@@ -64,7 +64,7 @@ CODEX_API_KEY=sk-...
 **Subscription auth (recommended):** The `NO_BROWSER=true` environment variable (set in the sandbox image) triggers a PKCE OAuth flow:
 
 ```bash
-iteron open ~ gemini
+boss open ~ gemini
 # Gemini prints an auth URL; open it in your browser
 # Paste the authorization code back into the terminal
 ```
@@ -79,7 +79,7 @@ Google Cloud service accounts via Vertex AI are an alternative for enterprise de
 
 ### OpenCode
 
-**Credential forwarding (recommended):** If `~/.local/share/opencode/auth.json` exists on the host, `iteron start` forwards it into the container automatically.
+**Credential forwarding (recommended):** If `~/.local/share/opencode/auth.json` exists on the host, `boss start` forwards it into the container automatically.
 
 **API key fallback:**
 
@@ -91,7 +91,7 @@ MOONSHOT_API_KEY=...
 
 Inject host SSH keys so agents can `git clone`/`push` over SSH and sign commits.
 
-Edit `~/.iteron/config.toml`:
+Edit `~/.boss/config.toml`:
 
 ```toml
 [auth.ssh]
@@ -108,23 +108,23 @@ keyfiles = [
 ]
 ```
 
-Then restart: `iteron stop && iteron start`.
+Then restart: `boss stop && boss start`.
 
-Keys are injected into an ephemeral tmpfs at `/run/iteron/ssh/` — never written to persistent storage. Verify inside the container:
+Keys are injected into an ephemeral tmpfs at `/run/boss/ssh/` — never written to persistent storage. Verify inside the container:
 
 ```bash
 ssh -T git@github.com
 # Expected: "Hi <user>! You've successfully authenticated..."
 # (exits non-zero — that's normal; GitHub rejects shell access)
 
-cat ~/.ssh/config.d/iteron.conf   # IdentityFile directives
+cat ~/.ssh/config.d/boss.conf   # IdentityFile directives
 ```
 
-**Commit signing** (optional) — use the actual path from `iteron.conf`:
+**Commit signing** (optional) — use the actual path from `boss.conf`:
 
 ```bash
 git config --global gpg.format ssh
-git config --global user.signingKey /run/iteron/ssh/KEY_NAME
+git config --global user.signingKey /run/boss/ssh/KEY_NAME
 git config --global commit.gpgsign true
 ```
 
@@ -143,7 +143,7 @@ The sandbox image includes pre-configured settings that allow agents to run auto
 | Gemini CLI | `~/.gemini/settings.json` | `approvalMode: "auto_edit"` |
 | OpenCode | `~/.config/opencode/opencode.json` | All permissions allowed |
 
-These configs are baked into the image. Since `/home/iteron` is backed by the `iteron-data` volume, agents can modify their own config files and changes persist across container restarts.
+These configs are baked into the image. Since `/home/boss` is backed by the `boss-data` volume, agents can modify their own config files and changes persist across container restarts.
 
 ## Tool Management
 
@@ -169,11 +169,11 @@ mise upgrade claude       # upgrade a specific tool
 
 ### Reconciliation on start
 
-Each `iteron start` runs `mise install` inside the container, which reconciles installed tool artifacts against the declared manifests. This is idempotent and fast when tools are already present — it only downloads when artifacts are missing (e.g., after an image upgrade or volume migration).
+Each `boss start` runs `mise install` inside the container, which reconciles installed tool artifacts against the declared manifests. This is idempotent and fast when tools are already present — it only downloads when artifacts are missing (e.g., after an image upgrade or volume migration).
 
 ## Environment Variables
 
-All env vars in `~/.iteron/.env` are loaded into the container on `iteron start`. The full template:
+All env vars in `~/.boss/.env` are loaded into the container on `boss start`. The full template:
 
 ```bash
 # Claude Code (run `claude setup-token` on host)

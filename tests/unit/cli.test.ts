@@ -17,7 +17,7 @@ function run(args: string[]): string {
 describe('CLI smoke tests', () => {
   it('--help exits 0 and shows usage', () => {
     const output = run(['--help']);
-    expect(output).toContain('iteron');
+    expect(output).toContain('boss');
     expect(output).toContain('open');
     expect(output).toContain('ls');
     expect(output).toContain('rm');

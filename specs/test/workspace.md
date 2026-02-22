@@ -45,7 +45,7 @@ shall fail
 
 ### WST-006
 
-Where `iteron open` is invoked with 0, 1, or 2 positional
+Where `boss open` is invoked with 0, 1, or 2 positional
 arguments (including workspace `~`), resolved binary,
 session identity, and working directory shall match
 spec-defined branches
@@ -55,7 +55,7 @@ spec-defined branches
 
 ### WST-007
 
-Where `iteron open` is run twice with the same
+Where `boss open` is run twice with the same
 `<agent,workspace>`, the second run shall reattach and no
 duplicate session shall be created
 ([WSX-002](../user/workspace.md#wsx-002)).
@@ -70,7 +70,7 @@ sessions shall coexist
 
 ### WST-009
 
-Where home and workspace sessions exist, `iteron ls` tree
+Where home and workspace sessions exist, `boss ls` tree
 output shall include `~/ (home)` plus workspace nodes in
 required ordering
 ([WSD-007](../dev/workspace.md#wsd-007)).
@@ -79,13 +79,13 @@ required ordering
 
 ### WST-010
 
-Where `iteron rm` is called with `~` or without a workspace,
+Where `boss rm` is called with `~` or without a workspace,
 it shall exit non-zero
 ([WSX-004](../user/workspace.md#wsx-004)).
 
 ### WST-011
 
-Where sessions exist in a workspace, `iteron rm <workspace>`
+Where sessions exist in a workspace, `boss rm <workspace>`
 shall remove the workspace and terminate its sessions after
 confirmation
 ([WSX-004](../user/workspace.md#wsx-004)).
@@ -94,6 +94,6 @@ confirmation
 
 ### WST-012
 
-Where the container is not running, `iteron open`, `iteron ls`,
-and `iteron rm` shall exit non-zero with a "not running" message
+Where the container is not running, `boss open`, `boss ls`,
+and `boss rm` shall exit non-zero with a "not running" message
 ([WSX-005](../user/workspace.md#wsx-005)).

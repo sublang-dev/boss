@@ -11,7 +11,7 @@ import { readConfig, validateWorkspace, KNOWN_AGENTS } from '../utils/config.js'
 import { buildSessionName, validateSessionToken } from '../utils/session.js';
 import { homedir } from 'node:os';
 
-const CONTAINER_HOME = '/home/iteron';
+const CONTAINER_HOME = '/home/boss';
 
 /**
  * Normalize a workspace argument: if the shell expanded `~` to the
@@ -25,7 +25,7 @@ function normalizeHome(arg: string): string {
 /**
  * Resolve arguments into command, session name, and working directory.
  *
- * Grammar: `iteron open [workspace] [command] [-- args]`
+ * Grammar: `boss open [workspace] [command] [-- args]`
  *
  * - 0 args: shell in ~
  * - 1 arg: shell in workspace (~ for home, else ~/name)
@@ -101,7 +101,7 @@ export async function openCommand(
 
     // Check container is running
     if (!(await isContainerRunning(name))) {
-      console.error(`Container ${name} is not running. Run \`iteron start\` first.`);
+      console.error(`Container ${name} is not running. Run \`boss start\` first.`);
       process.exit(1);
     }
 

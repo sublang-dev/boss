@@ -53,33 +53,33 @@ A setup script (`tests/setup-fixture.sh`) creates this fixture via `podman exec`
 ### 2. Claude Code autonomous test
 
 - Create fixture at `~/test-cc/`
-- Run: `podman exec iteron-sandbox bash -c 'cd ~/test-cc && claude -p "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js." --output-format json'`
+- Run: `podman exec boss-sandbox bash -c 'cd ~/test-cc && claude -p "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js." --output-format json'`
 - Wait for exit (timeout: 120s)
-- Check: `podman exec iteron-sandbox bash -c 'cd ~/test-cc && npm test'`
+- Check: `podman exec boss-sandbox bash -c 'cd ~/test-cc && npm test'`
 - Expected: exit 0, stdout contains `PASS`
 
 ### 3. Codex CLI autonomous test
 
 - Create fixture at `~/test-codex/`
-- Run: `podman exec iteron-sandbox bash -c 'cd ~/test-codex && codex exec "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."'` (fixture must be a git repo; Codex requires a trusted directory)
+- Run: `podman exec boss-sandbox bash -c 'cd ~/test-codex && codex exec "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."'` (fixture must be a git repo; Codex requires a trusted directory)
 - Wait for exit (timeout: 120s)
-- Check: `podman exec iteron-sandbox bash -c 'cd ~/test-codex && npm test'`
+- Check: `podman exec boss-sandbox bash -c 'cd ~/test-codex && npm test'`
 - Expected: exit 0, stdout contains `PASS`
 
 ### 4. Gemini CLI autonomous test
 
 - Create fixture at `~/test-gemini/`
-- Run: `podman exec iteron-sandbox bash -c 'cd ~/test-gemini && gemini --yolo -p "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."'`
+- Run: `podman exec boss-sandbox bash -c 'cd ~/test-gemini && gemini --yolo -p "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."'`
 - Wait for exit (timeout: 120s)
-- Check: `podman exec iteron-sandbox bash -c 'cd ~/test-gemini && npm test'`
+- Check: `podman exec boss-sandbox bash -c 'cd ~/test-gemini && npm test'`
 - Expected: exit 0, stdout contains `PASS`
 
 ### 5. OpenCode autonomous test
 
 - Create fixture at `~/test-opencode/`
-- Run: `podman exec iteron-sandbox bash -c 'cd ~/test-opencode && opencode run -m moonshotai-cn/kimi-k2.5 "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."'`
+- Run: `podman exec boss-sandbox bash -c 'cd ~/test-opencode && opencode run -m moonshotai-cn/kimi-k2.5 "Fix the bug in src/calc.js so that npm test passes. Do not modify tests/test_calc.js."'`
 - Wait for exit (timeout: 120s)
-- Check: `podman exec iteron-sandbox bash -c 'cd ~/test-opencode && npm test'`
+- Check: `podman exec boss-sandbox bash -c 'cd ~/test-opencode && npm test'`
 - Expected: exit 0, stdout contains `PASS`
 
 ### 6. Permission prompt absence test

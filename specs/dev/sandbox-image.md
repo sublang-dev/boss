@@ -4,7 +4,7 @@
 # SANDBOX: Sandbox Image Build and Configuration
 
 This component defines implementation requirements for the local
-IterOn sandbox image.
+Boss sandbox image.
 
 ## Build Inputs
 
@@ -36,7 +36,7 @@ shall be:
 ### SBD-004
 
 Where the image is built, runtime defaults shall include user
-`iteron` (`uid=1000`, `gid=1000`), `tini` as PID 1, `bash`
+`boss` (`uid=1000`, `gid=1000`), `tini` as PID 1, `bash`
 as the default command, and `en_US.UTF-8` locale (`LANG` and
 `LC_ALL`)
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
@@ -45,13 +45,13 @@ as the default command, and `en_US.UTF-8` locale (`LANG` and
 
 Where the image is built, it shall remove SUID/SGID bits and
 provision default config files for agents and tmux at:
-`/home/iteron/.claude.json`,
-`/home/iteron/.claude/settings.json`,
-`/home/iteron/.codex/config.toml`,
-`/home/iteron/.gemini/settings.json`,
-`/home/iteron/.config/opencode/opencode.json`,
+`/home/boss/.claude.json`,
+`/home/boss/.claude/settings.json`,
+`/home/boss/.codex/config.toml`,
+`/home/boss/.gemini/settings.json`,
+`/home/boss/.config/opencode/opencode.json`,
 `/etc/tmux.conf`, and
-`/home/iteron/.tmux.conf`
+`/home/boss/.tmux.conf`
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary),
 [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
 
@@ -61,7 +61,7 @@ provision default config files for agents and tmux at:
 
 Where `scripts/build-image.sh` runs a native build, it shall
 select a functional runtime (Podman or Docker) and build
-`iteron-sandbox:<tag>` from `image/`.
+`boss-sandbox:<tag>` from `image/`.
 
 ### SBD-007
 
@@ -89,7 +89,7 @@ Where the sandbox image is built, container defaults shall set
 
 ### SBD-011
 
-Where IterOn resolves host OpenCode credentials, the supported
+Where Boss resolves host OpenCode credentials, the supported
 source path shall be
 `$XDG_DATA_HOME/opencode/auth.json` when `XDG_DATA_HOME` is set,
 otherwise `~/.local/share/opencode/auth.json`
@@ -99,7 +99,7 @@ otherwise `~/.local/share/opencode/auth.json`
 
 Where the supported host OpenCode credential file exists at
 container start, launch behavior shall include a mapped credential
-file at `/home/iteron/.local/share/opencode/auth.json` that is
+file at `/home/boss/.local/share/opencode/auth.json` that is
 readable and writable by the container runtime user, including
 credential refresh
 ([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
@@ -116,17 +116,17 @@ credential file mapping
 ### SBD-014
 
 Where the image is built, the Dockerfile shall create
-`/home/iteron/.local/bin` owned by `iteron:iteron` and set `PATH`
+`/home/boss/.local/bin` owned by `boss:boss` and set `PATH`
 to `~/.local/share/mise/shims:~/.local/bin:$PATH` via `ENV`
 ([DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-layer),
 [DR-004 §3](../decisions/004-user-tool-provisioning.md)).
 
 ### SBD-015
 
-Where `iteron start` launches a container, the start sequence
-shall run `mkdir -p /home/iteron/.local/bin` inside the container
+Where `boss start` launches a container, the start sequence
+shall run `mkdir -p /home/boss/.local/bin` inside the container
 after volume mount, ensuring the directory exists on pre-existing
-`iteron-data` volumes
+`boss-data` volumes
 ([DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-layer)).
 
 ## Vulnerability Scanning
@@ -185,14 +185,14 @@ Where the image is built, tmux system configuration shall bind
 `MouseDragEnd1Pane` to `copy-selection-and-cancel` in both
 `copy-mode` and `copy-mode-vi`, and bind a prefix key to toggle
 `mouse` mode on/off. The toggle shall persist the choice to
-`~/.iteron-prefs`.
+`~/.boss-prefs`.
 
 ### SBD-023
 
 Where user preferences are persisted inside the container,
-they shall be stored in `~/.iteron-prefs` using `key=value`
+they shall be stored in `~/.boss-prefs` using `key=value`
 format (one entry per line). This file lives on the
-`iteron-data` volume and survives container restarts and image
+`boss-data` volume and survives container restarts and image
 updates. Image-level defaults (e.g., `/etc/tmux.conf`) read
 this file on startup to restore saved preferences.
 

@@ -3,7 +3,7 @@
 
 # SANDBOX: User-Facing Sandbox Image Behavior
 
-This component defines user-visible behavior of the local IterOn
+This component defines user-visible behavior of the local Boss
 sandbox image.
 
 ## Availability
@@ -18,8 +18,8 @@ user opens a shell in the container, the container shall expose
 ### SBX-002
 
 Where the container is started with default entrypoint and
-command, the shell shall run as user `iteron` (`uid=1000`,
-`gid=1000`) in `/home/iteron`
+command, the shell shall run as user `boss` (`uid=1000`,
+`gid=1000`) in `/home/boss`
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary),
 [DR-002 Workspace Model](../decisions/002-iteron-cli-commands.md#workspace-model)).
 
@@ -28,7 +28,7 @@ command, the shell shall run as user `iteron` (`uid=1000`,
 ### SBX-003
 
 Where the container is started read-only with tmpfs `/tmp`, when
-processes write outside `/tmp` and `/home/iteron`, the writes
+processes write outside `/tmp` and `/home/boss`, the writes
 shall fail
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
@@ -60,7 +60,7 @@ permission gates for standard file and shell actions
 
 ### SBX-006
 
-Where a user sets `CLAUDE_CODE_OAUTH_TOKEN` in `~/.iteron/.env`,
+Where a user sets `CLAUDE_CODE_OAUTH_TOKEN` in `~/.boss/.env`,
 when the sandbox container is started, Claude Code commands shall
 run without interactive login prompts
 ([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
@@ -68,7 +68,7 @@ run without interactive login prompts
 ### SBX-007
 
 Where `CLAUDE_CODE_OAUTH_TOKEN` is unset and
-`ANTHROPIC_API_KEY` is set in `~/.iteron/.env`, Claude Code
+`ANTHROPIC_API_KEY` is set in `~/.boss/.env`, Claude Code
 non-interactive commands shall authenticate with API key fallback
 ([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
 

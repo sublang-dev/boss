@@ -114,7 +114,7 @@ export async function lsCommand(): Promise<void> {
     const { name } = config.container;
 
     if (!(await isContainerRunning(name))) {
-      console.error(`Container ${name} is not running. Run \`iteron start\` first.`);
+      console.error(`Container ${name} is not running. Run \`boss start\` first.`);
       process.exit(1);
     }
 
@@ -137,7 +137,7 @@ export async function lsCommand(): Promise<void> {
     try {
       const result = await podmanExec([
         'exec', name, 'sh', '-c',
-        'ls -1d /home/iteron/*/ 2>/dev/null | xargs -I{} basename {} || true',
+        'ls -1d /home/boss/*/ 2>/dev/null | xargs -I{} basename {} || true',
       ]);
       workspaces = result.stdout.split('\n').filter(Boolean);
     } catch {

@@ -28,7 +28,7 @@ export function detectPlatform(): Platform {
   } else if (process.platform === 'linux') {
     os = detectWSL() ? 'wsl' : 'linux';
   } else {
-    throw new Error(`Unsupported platform: ${process.platform}. IterOn supports macOS, Linux, and WSL2.`);
+    throw new Error(`Unsupported platform: ${process.platform}. Boss supports macOS, Linux, and WSL2.`);
   }
 
   let arch: Arch;
@@ -37,7 +37,7 @@ export function detectPlatform(): Platform {
   } else if (process.arch === 'x64') {
     arch = 'amd64';
   } else {
-    throw new Error(`Unsupported architecture: ${process.arch}. IterOn supports amd64 and arm64.`);
+    throw new Error(`Unsupported architecture: ${process.arch}. Boss supports amd64 and arm64.`);
   }
 
   return { os, arch };

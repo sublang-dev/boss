@@ -3,7 +3,7 @@
 
 # SANDBOX: Sandbox Image Verification
 
-This component defines verification checks for the local IterOn
+This component defines verification checks for the local Boss
 sandbox image.
 
 ## Core Checks
@@ -11,38 +11,38 @@ sandbox image.
 ### SBT-001
 
 Where the image source exists, when a runtime builds
-`iteron-sandbox:<tag>`, the build shall exit 0
+`boss-sandbox:<tag>`, the build shall exit 0
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
 ### SBT-002
 
-Where `iteron-sandbox:<tag>` is built, when `claude --version`,
+Where `boss-sandbox:<tag>` is built, when `claude --version`,
 `codex --version`, `gemini --version`, and `opencode --version`
 run in the container, each command shall exit 0
 ([DR-001 Context](../decisions/001-sandbox-architecture.md#context)).
 
 ### SBT-003
 
-Where `iteron-sandbox:<tag>` is built, when `cat /proc/1/comm`
+Where `boss-sandbox:<tag>` is built, when `cat /proc/1/comm`
 runs in the container, output shall be `tini`
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
 ### SBT-004
 
-Where `iteron-sandbox:<tag>` is built, when `id` runs in the
-container, output shall include `uid=1000(iteron)` and
-`gid=1000(iteron)`
+Where `boss-sandbox:<tag>` is built, when `id` runs in the
+container, output shall include `uid=1000(boss)` and
+`gid=1000(boss)`
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
 ### SBT-012
 
-Where `iteron-sandbox:<tag>` is built, when `tmux -V` runs in the
+Where `boss-sandbox:<tag>` is built, when `tmux -V` runs in the
 container, the command shall exit 0 and print a tmux version
 ([DR-001 §2](../decisions/001-sandbox-architecture.md#2-tmux-mapping)).
 
 ### SBT-045
 
-Where `iteron-sandbox:<tag>` is built, when `locale` runs in the
+Where `boss-sandbox:<tag>` is built, when `locale` runs in the
 container, `LANG` and `LC_ALL` shall both be `en_US.UTF-8`
 ([SBD-004](../dev/sandbox-image.md#sbd-004)).
 
@@ -50,39 +50,39 @@ container, `LANG` and `LC_ALL` shall both be `en_US.UTF-8`
 
 ### SBT-005
 
-Where `iteron-sandbox:<tag>` runs read-only, when a process
-writes outside `/tmp` and `/home/iteron`, the write shall fail
+Where `boss-sandbox:<tag>` runs read-only, when a process
+writes outside `/tmp` and `/home/boss`, the write shall fail
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
 ### SBT-006
 
-Where `iteron-sandbox:<tag>` runs read-only with tmpfs `/tmp`,
+Where `boss-sandbox:<tag>` runs read-only with tmpfs `/tmp`,
 when a process writes inside `/tmp`, the write shall succeed
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
 ### SBT-007
 
-Where `iteron-sandbox:<tag>` is built, the SUID/SGID file count
+Where `boss-sandbox:<tag>` is built, the SUID/SGID file count
 from `find / -perm /6000 -type f` shall be `0`
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)).
 
 ### SBT-008
 
-Where `iteron-sandbox:<tag>` is built, the following files shall
+Where `boss-sandbox:<tag>` is built, the following files shall
 exist:
-`/home/iteron/.claude.json`,
-`/home/iteron/.claude/settings.json`,
-`/home/iteron/.codex/config.toml`,
-`/home/iteron/.gemini/settings.json`,
-`/home/iteron/.config/opencode/opencode.json`,
+`/home/boss/.claude.json`,
+`/home/boss/.claude/settings.json`,
+`/home/boss/.codex/config.toml`,
+`/home/boss/.gemini/settings.json`,
+`/home/boss/.config/opencode/opencode.json`,
 `/etc/tmux.conf`, and
-`/home/iteron/.tmux.conf`
+`/home/boss/.tmux.conf`
 ([DR-001 §1](../decisions/001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary),
 [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
 
 ### SBT-009
 
-Where `iteron-sandbox:<tag>` is built, the default Claude config
+Where `boss-sandbox:<tag>` is built, the default Claude config
 shall include onboarding bypass and tool-permission settings
 ([DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication)).
 
@@ -111,14 +111,14 @@ each be less than or equal to 700 MiB.
 
 ### SBT-014
 
-Where `iteron init` creates `~/.iteron/.env`, the template shall
+Where `boss init` creates `~/.boss/.env`, the template shall
 contain placeholders for `CLAUDE_CODE_OAUTH_TOKEN`,
 `ANTHROPIC_API_KEY`, `CODEX_API_KEY`, and `GEMINI_API_KEY`
 ([LCD-001](../dev/lifecycle.md#lcd-001)).
 
 ### SBT-015
 
-Where `~/.iteron/.env` defines `CLAUDE_CODE_OAUTH_TOKEN=<value>`,
+Where `~/.boss/.env` defines `CLAUDE_CODE_OAUTH_TOKEN=<value>`,
 when the container starts, `printenv CLAUDE_CODE_OAUTH_TOKEN`
 inside the container shall equal `<value>`
 ([SBX-006](../user/sandbox-image.md#sbx-006),
@@ -134,7 +134,7 @@ inside the container shall equal `true`
 
 Where the supported host OpenCode credential file exists at start
 time, the container file
-`/home/iteron/.local/share/opencode/auth.json` shall exist and be
+`/home/boss/.local/share/opencode/auth.json` shall exist and be
 readable and writable by the runtime user
 ([SBD-012](../dev/sandbox-image.md#sbd-012)).
 
@@ -161,21 +161,21 @@ authorization code pasted in the terminal
 ### SBT-021
 
 Where `CLAUDE_CODE_OAUTH_TOKEN` is unset and
-`ANTHROPIC_API_KEY=<value>` is set in `~/.iteron/.env`, a
+`ANTHROPIC_API_KEY=<value>` is set in `~/.boss/.env`, a
 non-interactive Claude command in the container shall
 authenticate successfully
 ([SBX-007](../user/sandbox-image.md#sbx-007)).
 
 ### SBT-022
 
-Where `CODEX_API_KEY=<value>` is set in `~/.iteron/.env`, a
+Where `CODEX_API_KEY=<value>` is set in `~/.boss/.env`, a
 non-interactive `codex exec` command in the container shall
 authenticate successfully
 ([SBX-008](../user/sandbox-image.md#sbx-008)).
 
 ### SBT-023
 
-Where `GEMINI_API_KEY=<value>` is set in `~/.iteron/.env`, a
+Where `GEMINI_API_KEY=<value>` is set in `~/.boss/.env`, a
 non-interactive Gemini command in the container shall
 authenticate successfully
 ([SBX-009](../user/sandbox-image.md#sbx-009)).
@@ -183,7 +183,7 @@ authenticate successfully
 ### SBT-024
 
 Where forwarded OpenCode credentials are absent and a supported
-provider API key is set in `~/.iteron/.env`, OpenCode
+provider API key is set in `~/.boss/.env`, OpenCode
 non-interactive commands in the container shall authenticate
 successfully
 ([SBX-010](../user/sandbox-image.md#sbx-010)).
@@ -252,42 +252,42 @@ status and a bounded excerpt of captured run output.
 
 ### SBT-033
 
-Where `iteron-sandbox:<tag>` is built, `/home/iteron/.local/bin`
-shall exist and be writable by the `iteron` user
+Where `boss-sandbox:<tag>` is built, `/home/boss/.local/bin`
+shall exist and be writable by the `boss` user
 ([SBD-014](../dev/sandbox-image.md#sbd-014)).
 
 ### SBT-034
 
-Where a standalone binary is placed in `/home/iteron/.local/bin`
+Where a standalone binary is placed in `/home/boss/.local/bin`
 inside the container, the binary shall be executable by name
 without specifying its full path
 ([SBX-011](../user/sandbox-image.md#sbx-011)).
 
 ### SBT-035
 
-Where `iteron start` launches a container with a pre-existing
-`iteron-data` volume that lacks `~/.local/bin`, after start
-completes, `/home/iteron/.local/bin` shall exist and be writable
-by the `iteron` user
+Where `boss start` launches a container with a pre-existing
+`boss-data` volume that lacks `~/.local/bin`, after start
+completes, `/home/boss/.local/bin` shall exist and be writable
+by the `boss` user
 ([SBD-015](../dev/sandbox-image.md#sbd-015)).
 
 ## Container Hardening
 
 ### SBT-036
 
-Where `iteron start` has launched the container, container inspection
+Where `boss start` has launched the container, container inspection
 shall show all Linux capabilities dropped
 ([LCD-004](../dev/lifecycle.md#lcd-004)).
 
 ### SBT-037
 
-Where `iteron start` has launched the container, container security
+Where `boss start` has launched the container, container security
 options shall include no-new-privileges
 ([LCD-004](../dev/lifecycle.md#lcd-004)).
 
 ### SBT-038
 
-Where `iteron init` runs on a non-rootless container runtime, the
+Where `boss init` runs on a non-rootless container runtime, the
 command shall exit non-zero and refuse to proceed
 ([LCD-003](../dev/lifecycle.md#lcd-003)).
 
@@ -303,26 +303,26 @@ scanner exclusions, the scanner shall report zero CRITICAL or HIGH CVEs
 
 ### SBT-040
 
-Where `iteron-sandbox:<tag>` is built, `/etc/tmux.conf` shall
+Where `boss-sandbox:<tag>` is built, `/etc/tmux.conf` shall
 contain `set-clipboard on` and `allow-passthrough on`
 ([SBD-020](../dev/sandbox-image.md#sbd-020)).
 
 ### SBT-050
 
-Where `iteron-sandbox:<tag>` is built, `/etc/tmux.conf` shall
+Where `boss-sandbox:<tag>` is built, `/etc/tmux.conf` shall
 contain `set -g default-terminal "screen-256color"`
 ([SBD-028](../dev/sandbox-image.md#sbd-028)).
 
 ### SBT-041
 
-Where `iteron-sandbox:<tag>` is built, the image-provided default
-`/home/iteron/.tmux.conf` shall contain only comment lines and blank
+Where `boss-sandbox:<tag>` is built, the image-provided default
+`/home/boss/.tmux.conf` shall contain only comment lines and blank
 lines
 ([SBD-021](../dev/sandbox-image.md#sbd-021)).
 
 ### SBT-042
 
-Where `iteron-sandbox:<tag>` is built, `/etc/tmux.conf` shall bind
+Where `boss-sandbox:<tag>` is built, `/etc/tmux.conf` shall bind
 `MouseDragEnd1Pane` to `copy-selection-and-cancel` in both
 `copy-mode` and `copy-mode-vi`, and bind a prefix key to toggle
 mouse mode
@@ -330,29 +330,29 @@ mouse mode
 
 ### SBT-043
 
-Where `iteron-sandbox:<tag>` is built, `/etc/tmux.conf` shall
+Where `boss-sandbox:<tag>` is built, `/etc/tmux.conf` shall
 default mouse mode to off and restore the `mouse` preference
-from `~/.iteron-prefs` on startup when the file exists
+from `~/.boss-prefs` on startup when the file exists
 ([SBD-023](../dev/sandbox-image.md#sbd-023)).
 
 ### SBT-044
 
-Where `iteron-sandbox:<tag>` is built, when the mouse-toggle
+Where `boss-sandbox:<tag>` is built, when the mouse-toggle
 prefix-key binding fires, `/etc/tmux.conf` shall write the
-updated `mouse` value to `~/.iteron-prefs` in `key=value` format
+updated `mouse` value to `~/.boss-prefs` in `key=value` format
 ([SBD-023](../dev/sandbox-image.md#sbd-023)).
 
 ## User-Space Tool Provisioning
 
 ### SBT-046
 
-Where `iteron-sandbox:<tag>` is built, `mise --version` in the
+Where `boss-sandbox:<tag>` is built, `mise --version` in the
 container shall exit 0 and print the pinned version
 ([SBD-024](../dev/sandbox-image.md#sbd-024)).
 
 ### SBT-047
 
-Where `iteron-sandbox:<tag>` is built, `/etc/mise/config.toml`
+Where `boss-sandbox:<tag>` is built, `/etc/mise/config.toml`
 shall declare `npm:@anthropic-ai/claude-code`,
 `npm:@google/gemini-cli`, `npm:opencode-ai`, and
 `github:openai/codex`
@@ -360,13 +360,13 @@ shall declare `npm:@anthropic-ai/claude-code`,
 
 ### SBT-048
 
-Where `iteron-sandbox:<tag>` is built, `/etc/mise/mise.lock`
+Where `boss-sandbox:<tag>` is built, `/etc/mise/mise.lock`
 shall exist and contain version entries for all declared tools
 ([SBD-026](../dev/sandbox-image.md#sbd-026)).
 
 ### SBT-049
 
-Where `iteron-sandbox:<tag>` is built, `claude --version`,
+Where `boss-sandbox:<tag>` is built, `claude --version`,
 `codex --help`, `gemini --version`, and `opencode --version`
 shall each exit 0 via mise shims
 ([SBD-027](../dev/sandbox-image.md#sbd-027)).

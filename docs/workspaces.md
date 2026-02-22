@@ -5,14 +5,14 @@
 
 ## Overview
 
-A workspace is a directory inside the sandbox container at `/home/iteron/<name>`. Each workspace can host one or more agent sessions running in separate tmux sessions.
+A workspace is a directory inside the sandbox container at `/home/boss/<name>`. Each workspace can host one or more agent sessions running in separate tmux sessions.
 
 ## Creating Workspaces
 
 Workspaces are created automatically when you open an agent in a new workspace:
 
 ```bash
-iteron open myproject claude
+boss open myproject claude
 ```
 
 This creates `~/myproject` in the container (if it doesn't exist) and starts Claude Code there.
@@ -21,20 +21,20 @@ This creates `~/myproject` in the container (if it doesn't exist) and starts Cla
 
 ```bash
 # Shell in home directory
-iteron open
+boss open
 
 # Shell in a workspace
-iteron open myproject
+boss open myproject
 ```
 
 ### Opening an Agent
 
 ```bash
 # Agent in home directory
-iteron open ~ claude
+boss open ~ claude
 
 # Agent in a workspace
-iteron open myproject codex
+boss open myproject codex
 ```
 
 ## Workspace Naming Rules
@@ -57,13 +57,13 @@ You can run different agents in different workspaces simultaneously:
 
 ```bash
 # Terminal 1: Claude Code working on the backend
-iteron open backend claude
+boss open backend claude
 
 # Terminal 2: Codex CLI working on the frontend
-iteron open frontend codex
+boss open frontend codex
 
 # Terminal 3: Shell for manual inspection
-iteron open backend
+boss open backend
 ```
 
 You can also run multiple agents in the same workspace, though they may interfere with each other's file edits.
@@ -71,7 +71,7 @@ You can also run multiple agents in the same workspace, though they may interfer
 ## Listing Workspaces
 
 ```bash
-iteron ls
+boss ls
 ```
 
 Output is a tree view grouped by workspace:
@@ -100,34 +100,34 @@ No workspaces or sessions.
 ## Removing Workspaces
 
 ```bash
-iteron rm myproject
+boss rm myproject
 ```
 
-If the workspace has active sessions, IterOn prompts before killing them:
+If the workspace has active sessions, Boss prompts before killing them:
 
 ```
 Kill claude@myproject, bash@myproject? [y/N] y
 Workspace "myproject" removed.
 ```
 
-The home directory (`~`) cannot be removed. Use `iteron stop` to shut down the entire container.
+The home directory (`~`) cannot be removed. Use `boss stop` to shut down the entire container.
 
 ## Data Persistence
 
-All workspace data lives on the `iteron-data` Podman volume mounted at `/home/iteron`. This means:
+All workspace data lives on the `boss-data` Podman volume mounted at `/home/boss`. This means:
 
-- Workspaces persist across `iteron stop` / `iteron start` cycles
+- Workspaces persist across `boss stop` / `boss start` cycles
 - Agent config changes persist (e.g., modified `.claude/settings.json`)
 - Binaries installed to `~/.local/bin` persist
-- Only `iteron rm <workspace>` or deleting the volume removes data
+- Only `boss rm <workspace>` or deleting the volume removes data
 
 ## Detach and Reattach
 
-When you close your terminal or detach from tmux (`Ctrl-B D`), the agent keeps running inside the container. Reattach with the same `iteron open` command:
+When you close your terminal or detach from tmux (`Ctrl-B D`), the agent keeps running inside the container. Reattach with the same `boss open` command:
 
 ```bash
 # Reattach to an existing session
-iteron open myproject claude
+boss open myproject claude
 ```
 
 See [Tmux Quick Reference](tmux.md) for more tmux operations.

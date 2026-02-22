@@ -7,15 +7,15 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { validateSessionToken } from './session.js';
 
-export const CONFIG_DIR = process.env.ITERON_CONFIG_DIR ?? join(homedir(), '.iteron');
+export const CONFIG_DIR = process.env.BOSS_CONFIG_DIR ?? join(homedir(), '.boss');
 export const CONFIG_PATH = join(CONFIG_DIR, 'config.toml');
 export const ENV_PATH = join(CONFIG_DIR, '.env');
 
-export const DEFAULT_IMAGE = 'ghcr.io/sublang-dev/iteron-sandbox:latest';
+export const DEFAULT_IMAGE = 'ghcr.io/sublang-dev/boss-sandbox:latest';
 export const LEGACY_DEFAULT_IMAGE = 'docker.io/library/alpine:latest';
-export const DEFAULT_CONTAINER_NAME = 'iteron-sandbox';
+export const DEFAULT_CONTAINER_NAME = 'boss-sandbox';
 export const DEFAULT_MEMORY = '16g';
-export const VOLUME_NAME = 'iteron-data';
+export const VOLUME_NAME = 'boss-data';
 
 /** Built-in agent names. Binary === name in every case. */
 export const KNOWN_AGENTS: ReadonlySet<string> = new Set(['claude', 'codex', 'gemini', 'opencode']);
@@ -47,7 +47,7 @@ export interface AuthConfig {
   ssh?: SshAuthConfig;
 }
 
-export interface IteronConfig {
+export interface BossConfig {
   container: ContainerConfig;
   auth?: AuthConfig;
 }
@@ -64,7 +64,7 @@ export async function ensureConfigDir(): Promise<void> {
 
 function configTemplate(image?: string): string {
   const img = image ?? DEFAULT_IMAGE;
-  return `# IterOn configuration — all available settings
+  return `# Boss configuration — all available settings
 # Uncomment and edit values as needed.
 
 # ─── Container ────────────────────────────────────────────
@@ -79,8 +79,8 @@ profile = "local"              # "local" (only supported profile)
 
 # ─── SSH key injection ────────────────────────────────────
 # Set mode = "keyfile" to inject host SSH keys into the container.
-# Keys are mounted into an ephemeral tmpfs at /run/iteron/ssh/ and
-# listed as IdentityFile directives in ~/.ssh/config.d/iteron.conf.
+# Keys are mounted into an ephemeral tmpfs at /run/boss/ssh/ and
+# listed as IdentityFile directives in ~/.ssh/config.d/boss.conf.
 # SSH tries keys in the order listed.
 [auth.ssh]
 mode = "off"                   # "keyfile" | "off"
@@ -120,7 +120,7 @@ export async function reconcileConfigImage(
   }
 
   const { stringify } = await loadToml();
-  const updated: IteronConfig = {
+  const updated: BossConfig = {
     ...config,
     container: {
       ...config.container,
@@ -132,13 +132,13 @@ export async function reconcileConfigImage(
   return true;
 }
 
-export async function readConfig(): Promise<IteronConfig> {
+export async function readConfig(): Promise<BossConfig> {
   if (!existsSync(CONFIG_PATH)) {
-    throw new Error('Config not found. Run "iteron init" first.');
+    throw new Error('Config not found. Run "boss init" first.');
   }
   const { parse } = await loadToml();
   const content = await readFile(CONFIG_PATH, 'utf-8');
-  const config = parse(content) as unknown as IteronConfig;
+  const config = parse(content) as unknown as BossConfig;
 
   if (config.auth?.profile && !SUPPORTED_AUTH_PROFILES.has(config.auth.profile)) {
     throw new Error(
@@ -185,7 +185,7 @@ export async function readConfig(): Promise<IteronConfig> {
  * Resolve SSH key paths from config. Returns absolute host paths
  * when mode is "keyfile", or an empty array when SSH is off or unconfigured.
  */
-export function resolveSshKeyPaths(config: IteronConfig): string[] {
+export function resolveSshKeyPaths(config: BossConfig): string[] {
   const ssh = config.auth?.ssh;
   if (!ssh || ssh.mode !== 'keyfile') return [];
   let raw = ssh.keyfiles;

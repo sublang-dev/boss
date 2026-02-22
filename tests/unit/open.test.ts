@@ -11,14 +11,14 @@ describe('resolveArgs', () => {
     const result = resolveArgs([]);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
-    expect(result.workDir).toBe('/home/iteron');
+    expect(result.workDir).toBe('/home/boss');
   });
 
   it('1 arg ~ → shell in home', () => {
     const result = resolveArgs(['~']);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
-    expect(result.workDir).toBe('/home/iteron');
+    expect(result.workDir).toBe('/home/boss');
   });
 
   it('1 arg shell-expanded ~ → shell in home', () => {
@@ -26,35 +26,35 @@ describe('resolveArgs', () => {
     const result = resolveArgs([homedir()]);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
-    expect(result.workDir).toBe('/home/iteron');
+    expect(result.workDir).toBe('/home/boss');
   });
 
   it('1 arg shell-expanded ~/ (trailing slash) → shell in home', () => {
     const result = resolveArgs([`${homedir()}/`]);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@~');
-    expect(result.workDir).toBe('/home/iteron');
+    expect(result.workDir).toBe('/home/boss');
   });
 
   it('2 args shell-expanded ~ and agent → agent in home', () => {
     const result = resolveArgs([homedir(), 'claude']);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@~');
-    expect(result.workDir).toBe('/home/iteron');
+    expect(result.workDir).toBe('/home/boss');
   });
 
   it('2 args shell-expanded ~/ (trailing slash) and agent → agent in home', () => {
     const result = resolveArgs([`${homedir()}/`, 'claude']);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@~');
-    expect(result.workDir).toBe('/home/iteron');
+    expect(result.workDir).toBe('/home/boss');
   });
 
   it('1 arg workspace → shell in workspace', () => {
     const result = resolveArgs(['myproject']);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@myproject');
-    expect(result.workDir).toBe('/home/iteron/myproject');
+    expect(result.workDir).toBe('/home/boss/myproject');
   });
 
   it('1 arg matching agent name → shell in workspace (no agent lookup)', () => {
@@ -62,7 +62,7 @@ describe('resolveArgs', () => {
     const result = resolveArgs(['claude']);
     expect(result.binary).toBe('bash');
     expect(result.sessionName).toBe('bash@claude');
-    expect(result.workDir).toBe('/home/iteron/claude');
+    expect(result.workDir).toBe('/home/boss/claude');
   });
 
   it('2 args old agent-first order → no swap, workspace=agent name', () => {
@@ -70,35 +70,35 @@ describe('resolveArgs', () => {
     const result = resolveArgs(['claude', 'myproject']);
     expect(result.binary).toBe('myproject');
     expect(result.sessionName).toBe('myproject@claude');
-    expect(result.workDir).toBe('/home/iteron/claude');
+    expect(result.workDir).toBe('/home/boss/claude');
   });
 
   it('2 args with ~ and known agent → agent in home', () => {
     const result = resolveArgs(['~', 'claude']);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@~');
-    expect(result.workDir).toBe('/home/iteron');
+    expect(result.workDir).toBe('/home/boss');
   });
 
   it('2 args workspace and known agent → agent in workspace', () => {
     const result = resolveArgs(['myproject', 'claude']);
     expect(result.binary).toBe('claude');
     expect(result.sessionName).toBe('claude@myproject');
-    expect(result.workDir).toBe('/home/iteron/myproject');
+    expect(result.workDir).toBe('/home/boss/myproject');
   });
 
   it('2 args workspace and unknown command → raw command in workspace', () => {
     const result = resolveArgs(['myproject', 'vim']);
     expect(result.binary).toBe('vim');
     expect(result.sessionName).toBe('vim@myproject');
-    expect(result.workDir).toBe('/home/iteron/myproject');
+    expect(result.workDir).toBe('/home/boss/myproject');
   });
 
   it('2 args ~ and unknown command → raw command in home', () => {
     const result = resolveArgs(['~', 'vim']);
     expect(result.binary).toBe('vim');
     expect(result.sessionName).toBe('vim@~');
-    expect(result.workDir).toBe('/home/iteron');
+    expect(result.workDir).toBe('/home/boss');
   });
 
   it('rejects traversal segment as workspace (1-arg)', () => {

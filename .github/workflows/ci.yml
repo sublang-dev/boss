@@ -76,11 +76,11 @@ jobs:
       - name: Export image to tar
         run: |
           set -o pipefail
-          podman save "iteron-sandbox:ci-$GITHUB_SHA" | gzip -1 > /tmp/iteron-sandbox.tar.gz
+          podman save "boss-sandbox:ci-$GITHUB_SHA" | gzip -1 > /tmp/boss-sandbox.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: sandbox-image
-          path: /tmp/iteron-sandbox.tar.gz
+          path: /tmp/boss-sandbox.tar.gz
           retention-days: 1
           compression-level: 0
 
@@ -106,7 +106,7 @@ jobs:
           path: /tmp
 
       - name: Load sandbox image
-        run: podman load -i /tmp/iteron-sandbox.tar.gz
+        run: podman load -i /tmp/boss-sandbox.tar.gz
 
       - name: Mask API keys
         if: github.event_name == 'push'
@@ -122,8 +122,8 @@ jobs:
 
       - name: Run integration tests
         env:
-          ITERON_TEST_IMAGE: iteron-sandbox:ci-${{ github.sha }}
-          ITERON_TEST_IMAGE_TAR: /tmp/iteron-sandbox.tar.gz
+          BOSS_TEST_IMAGE: boss-sandbox:ci-${{ github.sha }}
+          BOSS_TEST_IMAGE_TAR: /tmp/boss-sandbox.tar.gz
           CLAUDE_CODE_OAUTH_TOKEN: ${{ github.event_name == 'push' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
           ANTHROPIC_API_KEY: ${{ github.event_name == 'push' && secrets.ANTHROPIC_API_KEY || '' }}
           CODEX_API_KEY: ${{ github.event_name == 'push' && secrets.CODEX_API_KEY || '' }}

@@ -17,7 +17,7 @@ The agents have conflicting runtimes: Gemini CLI requires Node 20+ \[1], Claude 
 
 ### 1. OCI container as the sandbox boundary
 
-A single OCI image based on `node:22-bookworm-slim` packages all agent runtimes. **Podman is the container runtime**, chosen over Docker for three reasons: it is daemonless and rootless by default \[9]\[34], removing the attack surface of a privileged daemon; it has no licensing cost (Apache 2.0), whereas Docker Desktop requires paid subscriptions for companies with 250+ employees or >$10M revenue \[35]; and its daemonless architecture \[9] lets IterOn stop the VM when no sandboxes are running, unlike Docker Desktop's always-on daemon (~1–3 GB idle on macOS/Windows \[28]). IterOn's install script provisions Podman and manages the VM lifecycle on macOS/Windows (`podman machine init/start/stop`), so users never interact with Podman directly.
+A single OCI image based on `node:22-bookworm-slim` packages all agent runtimes. **Podman is the container runtime**, chosen over Docker for three reasons: it is daemonless and rootless by default \[9]\[34], removing the attack surface of a privileged daemon; it has no licensing cost (Apache 2.0), whereas Docker Desktop requires paid subscriptions for companies with 250+ employees or >$10M revenue \[35]; and its daemonless architecture \[9] lets Boss stop the VM when no sandboxes are running, unlike Docker Desktop's always-on daemon (~1–3 GB idle on macOS/Windows \[28]). Boss's install script provisions Podman and manages the VM lifecycle on macOS/Windows (`podman machine init/start/stop`), so users never interact with Podman directly.
 
 Multi-arch builds target `linux/amd64` and `linux/arm64` for Graviton \[10] and Apple Silicon. Agents run with full permissions *inside* the container. The container itself is the security boundary: `--cap-drop ALL`, `--security-opt no-new-privileges`, `--read-only` root filesystem, with writable `/tmp` and mounted volumes for workspace and agent state.
 
@@ -25,7 +25,7 @@ Memory leaks are documented in Claude Code (120 GB in v1.0.53 \[11]; 7.5 GB regr
 
 ### 2. Tmux mapping
 
-Each agent runs inside a **named tmux session within the container**. IterOn provides a host-side command that wraps `podman exec -it <container> tmux new-session -A -s <session> -c <path> <command>`, creating a new tmux session or attaching to an existing one. This gives:
+Each agent runs inside a **named tmux session within the container**. Boss provides a host-side command that wraps `podman exec -it <container> tmux new-session -A -s <session> -c <path> <command>`, creating a new tmux session or attaching to an existing one. This gives:
 
 - **Background persistence** — if the `exec` connection drops, the in-container tmux keeps the agent alive; the user reattaches without losing state.
 - **Cross-platform** — works on macOS, Linux, and Windows (WSL2). Shared tmux sockets across the container boundary fail on non-Linux hosts due to the VM layer \[15].
@@ -36,11 +36,11 @@ Each agent runs inside a **named tmux session within the container**. IterOn pro
 **Subscription auth (primary):** Each agent uses the most reliable headless mechanism for subscription-based auth:
 
 - **Claude Code:** `claude setup-token` \[37] generates a ~1-year OAuth token on a machine with a browser (Pro/Max subscription); inject as `CLAUDE_CODE_OAUTH_TOKEN` env var. `hasCompletedOnboarding: true` in `~/.claude.json` is required to skip the first-run prompt \[18]. Direct credential forwarding is not viable: macOS stores OAuth tokens exclusively in Keychain \[38], and token refresh is broken in copied credentials \[39].
-- **Codex CLI:** `codex login --device-auth` \[16] displays a URL and one-time code in the terminal; user completes auth on any browser. Works through IterOn's tmux interaction. Teams/Enterprise admins must enable device-code auth \[40]. Credential forwarding via `docker cp` of `~/.codex/auth.json` is an officially documented alternative \[40] but risks token desync on concurrent host/container use (see \[41]).
-- **Gemini CLI:** `NO_BROWSER=true` triggers a PKCE OAuth flow where the CLI prints an auth URL and the user pastes back the authorization code; works through IterOn's tmux interaction. This env var is referenced in CLI error messages but not yet in official auth guides \[17]; a v0.18.0 regression was fixed in v0.18.4 \[42]. Google Cloud service accounts via Vertex AI \[17] serve enterprise deployments.
+- **Codex CLI:** `codex login --device-auth` \[16] displays a URL and one-time code in the terminal; user completes auth on any browser. Works through Boss's tmux interaction. Teams/Enterprise admins must enable device-code auth \[40]. Credential forwarding via `docker cp` of `~/.codex/auth.json` is an officially documented alternative \[40] but risks token desync on concurrent host/container use (see \[41]).
+- **Gemini CLI:** `NO_BROWSER=true` triggers a PKCE OAuth flow where the CLI prints an auth URL and the user pastes back the authorization code; works through Boss's tmux interaction. This env var is referenced in CLI error messages but not yet in official auth guides \[17]; a v0.18.0 regression was fixed in v0.18.4 \[42]. Google Cloud service accounts via Vertex AI \[17] serve enterprise deployments.
 - **OpenCode:** Mount host `~/.local/share/opencode/auth.json` into the container \[43] (file-based, no Keychain involvement). Alternatively, inject provider env vars directly.
 
-**API keys (fallback):** Inject per-agent keys as environment variables (`ANTHROPIC_API_KEY`, `CODEX_API_KEY` \[33] (`codex exec` only), `GEMINI_API_KEY` \[17]) via `~/.iteron/.env`, AWS Secrets Manager, or Vault.
+**API keys (fallback):** Inject per-agent keys as environment variables (`ANTHROPIC_API_KEY`, `CODEX_API_KEY` \[33] (`codex exec` only), `GEMINI_API_KEY` \[17]) via `~/.boss/.env`, AWS Secrets Manager, or Vault.
 
 **Dynamic retrieval:** Claude Code's `apiKeyHelper` \[19] runs a script returning fresh keys on each invocation, with refresh controlled by `CLAUDE_CODE_API_KEY_HELPER_TTL_MS`. Must not coexist with `CLAUDE_CODE_OAUTH_TOKEN`.
 
@@ -69,16 +69,16 @@ Each agent runs inside a **named tmux session within the container**. IterOn pro
 
 The image installs tools that need shared libraries or complex dependency chains (e.g., git, curl, tmux, Node-based agents) via apt and npm at build time — the **image layer**. For standalone, statically-linked binaries (e.g., `gh`, `rg`, `fd`), a **user-local layer** at `~/.local/bin` provides a persistent, user-writable install target:
 
-- `~/.local/bin` is created in the Dockerfile (owned by `iteron:iteron`) and prepended to `PATH` via `ENV`. This follows common user-local PATH ordering and intentionally allows user-installed binaries to shadow image-layer commands (e.g., a newer `git`). Agents debugging unexpected tool behavior should check `command -v <cmd>` for shadowed paths.
-- Because `/home/iteron` is backed by the `iteron-data` volume, binaries placed there persist across container restarts without rebuilding the image.
+- `~/.local/bin` is created in the Dockerfile (owned by `boss:boss`) and prepended to `PATH` via `ENV`. This follows common user-local PATH ordering and intentionally allows user-installed binaries to shadow image-layer commands (e.g., a newer `git`). Agents debugging unexpected tool behavior should check `command -v <cmd>` for shadowed paths.
+- Because `/home/boss` is backed by the `boss-data` volume, binaries placed there persist across container restarts without rebuilding the image.
 - A future `tools.toml` manifest will let users declaratively list standalone tools; a reconciler will download missing binaries into `~/.local/bin` on container start. This mechanism is not yet implemented.
 
 ## Consequences
 
-- **Easy local install** — IterOn's install script provisions Podman automatically. No manual container commands needed; no KVM, Bubblewrap, or platform-specific tools.
+- **Easy local install** — Boss's install script provisions Podman automatically. No manual container commands needed; no KVM, Bubblewrap, or platform-specific tools.
 - **No licensing cost** — Podman is Apache 2.0 \[9]. No per-seat subscription required regardless of organization size.
 - **Rootless security by default** — no privileged daemon; container UIDs map to unprivileged host UIDs \[9]\[34].
-- **Lighter footprint** — no idle daemon process. IterOn auto-starts `podman machine` on sandbox launch and stops it when idle, reclaiming VM memory.
+- **Lighter footprint** — no idle daemon process. Boss auto-starts `podman machine` on sandbox launch and stops it when idle, reclaiming VM memory.
 - **Full agent autonomy** — unrestricted shell, filesystem, and network access within the container. No permission prompts.
 - **Portable security** — same OCI image locally and on Fargate; Firecracker isolation automatic in production.
 - **Tmux persistence** — in-container tmux survives connection drops; users inspect agents at any time.

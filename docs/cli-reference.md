@@ -6,20 +6,20 @@
 ## Global Options
 
 ```
-iteron -V, --version    Print version
-iteron -h, --help       Show help
+boss -V, --version    Print version
+boss -h, --help       Show help
 ```
 
 ---
 
-## `iteron scaffold [path]`
+## `boss scaffold [path]`
 
-Create the IterOn specs directory structure and templates.
+Create the Boss specs directory structure and templates.
 
 ### Synopsis
 
 ```
-iteron scaffold [path]
+boss scaffold [path]
 ```
 
 ### Arguments
@@ -38,10 +38,10 @@ iteron scaffold [path]
 
 ```bash
 # Scaffold in current git repo
-iteron scaffold
+boss scaffold
 
 # Scaffold in a specific directory
-iteron scaffold ~/projects/myapp
+boss scaffold ~/projects/myapp
 ```
 
 ### Exit Codes
@@ -53,21 +53,21 @@ iteron scaffold ~/projects/myapp
 
 ---
 
-## `iteron init [options]`
+## `boss init [options]`
 
 Install Podman, pull the sandbox image, create the data volume, and generate configuration files.
 
 ### Synopsis
 
 ```
-iteron init [--image <url>] [-y, --yes]
+boss init [--image <url>] [-y, --yes]
 ```
 
 ### Options
 
 | Option | Description | Default |
 | --- | --- | --- |
-| `--image <url>` | Custom OCI image URL | `ghcr.io/sublang-dev/iteron-sandbox:latest` |
+| `--image <url>` | Custom OCI image URL | `ghcr.io/sublang-dev/boss-sandbox:latest` |
 | `-y, --yes` | Skip confirmation prompts | Prompt |
 
 ### Behavior
@@ -77,18 +77,18 @@ iteron init [--image <url>] [-y, --yes]
 3. Initialize and start Podman machine (macOS)
 4. Verify rootless mode
 5. Pull OCI image
-6. Create `iteron-data` volume
-7. Write `~/.iteron/config.toml`
-8. Write `~/.iteron/.env` template
+6. Create `boss-data` volume
+7. Write `~/.boss/config.toml`
+8. Write `~/.boss/.env` template
 
 ### Examples
 
 ```bash
 # Interactive initialization
-iteron init
+boss init
 
 # Non-interactive with custom image
-iteron init --image ghcr.io/myorg/custom-sandbox:v1 -y
+boss init --image ghcr.io/myorg/custom-sandbox:v1 -y
 ```
 
 ### Exit Codes
@@ -100,31 +100,31 @@ iteron init --image ghcr.io/myorg/custom-sandbox:v1 -y
 
 ---
 
-## `iteron start`
+## `boss start`
 
 Launch the sandbox container.
 
 ### Synopsis
 
 ```
-iteron start
+boss start
 ```
 
 ### Behavior
 
-- Reads config from `~/.iteron/config.toml`
-- Loads environment variables from `~/.iteron/.env`
+- Reads config from `~/.boss/config.toml`
+- Loads environment variables from `~/.boss/.env`
 - Starts the container with security hardening: `--cap-drop ALL`, `--read-only`, `--security-opt no-new-privileges`
 - Sets memory limit from config (default: `16g`)
 - Uses `tini` as PID 1 via `--init`
-- Mounts `iteron-data` volume at `/home/iteron`
+- Mounts `boss-data` volume at `/home/boss`
 - Idempotent: if already running, reports status and exits successfully
 
 ### Examples
 
 ```bash
-iteron start
-# Container "iteron-sandbox" is running.
+boss start
+# Container "boss-sandbox" is running.
 ```
 
 ### Exit Codes
@@ -136,27 +136,27 @@ iteron start
 
 ---
 
-## `iteron stop`
+## `boss stop`
 
-Stop and remove the sandbox container. Workspace data persists in the `iteron-data` volume.
+Stop and remove the sandbox container. Workspace data persists in the `boss-data` volume.
 
 ### Synopsis
 
 ```
-iteron stop
+boss stop
 ```
 
 ### Behavior
 
 - Sends SIGTERM with a 30-second grace period
 - Removes the container after stopping
-- Volume data (`iteron-data`) is preserved
+- Volume data (`boss-data`) is preserved
 
 ### Examples
 
 ```bash
-iteron stop
-# Container "iteron-sandbox" stopped and removed.
+boss stop
+# Container "boss-sandbox" stopped and removed.
 ```
 
 ### Exit Codes
@@ -167,14 +167,14 @@ iteron stop
 
 ---
 
-## `iteron open [workspace] [command] [-- args]`
+## `boss open [workspace] [command] [-- args]`
 
 Open a workspace with an agent or shell. Attaches to an existing tmux session or creates a new one.
 
 ### Synopsis
 
 ```
-iteron open [workspace] [command] [-- extra-args]
+boss open [workspace] [command] [-- extra-args]
 ```
 
 ### Argument Resolution
@@ -193,7 +193,7 @@ Use `~` as the workspace argument for the home directory. Agent names (`claude`,
 Everything after `--` is passed to the agent binary:
 
 ```bash
-iteron open myproject claude -- --resume
+boss open myproject claude -- --resume
 # Runs: claude --resume (in ~/myproject)
 ```
 
@@ -208,19 +208,19 @@ Sessions are named `{command}@{location}`:
 
 ```bash
 # Open a shell in home directory
-iteron open
+boss open
 
 # Open a shell in a workspace
-iteron open myproject
+boss open myproject
 
 # Open Claude Code in home directory
-iteron open ~ claude
+boss open ~ claude
 
 # Open Codex CLI in a workspace
-iteron open myproject codex
+boss open myproject codex
 
 # Pass extra arguments to agent
-iteron open myproject claude -- --resume
+boss open myproject claude -- --resume
 ```
 
 ### Exit Codes
@@ -232,14 +232,14 @@ iteron open myproject claude -- --resume
 
 ---
 
-## `iteron ls`
+## `boss ls`
 
 List workspaces and running sessions.
 
 ### Synopsis
 
 ```
-iteron ls
+boss ls
 ```
 
 ### Output Format
@@ -273,14 +273,14 @@ No workspaces or sessions.
 
 ---
 
-## `iteron rm <workspace>`
+## `boss rm <workspace>`
 
 Remove a workspace directory and kill its sessions.
 
 ### Synopsis
 
 ```
-iteron rm <workspace>
+boss rm <workspace>
 ```
 
 ### Arguments
@@ -295,12 +295,12 @@ iteron rm <workspace>
 2. If sessions exist in the workspace, prompts for confirmation to kill them
 3. Removes the workspace directory recursively from the container
 
-The home directory (`~`) cannot be removed — use `iteron stop` instead.
+The home directory (`~`) cannot be removed — use `boss stop` instead.
 
 ### Examples
 
 ```bash
-iteron rm myproject
+boss rm myproject
 # Kill codex@myproject? [y/N] y
 # Workspace "myproject" removed.
 ```

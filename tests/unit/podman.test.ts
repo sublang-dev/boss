@@ -23,7 +23,7 @@ describe('podmanErrorMessage', () => {
     const { podmanErrorMessage } = await import('../../src/utils/podman.js');
     const msg = podmanErrorMessage({ code: 'ENOENT' });
     expect(msg).toContain('not installed');
-    expect(msg).toContain('iteron init');
+    expect(msg).toContain('boss init');
   });
 
   it('extracts last line from stderr', async () => {
@@ -162,7 +162,7 @@ describe('volumeExists', () => {
       cb(null, '{}', '');
     });
     const { volumeExists } = await import('../../src/utils/podman.js');
-    expect(await volumeExists('iteron-data')).toBe(true);
+    expect(await volumeExists('boss-data')).toBe(true);
   });
 
   it('returns false when volume does not exist', async () => {

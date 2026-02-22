@@ -24,13 +24,13 @@ Per [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication):
 
 **Subscription (primary):**
 
-- Support `CLAUDE_CODE_OAUTH_TOKEN` env var in `~/.iteron/.env` (loaded by `iteron start` per [IR-002 §3](002-container-lifecycle.md#3-iteron-start))
+- Support `CLAUDE_CODE_OAUTH_TOKEN` env var in `~/.boss/.env` (loaded by `boss start` per [IR-002 §3](002-container-lifecycle.md#3-boss-start))
 - Document one-time `claude setup-token` step on a host with a browser; token valid ~1 year \[1]
 - Document that `CLAUDE_CODE_OAUTH_TOKEN` must not coexist with `apiKeyHelper` \[2]
 
 **Fallback:**
 
-- Inject `ANTHROPIC_API_KEY` via `~/.iteron/.env`
+- Inject `ANTHROPIC_API_KEY` via `~/.boss/.env`
 
 **Onboarding bypass:**
 
@@ -47,7 +47,7 @@ Per [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication):
 
 **Fallback:**
 
-- Inject `CODEX_API_KEY` via `~/.iteron/.env` (for `codex exec` non-interactive mode only) \[7]
+- Inject `CODEX_API_KEY` via `~/.boss/.env` (for `codex exec` non-interactive mode only) \[7]
 
 > **Alternative: credential forwarding.** Copying `auth.json` into containers is officially documented \[6] but requires `cli_auth_credentials_store = "file"` on macOS (default `auto` uses Keychain) \[8] and risks token desync on concurrent host/container use.
 
@@ -56,12 +56,12 @@ Per [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication):
 **Subscription (primary):**
 
 - Set `NO_BROWSER=true` in container environment; the CLI prints an OAuth URL for the user to open on any browser and paste back the authorization code \[9]
-- Works through IterOn's tmux interaction
+- Works through Boss's tmux interaction
 - Caveat: this env var is referenced in CLI error messages but not yet in official auth guides \[9]; a v0.18.0 regression was fixed in v0.18.4 \[10]
 
 **Fallback:**
 
-- Inject `GEMINI_API_KEY` via `~/.iteron/.env` \[9]
+- Inject `GEMINI_API_KEY` via `~/.boss/.env` \[9]
 
 **Enterprise alternative:**
 
@@ -71,28 +71,28 @@ Per [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication):
 
 **Primary:**
 
-- Support credential forwarding: `iteron start` bind-mounts host `~/.local/share/opencode/auth.json` into the container if it exists (file-based, no Keychain \[11]; path is `~/.local/share/` on all platforms via `xdg-basedir` \[12])
+- Support credential forwarding: `boss start` bind-mounts host `~/.local/share/opencode/auth.json` into the container if it exists (file-based, no Keychain \[11]; path is `~/.local/share/` on all platforms via `xdg-basedir` \[12])
 - Mount read-write for token refresh; add `:U` suffix for rootless Podman UID mapping
 
 **Fallback:**
 
-- Inject provider env var (e.g. `ANTHROPIC_API_KEY`) via `~/.iteron/.env` \[13]
+- Inject provider env var (e.g. `ANTHROPIC_API_KEY`) via `~/.boss/.env` \[13]
 
 ## Verification
 
-Each test runs in a freshly started container (`iteron stop && iteron start`).
+Each test runs in a freshly started container (`boss stop && boss start`).
 
 | # | Test | Expected |
 | --- | --- | --- |
-| 1 | Set `CLAUDE_CODE_OAUTH_TOKEN` in `.env`; `iteron open claude`; send `hello` | Agent responds without login or onboarding prompt |
-| 2 | Set `ANTHROPIC_API_KEY` in `.env` (no OAuth token); `podman exec iteron-sandbox claude -p "echo hello"` | Exit 0 (API key fallback works) |
-| 3 | No auth in `.env`; `podman exec iteron-sandbox claude -p "echo hello"` | Exit non-zero; stderr shows auth error, not onboarding |
-| 4 | `iteron open codex`; run `codex login --device-auth` | CLI displays device URL and code; login succeeds after browser auth |
-| 5 | Set `CODEX_API_KEY` in `.env`; `podman exec iteron-sandbox codex exec "echo hello"` | Exit 0 |
-| 6 | `iteron open gemini` (with `NO_BROWSER=true`); run `gemini` | CLI prints auth URL; after browser auth and code paste, agent responds |
-| 7 | Set `GEMINI_API_KEY` in `.env`; `podman exec iteron-sandbox gemini -p "echo hello"` | Exit 0 (API key fallback) |
-| 8 | Mount host `auth.json`; `podman exec iteron-sandbox opencode run "echo hello"` | Exit 0; uses forwarded credentials |
-| 9 | `podman exec iteron-sandbox cat ~/.claude.json \| jq .hasCompletedOnboarding` | `true` |
+| 1 | Set `CLAUDE_CODE_OAUTH_TOKEN` in `.env`; `boss open claude`; send `hello` | Agent responds without login or onboarding prompt |
+| 2 | Set `ANTHROPIC_API_KEY` in `.env` (no OAuth token); `podman exec boss-sandbox claude -p "echo hello"` | Exit 0 (API key fallback works) |
+| 3 | No auth in `.env`; `podman exec boss-sandbox claude -p "echo hello"` | Exit non-zero; stderr shows auth error, not onboarding |
+| 4 | `boss open codex`; run `codex login --device-auth` | CLI displays device URL and code; login succeeds after browser auth |
+| 5 | Set `CODEX_API_KEY` in `.env`; `podman exec boss-sandbox codex exec "echo hello"` | Exit 0 |
+| 6 | `boss open gemini` (with `NO_BROWSER=true`); run `gemini` | CLI prints auth URL; after browser auth and code paste, agent responds |
+| 7 | Set `GEMINI_API_KEY` in `.env`; `podman exec boss-sandbox gemini -p "echo hello"` | Exit 0 (API key fallback) |
+| 8 | Mount host `auth.json`; `podman exec boss-sandbox opencode run "echo hello"` | Exit 0; uses forwarded credentials |
+| 9 | `podman exec boss-sandbox cat ~/.claude.json \| jq .hasCompletedOnboarding` | `true` |
 
 ## References
 
@@ -113,7 +113,7 @@ Each test runs in a freshly started container (`iteron stop && iteron start`).
 ## Dependencies
 
 - [IR-001](001-oci-sandbox-image.md) (autonomy defaults baked into image)
-- [IR-002](002-container-lifecycle.md) (`.env` loading and volume mounts via `iteron start`)
-- [IR-004](004-workspace-interaction.md) (`iteron open` for interactive verification)
+- [IR-002](002-container-lifecycle.md) (`.env` loading and volume mounts via `boss start`)
+- [IR-004](004-workspace-interaction.md) (`boss open` for interactive verification)
 - [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication) approved
 - Valid subscriptions or API keys for Anthropic, OpenAI, and Google (test accounts)

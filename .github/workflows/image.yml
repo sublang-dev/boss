@@ -28,7 +28,7 @@ permissions:
   security-events: write
 
 env:
-  IMAGE: ghcr.io/sublang-dev/iteron-sandbox
+  IMAGE: ghcr.io/sublang-dev/boss-sandbox
 
 jobs:
   build-push-release:

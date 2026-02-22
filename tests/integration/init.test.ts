@@ -10,22 +10,22 @@ import { rm } from 'node:fs/promises';
 // Isolated config dir for the entire suite
 let configDir: string;
 
-// Guaranteed by globalSetup (builds iteron-sandbox:dev locally when unset).
-const TEST_IMAGE = process.env.ITERON_TEST_IMAGE!;
+// Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
+const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
 
 beforeAll(() => {
-  configDir = mkdtempSync(join(tmpdir(), 'iteron-init-test-'));
-  process.env.ITERON_CONFIG_DIR = configDir;
+  configDir = mkdtempSync(join(tmpdir(), 'boss-init-test-'));
+  process.env.BOSS_CONFIG_DIR = configDir;
 });
 
 afterAll(async () => {
-  delete process.env.ITERON_CONFIG_DIR;
+  delete process.env.BOSS_CONFIG_DIR;
   await rm(configDir, { recursive: true, force: true });
 });
 
-describe('iteron init (integration)', { timeout: 120_000 }, () => {
+describe('boss init (integration)', { timeout: 120_000 }, () => {
   it('initializes with --yes and --image', async () => {
-    // Dynamic import so ITERON_CONFIG_DIR is picked up
+    // Dynamic import so BOSS_CONFIG_DIR is picked up
     const { initCommand } = await import('../../src/commands/init.js');
     await initCommand({ image: TEST_IMAGE, yes: true });
 
@@ -59,7 +59,7 @@ describe('iteron init (integration)', { timeout: 120_000 }, () => {
 
   it('updates legacy image in existing config to default image', async () => {
     const legacyToml = `[container]
-name = "iteron-sandbox"
+name = "boss-sandbox"
 image = "docker.io/library/alpine:latest"
 memory = "16g"
 `;

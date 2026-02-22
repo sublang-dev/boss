@@ -5,20 +5,20 @@
 
 ## Podman Not Installed
 
-**Symptom:** `iteron init` reports that Podman is not found.
+**Symptom:** `boss init` reports that Podman is not found.
 
-**Fix:** Let `iteron init` install it for you (it will prompt), or install manually:
+**Fix:** Let `boss init` install it for you (it will prompt), or install manually:
 
 - **macOS:** `brew install podman`
 - **Fedora/RHEL:** `sudo dnf install podman`
 - **Ubuntu/Debian:** `sudo apt install podman`
 - **WSL2 (Ubuntu):** `sudo apt install podman`
 
-Then re-run `iteron init`.
+Then re-run `boss init`.
 
 ## Podman Machine Not Running (macOS)
 
-**Symptom:** `iteron start` fails with a connection error on macOS.
+**Symptom:** `boss start` fails with a connection error on macOS.
 
 **Fix:** Start the Podman machine:
 
@@ -26,16 +26,16 @@ Then re-run `iteron init`.
 podman machine start
 ```
 
-Or re-run `iteron init` which handles machine initialization automatically.
+Or re-run `boss init` which handles machine initialization automatically.
 
 ## Container Not Running
 
-**Symptom:** `iteron open` exits with "Container iteron-sandbox is not running. Run `iteron start` first."
+**Symptom:** `boss open` exits with "Container boss-sandbox is not running. Run `boss start` first."
 
 **Fix:**
 
 ```bash
-iteron start
+boss start
 ```
 
 ## OOM / Memory Issues
@@ -48,19 +48,19 @@ iteron start
 
 1. Restart the container — workspace data is preserved on the volume:
    ```bash
-   iteron stop
-   iteron start
+   boss stop
+   boss start
    ```
 2. Check memory usage:
    ```bash
-   podman stats --no-stream iteron-sandbox
+   podman stats --no-stream boss-sandbox
    ```
-3. If 16 GB is insufficient, edit `~/.iteron/config.toml`:
+3. If 16 GB is insufficient, edit `~/.boss/config.toml`:
    ```toml
    [container]
    memory = "32g"
    ```
-   Then restart: `iteron stop && iteron start`.
+   Then restart: `boss stop && boss start`.
 
 ## Authentication Failures
 
@@ -69,13 +69,13 @@ iteron start
 **Symptom:** Claude Code prompts for login or shows "unauthorized".
 
 **Fix:**
-1. Verify `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` is set in `~/.iteron/.env`
+1. Verify `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` is set in `~/.boss/.env`
 2. Regenerate the setup token if expired:
    ```bash
    # On your host machine
    claude setup-token
    ```
-3. Restart the container to reload env vars: `iteron stop && iteron start`
+3. Restart the container to reload env vars: `boss stop && boss start`
 
 ### Codex CLI
 
@@ -84,10 +84,10 @@ iteron start
 **Fix:**
 1. Run the device-code flow inside the container:
    ```bash
-   iteron open ~ codex
+   boss open ~ codex
    codex login --device-auth
    ```
-2. Or set `CODEX_API_KEY` in `~/.iteron/.env` (works with `codex exec` only)
+2. Or set `CODEX_API_KEY` in `~/.boss/.env` (works with `codex exec` only)
 3. For Teams/Enterprise: ensure your admin has enabled device-code auth
 
 ### Gemini CLI
@@ -97,10 +97,10 @@ iteron start
 **Fix:**
 1. Open Gemini and complete the PKCE flow:
    ```bash
-   iteron open ~ gemini
+   boss open ~ gemini
    # Follow the URL printed by Gemini, paste the code back
    ```
-2. Or set `GEMINI_API_KEY` in `~/.iteron/.env`
+2. Or set `GEMINI_API_KEY` in `~/.boss/.env`
 3. Ensure you're using Gemini CLI >= v0.18.4 (earlier versions had a `NO_BROWSER` regression)
 
 ### OpenCode
@@ -108,8 +108,8 @@ iteron start
 **Symptom:** OpenCode shows provider authentication errors.
 
 **Fix:**
-1. Ensure `~/.local/share/opencode/auth.json` exists on your host — `iteron start` forwards it automatically
-2. Or set `MOONSHOT_API_KEY` in `~/.iteron/.env`
+1. Ensure `~/.local/share/opencode/auth.json` exists on your host — `boss start` forwards it automatically
+2. Or set `MOONSHOT_API_KEY` in `~/.boss/.env`
 
 ## Agent Permission Prompts Appearing
 
@@ -121,7 +121,7 @@ iteron start
 
 1. Check that the config files exist:
    ```bash
-   iteron open
+   boss open
    # Inside the container:
    cat ~/.claude.json              # Should have hasCompletedOnboarding: true
    cat ~/.claude/settings.json     # Should list allowed permissions
@@ -130,9 +130,9 @@ iteron start
    ```
 2. If missing or corrupted, recreate the container to restore image defaults:
    ```bash
-   iteron stop
-   podman volume rm iteron-data    # WARNING: deletes all workspace data
-   iteron start
+   boss stop
+   podman volume rm boss-data    # WARNING: deletes all workspace data
+   boss start
    ```
    Back up important workspace data before removing the volume.
 
@@ -140,29 +140,29 @@ iteron start
 
 **Symptom:** `claude`, `codex`, or another agent command is not found after upgrading the sandbox image.
 
-**Cause:** Agent CLIs are managed by mise and preinstalled in the image. `iteron start` runs `mise install` to reconcile tools, but the reconciliation may have failed (e.g., network issue during start).
+**Cause:** Agent CLIs are managed by mise and preinstalled in the image. `boss start` runs `mise install` to reconcile tools, but the reconciliation may have failed (e.g., network issue during start).
 
 **Fix:**
 
-1. Restart the container — `iteron start` will re-run reconciliation:
+1. Restart the container — `boss start` will re-run reconciliation:
    ```bash
-   iteron stop && iteron start
+   boss stop && boss start
    ```
 2. Or reconcile manually inside the container:
    ```bash
-   iteron open
+   boss open
    mise install
    ```
 3. As a last resort, recreate the volume for a fresh copy from the image:
    ```bash
-   iteron stop
-   podman volume rm iteron-data    # WARNING: deletes all workspace data
-   iteron start
+   boss stop
+   podman volume rm boss-data    # WARNING: deletes all workspace data
+   boss start
    ```
 
 ## mise Install Slow or Fails During Start
 
-**Symptom:** `iteron start` takes a long time or fails with network errors during the `mise install` reconciliation step.
+**Symptom:** `boss start` takes a long time or fails with network errors during the `mise install` reconciliation step.
 
 **Cause:** `mise install` downloads tool artifacts from npm and GitHub when they are missing. When tools are already present, this step is typically fast with minimal or no downloads.
 
@@ -170,31 +170,31 @@ iteron start
 
 1. Check network connectivity inside the container:
    ```bash
-   podman exec iteron-sandbox curl -fsSL https://registry.npmjs.org/
+   podman exec boss-sandbox curl -fsSL https://registry.npmjs.org/
    ```
-2. If behind a proxy, ensure proxy env vars are set in `~/.iteron/.env`
+2. If behind a proxy, ensure proxy env vars are set in `~/.boss/.env`
 3. If network is unavailable, tools preinstalled in the image are usually already on the volume — reconciliation only downloads when artifacts are missing
 
 ## Read-Only Filesystem Errors
 
 **Symptom:** Commands inside the container fail with "Read-only file system".
 
-**Cause:** The sandbox runs with `--read-only` for security. Only `/tmp` and `/home/iteron` are writable.
+**Cause:** The sandbox runs with `--read-only` for security. Only `/tmp` and `/home/boss` are writable.
 
 **Fix:**
-- Write files to `/home/iteron/` (your home directory) or `/tmp`
+- Write files to `/home/boss/` (your home directory) or `/tmp`
 - Install binaries to `~/.local/bin` (on PATH and persistent)
 - System paths like `/usr`, `/etc`, `/var` are intentionally read-only
 
 ## Image Pull Failures
 
-**Symptom:** `iteron init` fails to pull the sandbox image.
+**Symptom:** `boss init` fails to pull the sandbox image.
 
 **Fix:**
 1. Check internet connectivity
 2. Verify you can reach the registry:
    ```bash
-   podman pull ghcr.io/sublang-dev/iteron-sandbox:latest
+   podman pull ghcr.io/sublang-dev/boss-sandbox:latest
    ```
 3. If behind a proxy, configure Podman's proxy settings:
    ```bash

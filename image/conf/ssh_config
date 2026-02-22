@@ -5,4 +5,4 @@
 # The glob silently matches nothing when no managed config exists.
 
 StrictHostKeyChecking yes
-Include /home/iteron/.ssh/config.d/*.conf
+Include /home/boss/.ssh/config.d/*.conf

@@ -6,38 +6,38 @@
 ## Prerequisites
 
 - **Node.js** >= 18 ([download](https://nodejs.org/))
-- **Podman** (installed automatically by `iteron init`, or [install manually](https://podman.io/docs/installation))
+- **Podman** (installed automatically by `boss init`, or [install manually](https://podman.io/docs/installation))
 - At least one API key or subscription for a supported agent
 
-## Install IterOn
+## Install Boss
 
 ```bash
-npm install -g @sublang/iteron
+npm install -g @sublang/boss
 ```
 
 Verify the installation:
 
 ```bash
-iteron -V
+boss -V
 # 0.1.2
 ```
 
 ## Initialize the Sandbox
 
 ```bash
-iteron init
+boss init
 ```
 
-`iteron init` performs these steps automatically:
+`boss init` performs these steps automatically:
 
 1. **Detects your platform** (macOS, Linux, or WSL2)
 2. **Installs Podman** if not found (prompts for confirmation)
 3. **Initializes and starts the Podman machine** (macOS only)
 4. **Verifies rootless mode** — refuses to proceed if Podman runs as root
-5. **Pulls the sandbox image** (`ghcr.io/sublang-dev/iteron-sandbox:latest`)
-6. **Creates the `iteron-data` volume** for persistent workspace storage
-7. **Generates config** at `~/.iteron/config.toml`
-8. **Generates env template** at `~/.iteron/.env`
+5. **Pulls the sandbox image** (`ghcr.io/sublang-dev/boss-sandbox:latest`)
+6. **Creates the `boss-data` volume** for persistent workspace storage
+7. **Generates config** at `~/.boss/config.toml`
+8. **Generates env template** at `~/.boss/.env`
 
 Expected output (on macOS with Podman already installed):
 
@@ -47,10 +47,10 @@ Detected platform: darwin/arm64
   Podman machine init (skipped)
   Podman machine start (skipped)
   Rootless mode (done)
-  Image ghcr.io/sublang-dev/iteron-sandbox:latest (done)
-  Volume "iteron-data" (created)
-  Config ~/.iteron/config.toml (created)
-  Env template ~/.iteron/.env (created)
+  Image ghcr.io/sublang-dev/boss-sandbox:latest (done)
+  Volume "boss-data" (created)
+  Config ~/.boss/config.toml (created)
+  Env template ~/.boss/.env (created)
 
 Initialization complete.
 ```
@@ -64,7 +64,7 @@ Initialization complete.
 
 ## Set Up API Keys
 
-Edit `~/.iteron/.env` and fill in at least one key:
+Edit `~/.boss/.env` and fill in at least one key:
 
 ```bash
 # Claude Code (run `claude setup-token` on host for subscription auth)
@@ -88,15 +88,15 @@ See [Agent Configuration](agents.md) for subscription auth alternatives that don
 
 ### macOS
 
-Podman runs inside a lightweight Linux VM managed by `podman machine`. `iteron init` creates and starts this machine automatically with 4 GB RAM and 2 vCPUs.
+Podman runs inside a lightweight Linux VM managed by `podman machine`. `boss init` creates and starts this machine automatically with 4 GB RAM and 2 vCPUs.
 
 ### Linux
 
-Podman runs natively in rootless mode. No VM is required. Install Podman via your distribution's package manager if `iteron init` does not detect it.
+Podman runs natively in rootless mode. No VM is required. Install Podman via your distribution's package manager if `boss init` does not detect it.
 
 ### WSL2
 
-Run IterOn inside a WSL2 distribution (Ubuntu recommended). Podman runs natively inside WSL2, same as Linux. Do not use Podman Desktop for Windows — use the WSL2 package instead.
+Run Boss inside a WSL2 distribution (Ubuntu recommended). Podman runs natively inside WSL2, same as Linux. Do not use Podman Desktop for Windows — use the WSL2 package instead.
 
 ## Next Steps
 

@@ -35,9 +35,9 @@ Authoring rules: [dev/style.md](dev/style.md).
 | --- | --- | --- |
 | IR-000 | [000-spdx-headers.md](iterations/000-spdx-headers.md) | Add SPDX headers to applicable files |
 | IR-001 | [001-oci-sandbox-image.md](iterations/001-oci-sandbox-image.md) | Multi-arch OCI image with four agent runtimes |
-| IR-002 | [002-container-lifecycle.md](iterations/002-container-lifecycle.md) | `iteron init`, `start`, `stop` commands |
+| IR-002 | [002-container-lifecycle.md](iterations/002-container-lifecycle.md) | `boss init`, `start`, `stop` commands |
 | IR-003 | [003-tests-ci.md](iterations/003-tests-ci.md) | Automated tests and CI pipeline |
-| IR-004 | [004-workspace-interaction.md](iterations/004-workspace-interaction.md) | `iteron open`, `ls`, `rm` commands |
+| IR-004 | [004-workspace-interaction.md](iterations/004-workspace-interaction.md) | `boss open`, `ls`, `rm` commands |
 | IR-005 | [005-headless-auth.md](iterations/005-headless-auth.md) | Headless authentication for all agents |
 | IR-006 | [006-autonomous-execution.md](iterations/006-autonomous-execution.md) | Autonomous agent execution validation |
 | IR-007 | [007-reliability-security.md](iterations/007-reliability-security.md) | Reliability, security, CVEs, and documentation |

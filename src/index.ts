@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2025 SubLang International <https://sublang.ai>
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Command } from 'commander';
 import { scaffoldCommand } from './commands/scaffold.js';
 import { initCommand } from './commands/init.js';
@@ -11,17 +13,19 @@ import { openCommand } from './commands/open.js';
 import { lsCommand } from './commands/ls.js';
 import { rmCommand } from './commands/rm.js';
 
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
+
 const program = new Command();
 
 program
-  .name('iteron')
+  .name('boss')
   .description('Delegate dev loops to Claude Code + Codex CLI. Iterates for hours. No API keys.')
-  .version('0.1.2')
+  .version(pkg.version)
   .enablePositionalOptions();
 
 program
   .command('scaffold')
-  .description('Create iteron specs directory structure and templates')
+  .description('Create boss specs directory structure and templates')
   .argument('[path]', 'target directory (defaults to git root or cwd)')
   .action(scaffoldCommand);
 

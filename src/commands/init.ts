@@ -66,7 +66,7 @@ export async function initCommand(options: { image?: string; yes?: boolean }): P
 
       const yes = options.yes || await confirm('Proceed?');
       if (!yes) {
-        console.log('Aborted. Install Podman manually, then re-run "iteron init".');
+        console.log('Aborted. Install Podman manually, then re-run "boss init".');
         process.exit(1);
       }
 
@@ -135,15 +135,15 @@ export async function initCommand(options: { image?: string; yes?: boolean }): P
     // 7. Generate config
     const configCreated = await writeConfig(image);
     if (configCreated) {
-      step('Config ~/.iteron/config.toml', 'created');
+      step('Config ~/.boss/config.toml', 'created');
     } else {
       const configUpdated = await reconcileConfigImage(image, { force: Boolean(options.image) });
-      step('Config ~/.iteron/config.toml', configUpdated ? 'updated' : 'skipped');
+      step('Config ~/.boss/config.toml', configUpdated ? 'updated' : 'skipped');
     }
 
     // 8. Generate .env template
     const envCreated = await writeEnvTemplate();
-    step('Env template ~/.iteron/.env', envCreated ? 'created' : 'skipped');
+    step('Env template ~/.boss/.env', envCreated ? 'created' : 'skipped');
 
     console.log('\nInitialization complete.');
   } catch (error) {

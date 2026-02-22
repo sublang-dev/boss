@@ -22,7 +22,7 @@ async function ensureDir(dirPath: string): Promise<CreateDirResult> {
 }
 
 /**
- * Create the iteron specs directory structure.
+ * Create the boss specs directory structure.
  */
 export async function createSpecsStructure(basePath: string): Promise<{
   specsDir: string;

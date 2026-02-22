@@ -26,17 +26,17 @@ RUN set -eux; \
  && mise --version
 
 # ---------- non-root user ----------
-# node:22-bookworm-slim ships uid=1000/gid=1000 as "node"; rename to "iteron"
-RUN groupmod -n iteron node \
- && usermod -l iteron -d /home/iteron -m -s /bin/bash node
+# node:22-bookworm-slim ships uid=1000/gid=1000 as "node"; rename to "boss"
+RUN groupmod -n boss node \
+ && usermod -l boss -d /home/boss -m -s /bin/bash node
 
 # ---------- remove SUID/SGID ----------
 RUN find / -perm /6000 -type f -exec chmod a-s {} + 2>/dev/null || true
 
 # ---------- user-local tool layer ----------
-RUN mkdir -p /home/iteron/.local/bin \
- && chown -R iteron:iteron /home/iteron/.local
-ENV PATH="/home/iteron/.local/share/mise/shims:/home/iteron/.local/bin:${PATH}"
+RUN mkdir -p /home/boss/.local/bin \
+ && chown -R boss:boss /home/boss/.local
+ENV PATH="/home/boss/.local/share/mise/shims:/home/boss/.local/bin:${PATH}"
 
 # ---------- mise system config + lockfile (root phase) ----------
 COPY conf/mise-system.toml /etc/mise/config.toml
@@ -50,27 +50,27 @@ RUN --mount=type=secret,id=GITHUB_TOKEN \
 ENV NO_BROWSER=true
 
 # ---------- agent autonomy configs ----------
-COPY --chown=iteron:iteron conf/claude.json          /home/iteron/.claude.json
-COPY --chown=iteron:iteron conf/claude-settings.json  /home/iteron/.claude/settings.json
-COPY --chown=iteron:iteron conf/codex-config.toml     /home/iteron/.codex/config.toml
-COPY --chown=iteron:iteron conf/gemini-settings.json  /home/iteron/.gemini/settings.json
-COPY --chown=iteron:iteron conf/opencode.json         /home/iteron/.config/opencode/opencode.json
+COPY --chown=boss:boss conf/claude.json          /home/boss/.claude.json
+COPY --chown=boss:boss conf/claude-settings.json  /home/boss/.claude/settings.json
+COPY --chown=boss:boss conf/codex-config.toml     /home/boss/.codex/config.toml
+COPY --chown=boss:boss conf/gemini-settings.json  /home/boss/.gemini/settings.json
+COPY --chown=boss:boss conf/opencode.json         /home/boss/.config/opencode/opencode.json
 # ---------- SSH known hosts + strict checking (DR-003 §2) ----------
 COPY conf/ssh_known_hosts                               /etc/ssh/ssh_known_hosts
-COPY conf/ssh_config                                    /etc/ssh/ssh_config.d/iteron.conf
+COPY conf/ssh_config                                    /etc/ssh/ssh_config.d/boss.conf
 
 COPY conf/tmux-system.conf                             /etc/tmux.conf
-COPY --chown=iteron:iteron conf/tmux.conf             /home/iteron/.tmux.conf
+COPY --chown=boss:boss conf/tmux.conf             /home/boss/.tmux.conf
 
 # ---------- mise user-global config template ----------
-COPY --chown=iteron:iteron conf/mise-user.toml /home/iteron/.config/mise/config.toml
+COPY --chown=boss:boss conf/mise-user.toml /home/boss/.config/mise/config.toml
 
-# ---------- mise tool installation (iteron phase) ----------
-# Allow iteron to update lockfile during install (rootfs is read-only at runtime)
-RUN chown iteron:iteron /etc/mise /etc/mise/mise.lock
+# ---------- mise tool installation (boss phase) ----------
+# Allow boss to update lockfile during install (rootfs is read-only at runtime)
+RUN chown boss:boss /etc/mise /etc/mise/mise.lock
 
-USER iteron
-WORKDIR /home/iteron
+USER boss
+WORKDIR /home/boss
 RUN mise trust /etc/mise/config.toml \
  && mise install --locked \
  && mise reshim

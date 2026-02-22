@@ -9,7 +9,7 @@ This component defines requirements for user-facing documentation.
 
 ### DOC-001
 
-Where IterOn is released, user documentation in `docs/` shall cover
+Where Boss is released, user documentation in `docs/` shall cover
 installation, CLI reference, agent configuration, workspace
 management, tmux usage, and troubleshooting.
 

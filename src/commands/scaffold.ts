@@ -7,7 +7,7 @@ import { findGitRoot } from '../utils/git.js';
 import { createSpecsStructure, copyTemplates, appendAgentSpecs } from '../utils/fs.js';
 
 /**
- * Scaffold the iteron specs directory structure.
+ * Scaffold the boss specs directory structure.
  *
  * Behavior:
  * - If path provided: use that directory (must exist)
@@ -39,7 +39,7 @@ export async function scaffoldCommand(targetPath?: string): Promise<void> {
     }
   }
 
-  console.log(`Scaffolding iteron specs in: ${basePath}`);
+  console.log(`Scaffolding boss specs in: ${basePath}`);
 
   try {
     const { specsDir, subDirs } = await createSpecsStructure(basePath);
@@ -80,10 +80,10 @@ export async function scaffoldCommand(targetPath?: string): Promise<void> {
       }
     }
 
-    console.log('\nIteron scaffolding complete!');
+    console.log('\nBoss scaffolding complete!');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`Failed to scaffold iteron: ${message}`);
+    console.error(`Failed to scaffold boss: ${message}`);
     process.exit(1);
   }
 }

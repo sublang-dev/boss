@@ -1,11 +1,11 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- SPDX-FileCopyrightText: 2025 SubLang International <https://sublang.ai> -->
 
-# <img src="assets/iteron.svg" alt="iteron" width="128" height="128">
+# <img src="assets/boss.svg" alt="boss" width="128" height="128">
 
-[![npm version](https://img.shields.io/npm/v/@sublang/iteron)](https://www.npmjs.com/package/@sublang/iteron)
-[![Node.js](https://img.shields.io/node/v/@sublang/iteron)](https://nodejs.org/)
-[![CI](https://github.com/sublang-dev/iteron/actions/workflows/ci.yml/badge.svg)](https://github.com/sublang-dev/iteron/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@sublang/boss)](https://www.npmjs.com/package/@sublang/boss)
+[![Node.js](https://img.shields.io/node/v/@sublang/boss)](https://nodejs.org/)
+[![CI](https://github.com/sublang-dev/boss/actions/workflows/ci.yml/badge.svg)](https://github.com/sublang-dev/boss/actions/workflows/ci.yml)
 
 Delegate dev loops to Claude Code, Codex CLI, Gemini CLI, OpenCode or any AI coder. Runs autonomously for hours in an isolated Podman sandbox. Subscription/device auth is primary; API keys are supported fallback.
 
@@ -21,9 +21,9 @@ Pick the path that fits your setup:
 Scaffold [GEARS](https://sublang.ai/ref/gears-ai-ready-spec-syntax) specs into any project and let AI agents iterate on them:
 
 ```bash
-npm install -g @sublang/iteron
+npm install -g @sublang/boss
 cd your-project
-iteron scaffold
+boss scaffold
 ```
 
 Review the sample iteration `specs/iterations/000-spdx-headers.md`, update the copyright text, then prompt your AI coding agent:
@@ -34,47 +34,47 @@ Complete Iteration #0
 
 ### Sandbox
 
-Install IterOn globally to launch AI agents in an isolated Podman container.
+Install Boss globally to launch AI agents in an isolated Podman container.
 
 #### Prerequisites
 
 - Node.js >= 18
-- Podman (installed automatically by `iteron init`, or install manually)
+- Podman (installed automatically by `boss init`, or install manually)
 - One auth method for the agent(s) you use: subscription/device auth (recommended) or API key fallback
 
 #### Setup
 
 ```bash
-# Install IterOn globally
-npm install -g @sublang/iteron
+# Install Boss globally
+npm install -g @sublang/boss
 
 # Initialize Podman, pull sandbox image, create config
-iteron init
+boss init
 
 # Optional fallback API keys
-# Edit ~/.iteron/.env if you prefer key-based auth
+# Edit ~/.boss/.env if you prefer key-based auth
 ```
 
 #### Run
 
 ```bash
 # Start the sandbox container
-iteron start
+boss start
 
 # Open Claude Code in a workspace
-iteron open myproject claude
+boss open myproject claude
 
 # Open Claude Code with extra args
-iteron open myproject claude -- --resume
+boss open myproject claude -- --resume
 
 # List running sessions
-iteron ls
+boss ls
 
 # More features
-iteron -h
+boss -h
 ```
 
-Then authenticate in-session (recommended), or set fallback API keys in `~/.iteron/.env`.
+Then authenticate in-session (recommended), or set fallback API keys in `~/.boss/.env`.
 
 If any step fails, see [Troubleshooting](docs/troubleshooting.md).
 
@@ -95,12 +95,12 @@ For full auth details and caveats, see [Agent Configuration](docs/agents.md).
 
 | File | Purpose |
 | --- | --- |
-| `~/.iteron/config.toml` | Container settings, [SSH keys](docs/agents.md#ssh-keys) |
-| `~/.iteron/.env` | Auth env vars (subscription tokens and API-key fallbacks; loaded on `start`) |
+| `~/.boss/config.toml` | Container settings, [SSH keys](docs/agents.md#ssh-keys) |
+| `~/.boss/.env` | Auth env vars (subscription tokens and API-key fallbacks; loaded on `start`) |
 
 ## Workflow
 
-<img src="assets/workflow.png" alt="IterOn Workflow" width="530" height="510" style="max-width: 100%; height: auto">
+<img src="assets/workflow.png" alt="Boss Workflow" width="530" height="510" style="max-width: 100%; height: auto">
 
 1. **Make Decisions** — Discuss requirements and architecture with AI. It generates decision records in `specs/decisions/`.
 2. **Plan Iterations** — Break down work into iteration specs with AI. It generates iteration records in `specs/iterations/`.
@@ -121,7 +121,7 @@ Then loop back to the next decision or iteration.
 
 We welcome contributions of all kinds. If you'd like to help:
 
-- 🌟 Star our repo if you find IterOn useful.
-- [Open an issue](https://github.com/sublang-dev/iteron/issues) for bugs or feature requests.
-- [Open a PR](https://github.com/sublang-dev/iteron/pulls) for fixes or improvements.
+- 🌟 Star our repo if you find Boss useful.
+- [Open an issue](https://github.com/sublang-dev/boss/issues) for bugs or feature requests.
+- [Open a PR](https://github.com/sublang-dev/boss/pulls) for fixes or improvements.
 - Discuss on [Discord](https://discord.gg/cxUsykWr) for support or new ideas.

@@ -8,9 +8,9 @@ import { tmpdir } from 'node:os';
 import { rm, mkdir } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-// Guaranteed by globalSetup (builds iteron-sandbox:dev locally when unset).
-const TEST_IMAGE = process.env.ITERON_TEST_IMAGE!;
-const TEST_CONTAINER = 'iteron-test-sandbox';
+// Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
+const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
+const TEST_CONTAINER = 'boss-test-sandbox';
 
 let configDir: string;
 
@@ -30,8 +30,8 @@ async function cleanup(): Promise<void> {
 beforeAll(async () => {
   await cleanup();
 
-  configDir = mkdtempSync(join(tmpdir(), 'iteron-workspace-test-'));
-  process.env.ITERON_CONFIG_DIR = configDir;
+  configDir = mkdtempSync(join(tmpdir(), 'boss-workspace-test-'));
+  process.env.BOSS_CONFIG_DIR = configDir;
 
   await mkdir(configDir, { recursive: true });
 
@@ -44,7 +44,7 @@ memory = "512m"
   writeFileSync(join(configDir, '.env'), 'ANTHROPIC_API_KEY=sk-test-123\n', 'utf-8');
 
   // Ensure volume exists (image is guaranteed by globalSetup)
-  try { execFileSync('podman', ['volume', 'create', 'iteron-data'], { stdio: 'ignore' }); } catch {}
+  try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
 
   // Start container
   const { startCommand } = await import('../../src/commands/start.js');
@@ -54,28 +54,28 @@ memory = "512m"
 
 afterAll(async () => {
   await cleanup();
-  delete process.env.ITERON_CONFIG_DIR;
+  delete process.env.BOSS_CONFIG_DIR;
   if (configDir) await rm(configDir, { recursive: true, force: true });
 });
 
-describe('iteron open (integration)', { timeout: 120_000, sequential: true }, () => {
-  // IR-004 test 1: `iteron open` → bash in ~, tmux shows bash@~
+describe('boss open (integration)', { timeout: 120_000, sequential: true }, () => {
+  // IR-004 test 1: `boss open` → bash in ~, tmux shows bash@~
   it('opens shell in home directory', async () => {
     // Create a tmux session directly (can't use interactive open in test)
-    containerExec(['tmux', 'new-session', '-d', '-s', 'bash@~', '-c', '/home/iteron', 'bash']);
+    containerExec(['tmux', 'new-session', '-d', '-s', 'bash@~', '-c', '/home/boss', 'bash']);
     const sessions = containerExec(['tmux', 'list-sessions', '-F', '#{session_name}']);
     expect(sessions).toContain('bash@~');
     // Cleanup
     try { containerExec(['tmux', 'kill-session', '-t', 'bash@~']); } catch {}
   });
 
-  // IR-004 test 2: `iteron open myproject` → creates ~/myproject, bash@myproject
+  // IR-004 test 2: `boss open myproject` → creates ~/myproject, bash@myproject
   it('creates workspace directory and session', async () => {
-    containerExec(['mkdir', '-p', '/home/iteron/myproject']);
-    containerExec(['tmux', 'new-session', '-d', '-s', 'bash@myproject', '-c', '/home/iteron/myproject', 'bash']);
+    containerExec(['mkdir', '-p', '/home/boss/myproject']);
+    containerExec(['tmux', 'new-session', '-d', '-s', 'bash@myproject', '-c', '/home/boss/myproject', 'bash']);
 
     // Verify directory exists
-    containerExec(['test', '-d', '/home/iteron/myproject']);
+    containerExec(['test', '-d', '/home/boss/myproject']);
 
     // Verify session
     const sessions = containerExec(['tmux', 'list-sessions', '-F', '#{session_name}']);
@@ -83,7 +83,7 @@ describe('iteron open (integration)', { timeout: 120_000, sequential: true }, ()
 
     // Cleanup
     try { containerExec(['tmux', 'kill-session', '-t', 'bash@myproject']); } catch {}
-    try { containerExec(['rm', '-rf', '/home/iteron/myproject']); } catch {}
+    try { containerExec(['rm', '-rf', '/home/boss/myproject']); } catch {}
   });
 
   // IR-004 test 7 (partial): -A reattach requires interactive terminal;
@@ -121,16 +121,16 @@ describe('iteron open (integration)', { timeout: 120_000, sequential: true }, ()
   });
 });
 
-describe('iteron ls (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('boss ls (integration)', { timeout: 120_000, sequential: true }, () => {
   afterEach(() => {
     try { containerExec(['tmux', 'kill-session', '-t', 'bash@~']); } catch {}
     try { containerExec(['tmux', 'kill-session', '-t', 'bash@ls-test']); } catch {}
-    try { containerExec(['rm', '-rf', '/home/iteron/ls-test']); } catch {}
+    try { containerExec(['rm', '-rf', '/home/boss/ls-test']); } catch {}
   });
 
   function setupLsSessions(): void {
     containerExec(['tmux', 'new-session', '-d', '-s', 'bash@~', 'bash']);
-    containerExec(['mkdir', '-p', '/home/iteron/ls-test']);
+    containerExec(['mkdir', '-p', '/home/boss/ls-test']);
     containerExec(['tmux', 'new-session', '-d', '-s', 'bash@ls-test', 'bash']);
   }
 
@@ -152,11 +152,11 @@ describe('iteron ls (integration)', { timeout: 120_000, sequential: true }, () =
 
 });
 
-describe('iteron rm (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('boss rm (integration)', { timeout: 120_000, sequential: true }, () => {
   // IR-004 test 10: rm removes workspace directory
   it('removes workspace directory', async () => {
     // Setup
-    containerExec(['mkdir', '-p', '/home/iteron/rm-test']);
+    containerExec(['mkdir', '-p', '/home/boss/rm-test']);
 
     // Import and run rm
     const { rmCommand } = await import('../../src/commands/rm.js');
@@ -164,7 +164,7 @@ describe('iteron rm (integration)', { timeout: 120_000, sequential: true }, () =
 
     // Verify directory removed
     try {
-      containerExec(['test', '-d', '/home/iteron/rm-test']);
+      containerExec(['test', '-d', '/home/boss/rm-test']);
       expect(true).toBe(false); // should have thrown
     } catch {
       // Expected
@@ -208,7 +208,7 @@ describe('iteron rm (integration)', { timeout: 120_000, sequential: true }, () =
   });
 });
 
-describe('iteron open when container not running (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('boss open when container not running (integration)', { timeout: 120_000, sequential: true }, () => {
   // IR-004 test 12: open when container not running
   it('errors when container is not running', async () => {
     // Stop the container
