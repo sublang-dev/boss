@@ -10,6 +10,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-22
+
+### Added
+
+- **Headless authentication** (IR-005): Subscription-based and API-key authentication for all supported agents, with opt-in SSH key mounting for Git access
+- **Autonomous execution validation** (IR-006): End-to-end test suite verifying agents can execute autonomously inside the sandbox
+- **Tool provisioning via mise** (IR-008): Agent CLIs provisioned and version-locked using mise tool manager
+- **Multi-key SSH mount**: Support for mounting multiple SSH keys into the sandbox via `keyfiles` config
+- **UTF-8 locale support**: Container image now includes full UTF-8 locale configuration
+- **OSC 52 clipboard passthrough**: Tmux clipboard integration via terminal escape sequences
+- **Mouse-drag copy and toggle**: Tmux mouse mode with drag-to-copy and keyboard toggle binding
+- **User-local binary directory**: Added `~/.local/bin` to container PATH for user-installed tools
+
+### Changed
+
+- **BREAKING: Project renamed from IterOn to Boss** — CLI binary is now `boss`, npm package is `@sublang/boss`, container image is `boss-sandbox`, config directory is `~/.boss/`, and all environment variables use the `BOSS_` prefix
+- **BREAKING: `open` argument order reversed** — Now `boss open [workspace] [command]` (workspace-first) instead of command-first
+- Simplified agent names to match their binary names (e.g., `claude` instead of `claude-code`)
+- Replaced `[agents]` config section with hardcoded known-agents list
+- Config file now uses commented template instead of programmatic stringify
+
+### Fixed
+
+- Container terminal compatibility (`screen-256color` for agent TUIs)
+- Locked mise install on read-only rootfs during container start
+- SSH key disambiguation when parent directories share names
+- Image availability across XDG-redirected Podman stores
+- Trailing slash normalization in shell-expanded workspace paths
+- Legacy agent key migration in existing config files
+- Tmux mouse mode defaults and preference persistence
+- Container inspect scoped to containers only (not pods/volumes)
+- Build script empty-array expansion under strict bash mode
+
+### Security
+
+- Pinned npm@11.10.0 and added .trivyignore for known OS-level CVEs
+
 ## [0.1.3] - 2026-02-10
 
 Major release completing iterations IR-001 through IR-004, bringing full sandbox and workspace management capabilities.
@@ -60,7 +97,8 @@ Install with `npm install -g @sublang/iteron`.
 - GitHub Actions CI workflow
 - Project specifications structure
 
-[Unreleased]: https://github.com/sublang-dev/boss/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/sublang-dev/boss/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/sublang-dev/boss/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/sublang-dev/boss/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/sublang-dev/boss/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/sublang-dev/boss/releases/tag/v0.1.1

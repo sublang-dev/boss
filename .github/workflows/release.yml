@@ -69,7 +69,12 @@ jobs:
           # Write to file for multi-line support
           echo "$NOTES" > release-notes.md
 
+      # npm publish is handled via OIDC trusted publishing (no token needed).
+      # First release must be published manually (`npm login && npm publish
+      # --provenance --access public`), then link the GitHub repo as a trusted
+      # publisher on npmjs.com to enable this step.
       - name: Publish to npm
+        if: vars.NPM_OIDC_ENABLED == 'true'
         run: npm publish --provenance --access public
 
       - name: Create GitHub Release

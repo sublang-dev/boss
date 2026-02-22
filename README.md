@@ -7,6 +7,8 @@
 [![Node.js](https://img.shields.io/node/v/@sublang/boss)](https://nodejs.org/)
 [![CI](https://github.com/sublang-dev/boss/actions/workflows/ci.yml/badge.svg)](https://github.com/sublang-dev/boss/actions/workflows/ci.yml)
 
+*Enter boss mode.*
+
 Delegate dev loops to Claude Code, Codex CLI, Gemini CLI, OpenCode or any AI coder. Runs autonomously for hours in an isolated Podman sandbox. Subscription/device auth is primary; API keys are supported fallback.
 
 ## Quick Start
