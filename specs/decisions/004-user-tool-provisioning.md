@@ -34,7 +34,7 @@ Tools are separated by lifecycle:
 
 | Layer | Contents | Storage | Change cadence |
 | --- | --- | --- | --- |
-| **Image** | OS base, `mise`, `/etc/mise/config.toml` (baseline agent declarations) | OCI image | Slow |
+| **Image** | OS base, `mise`, `/etc/mise/config.toml` (baseline agent and runtime declarations) | OCI image | Slow |
 | **Manifest** | `~/.config/mise/config.toml` and `~/.config/mise/mise.lock` (user-global declarations and lockfile) | `boss-data` volume | As needed |
 | **Installed tools** | `~/.local/share/mise/` installs/downloads/shims (agent and user tool artifacts) | `boss-data` volume | Reconciled |
 
@@ -44,13 +44,25 @@ Boss uses **mise** \[1] as the user-space tool manager. It supports a global
 manifest, multiple backends (including npm and GitHub), and lockfile-based
 resolution \[2]\[3]\[4].
 
-### 3. Agent CLIs are managed by mise and preinstalled
+### 3. Baseline tools and language runtimes are declared in the image config and preinstalled
 
-Baseline agent CLIs are declared in `/etc/mise/config.toml` (system config) and
-preinstalled during image build with `mise install` \[5]\[9]. The user-global
-config file (`~/.config/mise/config.toml`) is reserved for user/agent-managed
-additions. This makes the baseline explicit in the image layer while preserving
-runtime flexibility in the volume layer.
+Baseline agent CLIs **and language runtimes** are declared in
+`/etc/mise/config.toml` (system config) and preinstalled during image build
+with `mise install` \[5]\[9]. The user-global config file
+(`~/.config/mise/config.toml`) is reserved for user/agent-managed additions.
+This makes the baseline explicit in the image layer while preserving runtime
+flexibility in the volume layer.
+
+Language runtimes (Python, Go, Rust) follow the same declaration pattern as
+agent CLIs. Node.js is the one exception: because the base image is
+`node:22-bookworm-slim` ([DR-001 §1](001-sandbox-architecture.md#1-oci-container-as-the-sandbox-boundary)),
+Node.js 22 is provided by the base layer and does not require a separate mise
+declaration.
+
+Agents may switch or add runtime versions at runtime — for example,
+`mise use -g python@3.13` or `mise use -g go@1.24` — and the new version is
+downloaded to `~/.local/share/mise/` on the `boss-data` volume, persisting
+across restarts without an image rebuild.
 
 Per mise configuration precedence, the system config layer is higher precedence
 than the user-global layer \[9], so baseline declarations are not accidentally
@@ -132,6 +144,11 @@ To reduce drift and constrain resolution behavior:
   between current and target releases by diffing the `BackendType` enum in
   `src/backend/backend_type.rs` at the two pinned release commits, then update
   `disable_backends` accordingly \[12]\[18]\[19]\[20].
+  **Scope of the denylist:** `disable_backends` applies to pluggable
+  tool-installation backends — the colon-prefixed forms such as `cargo:X`,
+  `go:X`, `ubi:X`, `aqua:X`, `pipx:X`. Core language runtime declarations
+  (`python = "3.12"`, `go = "1.23"`, `rust = "stable"`) use mise's built-in
+  plugin system and are **not** affected by `disable_backends`.
 - **Lock discipline**: Any change to declarative tool versions shall include
   the corresponding lockfile update (`~/.config/mise/mise.lock` for global
   config, and `mise.lock` adjacent to workspace `mise.toml`) \[2]\[11]\[17].
