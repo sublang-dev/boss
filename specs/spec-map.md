@@ -43,6 +43,7 @@ Authoring rules: [dev/style.md](dev/style.md).
 | IR-006 | [006-autonomous-execution.md](iterations/006-autonomous-execution.md) | Autonomous agent execution validation |
 | IR-007 | [007-reliability-security.md](iterations/007-reliability-security.md) | Reliability, security, CVEs, and documentation |
 | IR-008 | [008-user-tool-provisioning.md](iterations/008-user-tool-provisioning.md) | User-space tool provisioning via mise |
+| IR-009 | [009-dr005-rollout-and-dev-cli-baseline.md](iterations/009-dr005-rollout-and-dev-cli-baseline.md) | DR-005 rollout and baseline developer CLIs |
 
 ## Spec Files
 
