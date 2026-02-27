@@ -9,14 +9,14 @@ Implement [DR-005](../decisions/005-package-manager-environment.md) end-to-end i
 
 ## Deliverables
 
-- [ ] DR-005 package-manager environment variables implemented in image `ENV`
-- [ ] DR-005 sudo no-op shim installed at `/usr/local/bin/sudo`
-- [ ] DR-005 defaults seeding from `/opt/defaults/` implemented on every container start
-- [ ] DR-005 image-version marker (`BOSS_IMAGE_VERSION`) persisted to `$XDG_STATE_HOME/.boss-image-version`
-- [ ] Baseline developer CLIs preinstalled and verified:
-  - apt: `gpg`, `tree`
-  - mise (`github:`): `gh`, `glab`
-- [ ] Spec and test updates for DR-005 rollout and baseline CLI availability
+- [x] DR-005 package-manager environment variables implemented in image `ENV`
+- [x] DR-005 sudo no-op shim installed at `/usr/local/bin/sudo`
+- [x] DR-005 defaults seeding from `/opt/defaults/` implemented on every container start
+- [x] DR-005 image-version marker (`BOSS_IMAGE_VERSION`) persisted to `$XDG_STATE_HOME/.boss-image-version`
+- [x] Baseline developer CLIs preinstalled and verified:
+  - apt: `gpg`, `tree`, `glab` (bookworm-backports)
+  - mise (`github:`): `gh`
+- [x] Spec and test updates for DR-005 rollout and baseline CLI availability
 
 ## Tasks
 
@@ -43,18 +43,23 @@ Implement [DR-005](../decisions/005-package-manager-environment.md) end-to-end i
 
 ### 4. Preinstall baseline developer CLIs
 
-- apt channel: install `gpg` and `tree`.
-- mise channel: declare/install `github:cli/cli` (`gh`) and `github:gl-cli/glab` (`glab`) in system config and lockfile.
+- apt channel: install `gpg`, `tree`, and `glab` (`bookworm-backports`).
+- mise channel: declare/install `github:cli/cli` (`gh`) in system config and lockfile.
 
 Rationale for `gh` channel choice:
 
 - Debian Bookworm `gh` is `2.23.0+dfsg1-1`; upstream GitHub CLI releases are substantially newer and move faster than Debian stable cadence.
 - For agent compatibility with newer CLI flags/features, preinstall from mise `github:` and lock exact version.
 
-Rationale for `gpg` package choice:
+Rationale for apt `gpg` package choice:
 
 - `gpg` (the gnupg core binary package) provides the core CLI with lower footprint than the `gnupg` meta-package.
 - `gnupg` pulls additional components (`dirmngr`, `gpg-agent`, `gpgsm`, etc.) that are not required for baseline signing/verification workflows.
+
+Rationale for `glab` channel choice:
+
+- Debian provides `glab` in `bookworm-backports`, while maintained GitHub release metadata is not the canonical distribution path for current GitLab CLI builds.
+- Backports keeps `glab` in signed Debian repository flow and avoids custom GitHub asset-matching logic.
 
 ### 5. Update specs for DR-005 parity
 
@@ -86,9 +91,9 @@ Rationale for `gpg` package choice:
 | 2 | `gpg --version` | Exit 0 |
 | 3 | `tree --version` | Exit 0 |
 | 4 | `gh --version` | Exit 0 and version is from mise-managed install |
-| 5 | `glab --version` | Exit 0 and version is from mise-managed install |
+| 5 | `glab --version` | Exit 0 and version is from apt-installed `bookworm-backports` package |
 | 6 | `echo "$PATH"` in container | Prefix matches DR-005 order (mise shims, `.local/bin`, npm-global/bin, cargo/bin, then system path) |
-| 7 | Run `python -m site --user-base`, `npm config get prefix`, `go env GOPATH GOBIN`, and `echo "$CARGO_HOME"` inside container | All reported paths are under `~/.local` (no network install required and no sudo) |
+| 7 | Read container env for `PYTHONUSERBASE`, `NPM_CONFIG_PREFIX`, `GOPATH`, `GOBIN`, `CARGO_HOME`, and `RUSTUP_HOME` | All values are under `~/.local` (no network install required and no sudo) |
 | 8 | Interactive Bash venv flow (`activate` then `deactivate`) | `PIP_USER` unset in venv and restored to `1` after leaving venv |
 | 9 | `sudo -E <cmd>` and `sudo -n <cmd>` | Command runs unprivileged and prints DR-005 context line |
 | 10 | `sudo -u root <cmd>` / `sudo -g root <cmd>` / `sudo -i` | Exit 1 with DR-005 shim errors |
@@ -100,7 +105,8 @@ Rationale for `gpg` package choice:
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| `gh`/`glab` GitHub release asset naming changes break mise resolution | Build-time or reconciliation failure | Pin via lockfile and add explicit platform asset patterns if upstream naming drifts |
+| `gh` GitHub release asset naming changes break mise resolution | Build-time or reconciliation failure | Pin via lockfile and add explicit platform asset patterns if upstream naming drifts |
+| Debian backports `glab` package changes or is temporarily unavailable | Build failures for `glab` install | Pin to `bookworm-backports` target and fall back to image rebuild with explicit version pin if needed |
 | Additional baseline tools increase image size | Could pressure SBD-008 budget | Keep baseline minimal; validate compressed size in CI after rollout |
 | DR-005 bootstrap logic overwrites user files | User config loss | Use file-granular copy with existence guard exactly as DR-005 specifies |
 | Mixed apt/mise baseline channels confuse maintainers | Incorrect upgrade assumptions | Document channel ownership in specs/docs and enforce via tests |

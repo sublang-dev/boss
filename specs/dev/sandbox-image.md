@@ -117,9 +117,10 @@ credential file mapping
 
 Where the image is built, the Dockerfile shall create
 `/home/boss/.local/bin` owned by `boss:boss` and set `PATH`
-to `~/.local/share/mise/shims:~/.local/bin:$PATH` via `ENV`
+to `~/.local/share/mise/shims:~/.local/bin:~/.local/share/npm-global/bin:~/.local/share/cargo/bin:$PATH` via `ENV`
 ([DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-layer),
-[DR-004 §3](../decisions/004-user-tool-provisioning.md)).
+[DR-004 §3](../decisions/004-user-tool-provisioning.md),
+[DR-005 §1](../decisions/005-package-manager-environment.md#1-xdg-environment-variables)).
 
 ### SBD-015
 
@@ -222,3 +223,44 @@ resolved versions for all declared baseline tools
 Where the image is built, agent CLI binaries shall be invocable
 via mise shims on `PATH`
 ([DR-004 §3](../decisions/004-user-tool-provisioning.md)).
+
+## DR-005 Package Manager Environment
+
+### SBD-029
+
+Where the image is built, Dockerfile `ENV` shall define the DR-005
+package-manager paths:
+`XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME`,
+`PYTHONUSERBASE`, `PIP_USER`, `NPM_CONFIG_PREFIX`, `GOPATH`, `GOBIN`,
+`CARGO_HOME`, and `RUSTUP_HOME`
+([DR-005 §1](../decisions/005-package-manager-environment.md#1-xdg-environment-variables)).
+
+### SBD-030
+
+Where the image is built, `/usr/local/bin/sudo` shall be a root-owned
+mock shim that runs allowed forms unprivileged with a context line and
+rejects user/group switching and interactive shell forms
+([DR-005 §2](../decisions/005-package-manager-environment.md#2-mock-sudo-shim)).
+
+### SBD-031
+
+Where the image is built, `/opt/defaults/` shall contain image-owned
+default dotfiles/configs, and container startup entrypoint behavior
+shall seed missing files from `/opt/defaults/` into `$HOME` without
+overwriting existing files
+([DR-005 §3](../decisions/005-package-manager-environment.md#3-entrypoint-defaults-seeding)).
+
+### SBD-032
+
+Where the image is built, Dockerfile `ENV` shall set
+`BOSS_IMAGE_VERSION` from a required build argument. Startup entrypoint
+behavior shall record this value at
+`$XDG_STATE_HOME/.boss-image-version` and emit a diagnostic when the
+stored value changes
+([DR-005 §3](../decisions/005-package-manager-environment.md#3-entrypoint-defaults-seeding)).
+
+### SBD-033
+
+Where the image is built, baseline developer CLIs shall be preinstalled
+and executable on `PATH`: `gpg`, `tree`, `gh`, and `glab`
+([DR-005](../decisions/005-package-manager-environment.md)).

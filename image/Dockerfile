@@ -3,14 +3,31 @@
 
 FROM node:22-bookworm-slim
 
+# Docker build must pass the npm package version.
+ARG BOSS_VERSION
+RUN test -n "${BOSS_VERSION}"
+
 # ---------- system packages ----------
-RUN apt-get update \
+RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/bookworm-backports.list \
+ && apt-get update \
  && apt-get install -y --no-install-recommends \
-      tini tmux bash git curl jq ca-certificates openssh-client locales \
+      tini tmux bash git curl jq ca-certificates openssh-client locales gpg tree glab/bookworm-backports \
  && sed -i 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen \
  && locale-gen \
  && rm -rf /var/lib/apt/lists/*
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+ENV BOSS_IMAGE_VERSION="${BOSS_VERSION}"
+ENV XDG_CONFIG_HOME=/home/boss/.config
+ENV XDG_CACHE_HOME=/home/boss/.cache
+ENV XDG_DATA_HOME=/home/boss/.local/share
+ENV XDG_STATE_HOME=/home/boss/.local/state
+ENV PYTHONUSERBASE=/home/boss/.local
+ENV PIP_USER=1
+ENV NPM_CONFIG_PREFIX=/home/boss/.local/share/npm-global
+ENV GOPATH=/home/boss/.local/share/go
+ENV GOBIN=/home/boss/.local/bin
+ENV CARGO_HOME=/home/boss/.local/share/cargo
+ENV RUSTUP_HOME=/home/boss/.local/share/rustup
 
 # ---------- mise (user-space tool manager, DR-004) ----------
 ARG MISE_VERSION=2026.2.16
@@ -33,10 +50,36 @@ RUN groupmod -n boss node \
 # ---------- remove SUID/SGID ----------
 RUN find / -perm /6000 -type f -exec chmod a-s {} + 2>/dev/null || true
 
+# ---------- sudo shim + entrypoint ----------
+COPY conf/sudo-shim.sh /usr/local/bin/sudo
+COPY conf/entrypoint.sh /usr/local/bin/boss-entrypoint.sh
+RUN chmod 0555 /usr/local/bin/sudo /usr/local/bin/boss-entrypoint.sh
+
 # ---------- user-local tool layer ----------
 RUN mkdir -p /home/boss/.local/bin \
  && chown -R boss:boss /home/boss/.local
-ENV PATH="/home/boss/.local/share/mise/shims:/home/boss/.local/bin:${PATH}"
+ENV PATH="/home/boss/.local/share/mise/shims:/home/boss/.local/bin:/home/boss/.local/share/npm-global/bin:/home/boss/.local/share/cargo/bin:${PATH}"
+
+# ---------- DR-005 interactive venv guard ----------
+RUN test -f /home/boss/.bashrc || touch /home/boss/.bashrc \
+ && cat <<'EOF' >> /home/boss/.bashrc
+_pip_user_venv_guard() {
+    if [ -n "$VIRTUAL_ENV" ]; then
+        unset PIP_USER
+        _BOSS_VENV_WAS_ACTIVE=1
+    elif [ -n "$_BOSS_VENV_WAS_ACTIVE" ]; then
+        export PIP_USER=1
+        unset _BOSS_VENV_WAS_ACTIVE
+    fi
+    # Outside a venv and not transitioning: leave PIP_USER untouched
+    # to preserve any explicit user override (e.g. `unset PIP_USER`).
+}
+case "${PROMPT_COMMAND:-}" in
+    *_pip_user_venv_guard*) ;;
+    *) PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }_pip_user_venv_guard" ;;
+esac
+EOF
+RUN chown boss:boss /home/boss/.bashrc
 
 # ---------- mise system config + lockfile (root phase) ----------
 COPY conf/mise-system.toml /etc/mise/config.toml
@@ -65,6 +108,19 @@ COPY --chown=boss:boss conf/tmux.conf             /home/boss/.tmux.conf
 # ---------- mise user-global config template ----------
 COPY --chown=boss:boss conf/mise-user.toml /home/boss/.config/mise/config.toml
 
+# ---------- defaults layer (seeded into volume at container start) ----------
+RUN mkdir -p /opt/defaults/.claude /opt/defaults/.codex /opt/defaults/.gemini \
+             /opt/defaults/.config/opencode /opt/defaults/.config/mise /opt/defaults/.config/boss \
+ && cp -a /home/boss/.bashrc /opt/defaults/.bashrc \
+ && cp -a /home/boss/.tmux.conf /opt/defaults/.tmux.conf \
+ && cp -a /home/boss/.claude.json /opt/defaults/.claude.json \
+ && cp -a /home/boss/.claude/settings.json /opt/defaults/.claude/settings.json \
+ && cp -a /home/boss/.codex/config.toml /opt/defaults/.codex/config.toml \
+ && cp -a /home/boss/.gemini/settings.json /opt/defaults/.gemini/settings.json \
+ && cp -a /home/boss/.config/opencode/opencode.json /opt/defaults/.config/opencode/opencode.json \
+ && cp -a /home/boss/.config/mise/config.toml /opt/defaults/.config/mise/config.toml \
+ && printf 'seed-defaults-v1\n' > /opt/defaults/.config/boss/default-seed.marker
+
 # ---------- mise tool installation (boss phase) ----------
 # Allow boss to update lockfile during install (rootfs is read-only at runtime)
 RUN chown boss:boss /etc/mise /etc/mise/mise.lock
@@ -79,7 +135,11 @@ RUN mise trust /etc/mise/config.toml \
 RUN claude --version \
  && codex --help > /dev/null \
  && gemini --version \
- && opencode --version
+ && opencode --version \
+ && gpg --version > /dev/null \
+ && tree --version > /dev/null \
+ && gh --version > /dev/null \
+ && glab --version > /dev/null
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/boss-entrypoint.sh"]
 CMD ["bash"]

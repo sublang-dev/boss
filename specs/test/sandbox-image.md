@@ -370,3 +370,68 @@ Where `boss-sandbox:<tag>` is built, `claude --version`,
 `codex --help`, `gemini --version`, and `opencode --version`
 shall each exit 0 via mise shims
 ([SBD-027](../dev/sandbox-image.md#sbd-027)).
+
+## DR-005 Package Manager Environment
+
+### SBT-051
+
+Where `boss-sandbox:<tag>` is built, container `ENV` shall set
+`XDG_CONFIG_HOME=/home/boss/.config`,
+`XDG_CACHE_HOME=/home/boss/.cache`,
+`XDG_DATA_HOME=/home/boss/.local/share`,
+`XDG_STATE_HOME=/home/boss/.local/state`,
+`PYTHONUSERBASE=/home/boss/.local`,
+`PIP_USER=1`,
+`NPM_CONFIG_PREFIX=/home/boss/.local/share/npm-global`,
+`GOPATH=/home/boss/.local/share/go`,
+`GOBIN=/home/boss/.local/bin`,
+`CARGO_HOME=/home/boss/.local/share/cargo`, and
+`RUSTUP_HOME=/home/boss/.local/share/rustup`
+([SBD-029](../dev/sandbox-image.md#sbd-029)).
+
+### SBT-052
+
+Where `boss-sandbox:<tag>` is built, `PATH` shall start with
+`/home/boss/.local/share/mise/shims:/home/boss/.local/bin:/home/boss/.local/share/npm-global/bin:/home/boss/.local/share/cargo/bin:`
+([SBD-014](../dev/sandbox-image.md#sbd-014)).
+
+### SBT-053
+
+Where `boss-sandbox:<tag>` is built, `sudo -n <cmd>` inside the
+container shall execute `<cmd>` unprivileged and print the rootless
+context line; `sudo -u`, `sudo -g`, and `sudo -i` forms shall exit 1
+with informative errors
+([SBD-030](../dev/sandbox-image.md#sbd-030)).
+
+### SBT-054
+
+Where a container starts from `boss-sandbox:<tag>` with a writable
+home volume, startup shall seed missing files from `/opt/defaults/`
+into `$HOME` and shall not overwrite an already-existing target file
+([SBD-031](../dev/sandbox-image.md#sbd-031)).
+
+### SBT-055
+
+Where a container starts from `boss-sandbox:<tag>`, startup shall
+persist `BOSS_IMAGE_VERSION` in
+`$XDG_STATE_HOME/.boss-image-version`. Where the stored value differs
+from current `BOSS_IMAGE_VERSION`, startup logs shall include both
+previous and current values
+([SBD-032](../dev/sandbox-image.md#sbd-032)).
+
+### SBT-056
+
+Where `boss-sandbox:<tag>` is built, `gpg --version`,
+`tree --version`, `gh --version`, and `glab --version` in the
+container shall each exit 0
+([SBD-033](../dev/sandbox-image.md#sbd-033),
+[SBX-014](../user/sandbox-image.md#sbx-014)).
+
+### SBT-057
+
+Where interactive Bash loads the default `.bashrc` in the container,
+`PROMPT_COMMAND` shall include `_pip_user_venv_guard`; when
+`VIRTUAL_ENV` is set then the guard shall unset `PIP_USER`, and when
+`VIRTUAL_ENV` is removed after a venv-active state, the guard shall
+restore `PIP_USER=1`
+([DR-005 §1](../decisions/005-package-manager-environment.md#1-xdg-environment-variables)).

@@ -55,6 +55,13 @@ afterAll(async () => {
 });
 
 describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }, () => {
+  async function restartContainer(): Promise<void> {
+    const { stopCommand } = await import('../../src/commands/stop.js');
+    await stopCommand();
+    const { startCommand } = await import('../../src/commands/start.js');
+    await startCommand();
+  }
+
   it('starts a container', async () => {
     const { startCommand } = await import('../../src/commands/start.js');
     await startCommand();
@@ -98,6 +105,131 @@ describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }
   it('propagates environment variables', () => {
     const val = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'ANTHROPIC_API_KEY']);
     expect(val).toBe('sk-test-123');
+  });
+
+  it('preinstalls baseline developer CLIs', () => {
+    const gpg = podmanExecSync(['exec', TEST_CONTAINER, 'gpg', '--version']);
+    expect(gpg).toContain('gpg (GnuPG)');
+
+    const tree = podmanExecSync(['exec', TEST_CONTAINER, 'tree', '--version']);
+    expect(tree.toLowerCase()).toContain('tree');
+
+    const gh = podmanExecSync(['exec', TEST_CONTAINER, 'gh', '--version']);
+    expect(gh.toLowerCase()).toContain('gh version');
+
+    const glab = podmanExecSync(['exec', TEST_CONTAINER, 'glab', '--version']);
+    expect(glab.toLowerCase()).toContain('glab');
+  });
+
+  it('sets DR-005 package-manager environment variables and PATH order', () => {
+    const xdgConfig = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'XDG_CONFIG_HOME']);
+    const xdgCache = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'XDG_CACHE_HOME']);
+    const xdgData = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'XDG_DATA_HOME']);
+    const xdgState = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'XDG_STATE_HOME']);
+    const pipUser = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'PIP_USER']);
+    const pythonUserBase = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'PYTHONUSERBASE']);
+    const npmPrefix = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'NPM_CONFIG_PREFIX']);
+    const goPath = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'GOPATH']);
+    const goBin = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'GOBIN']);
+    const cargoHome = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'CARGO_HOME']);
+    const rustupHome = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'RUSTUP_HOME']);
+    const path = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'PATH']);
+
+    expect(xdgConfig).toBe('/home/boss/.config');
+    expect(xdgCache).toBe('/home/boss/.cache');
+    expect(xdgData).toBe('/home/boss/.local/share');
+    expect(xdgState).toBe('/home/boss/.local/state');
+    expect(pipUser).toBe('1');
+    expect(pythonUserBase).toBe('/home/boss/.local');
+    expect(npmPrefix).toBe('/home/boss/.local/share/npm-global');
+    expect(goPath).toBe('/home/boss/.local/share/go');
+    expect(goBin).toBe('/home/boss/.local/bin');
+    expect(cargoHome).toBe('/home/boss/.local/share/cargo');
+    expect(rustupHome).toBe('/home/boss/.local/share/rustup');
+    expect(path.startsWith(
+      '/home/boss/.local/share/mise/shims:' +
+      '/home/boss/.local/bin:' +
+      '/home/boss/.local/share/npm-global/bin:' +
+      '/home/boss/.local/share/cargo/bin:',
+    )).toBe(true);
+  });
+
+  it('sudo shim passes through common flags and blocks user/group/shell switching', () => {
+    const output = podmanExecSync([
+      'exec',
+      TEST_CONTAINER,
+      'sh',
+      '-lc',
+      'sudo -n sh -lc "id -un" 2>&1',
+    ]);
+    expect(output).toContain('# rootless: sudo is a no-op shim; running as boss');
+    expect(output).toContain('boss');
+
+    expect(() => {
+      execFileSync('podman', ['exec', TEST_CONTAINER, 'sudo', '-u', 'root', 'true'], { stdio: 'ignore' });
+    }).toThrow();
+    expect(() => {
+      execFileSync('podman', ['exec', TEST_CONTAINER, 'sudo', '-g', 'root', 'true'], { stdio: 'ignore' });
+    }).toThrow();
+    expect(() => {
+      execFileSync('podman', ['exec', TEST_CONTAINER, 'sudo', '-i'], { stdio: 'ignore' });
+    }).toThrow();
+  });
+
+  it('seeds missing defaults and preserves existing files across restart', async () => {
+    const marker = '/home/boss/.config/boss/default-seed.marker';
+
+    execFileSync('podman', ['exec', TEST_CONTAINER, 'rm', '-f', marker], { stdio: 'ignore' });
+    await restartContainer();
+    const seeded = podmanExecSync(['exec', TEST_CONTAINER, 'cat', marker]);
+    expect(seeded).toBe('seed-defaults-v1');
+
+    execFileSync(
+      'podman',
+      ['exec', TEST_CONTAINER, 'sh', '-lc', `printf '%s\\n' user-custom > ${marker}`],
+      { stdio: 'ignore' },
+    );
+    await restartContainer();
+    const preserved = podmanExecSync(['exec', TEST_CONTAINER, 'cat', marker]);
+    expect(preserved).toBe('user-custom');
+  });
+
+  it('records image version marker and logs version transitions', async () => {
+    const current = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'BOSS_IMAGE_VERSION']);
+    const marker = '/home/boss/.local/state/.boss-image-version';
+    execFileSync(
+      'podman',
+      ['exec', TEST_CONTAINER, 'sh', '-lc', `printf '%s\\n' 0.0.0-test > ${marker}`],
+      { stdio: 'ignore' },
+    );
+
+    await restartContainer();
+    const markerValue = podmanExecSync(['exec', TEST_CONTAINER, 'cat', marker]);
+    expect(markerValue).toBe(current);
+
+    const logs = podmanExecSync(['logs', TEST_CONTAINER]);
+    expect(logs).toContain(`boss-image-version changed: 0.0.0-test -> ${current}`);
+  });
+
+  it('loads DR-005 interactive venv guard in bash and restores PIP_USER on venv exit', () => {
+    const output = podmanExecSync([
+      'exec',
+      TEST_CONTAINER,
+      'bash',
+      '-ic',
+      [
+        'set -eu',
+        'case "${PROMPT_COMMAND:-}" in *_pip_user_venv_guard*) ;; *) echo "missing-prompt-command"; exit 1;; esac',
+        'export VIRTUAL_ENV=/tmp/fake-venv',
+        '_pip_user_venv_guard',
+        '[ -z "${PIP_USER:-}" ]',
+        'unset VIRTUAL_ENV',
+        '_pip_user_venv_guard',
+        '[ "${PIP_USER:-}" = "1" ]',
+        'echo ok',
+      ].join('; '),
+    ]);
+    expect(output).toContain('ok');
   });
 
   // IR-002 test 13: volume persistence

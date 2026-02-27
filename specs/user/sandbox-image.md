@@ -111,3 +111,10 @@ Where a user runs `mise use -g <backend>:<package>` inside the
 container, the tool shall be installed and available on `PATH`
 via shims, persisting across container restarts
 ([DR-004 §4](../decisions/004-user-tool-provisioning.md)).
+
+### SBX-014
+
+Where a container runs from the official sandbox image, `gpg`,
+`tree`, `gh`, and `glab` shall be available on `PATH` without
+additional user installation
+([DR-005](../decisions/005-package-manager-environment.md)).

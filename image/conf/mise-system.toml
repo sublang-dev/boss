@@ -26,3 +26,12 @@ rename_exe = "codex"
 [tools."github:openai/codex".platforms]
 linux-x64 = { asset_pattern = "codex-x86_64-unknown-linux-musl.tar.gz" }
 linux-arm64 = { asset_pattern = "codex-aarch64-unknown-linux-musl.tar.gz" }
+
+[tools."github:cli/cli"]
+version = "latest"
+version_prefix = "v"
+rename_exe = "gh"
+
+[tools."github:cli/cli".platforms]
+linux-x64 = { asset_pattern = "gh_*_linux_amd64.tar.gz" }
+linux-arm64 = { asset_pattern = "gh_*_linux_arm64.tar.gz" }
