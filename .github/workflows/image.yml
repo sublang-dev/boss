@@ -163,6 +163,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.34.0
         with:
           image-ref: ${{ needs.build-push-release.outputs.scan_tag }}
+          severity: CRITICAL,HIGH
           format: sarif
           output: trivy-results.sarif
           trivyignores: image/.trivyignore
@@ -198,6 +199,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.34.0
         with:
           image-ref: ${{ needs.build-push-dev.outputs.scan_tag }}
+          severity: CRITICAL,HIGH
           format: sarif
           output: trivy-results.sarif
           trivyignores: image/.trivyignore
