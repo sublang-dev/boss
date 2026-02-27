@@ -3,6 +3,8 @@
 
 FROM node:22-bookworm-slim
 
+ARG NPM_VERSION=11.11.0
+
 # ---------- system packages ----------
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
@@ -11,6 +13,10 @@ RUN apt-get update \
  && locale-gen \
  && rm -rf /var/lib/apt/lists/*
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+# Keep npm's bundled dependency set on a patched release.
+RUN npm install -g "npm@${NPM_VERSION}" --no-audit --no-fund \
+ && npm --version
 
 # ---------- mise (user-space tool manager, DR-004) ----------
 ARG MISE_VERSION=2026.2.16
