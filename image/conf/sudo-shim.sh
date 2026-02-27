@@ -14,11 +14,27 @@ while [ "$#" -gt 0 ]; do
       shift
       break
       ;;
-    -u|--user|--user=*)
+    --user=*)
       echo "$deny_user_msg" >&2
       exit 1
       ;;
-    -g|--group|--group=*)
+    --group=*)
+      echo "$deny_group_msg" >&2
+      exit 1
+      ;;
+    --user)
+      echo "$deny_user_msg" >&2
+      exit 1
+      ;;
+    --group)
+      echo "$deny_group_msg" >&2
+      exit 1
+      ;;
+    -u)
+      echo "$deny_user_msg" >&2
+      exit 1
+      ;;
+    -g)
       echo "$deny_group_msg" >&2
       exit 1
       ;;
@@ -27,6 +43,33 @@ while [ "$#" -gt 0 ]; do
       exit 1
       ;;
     -E|-n|-S|-k|-K|-v|--preserve-env|--preserve-env=*)
+      shift
+      ;;
+    -[!-]*)
+      flags="${1#-}"
+      while [ -n "$flags" ]; do
+        ch="${flags%"${flags#?}"}"
+        flags="${flags#?}"
+        case "$ch" in
+          E|n|S|k|K|v) ;;
+          i|s)
+            echo "$deny_shell_msg" >&2
+            exit 1
+            ;;
+          u)
+            echo "$deny_user_msg" >&2
+            exit 1
+            ;;
+          g)
+            echo "$deny_group_msg" >&2
+            exit 1
+            ;;
+          *)
+            echo "sudo: unsupported option: -$ch" >&2
+            exit 1
+            ;;
+        esac
+      done
       shift
       ;;
     -*)

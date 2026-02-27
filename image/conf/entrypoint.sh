@@ -7,13 +7,16 @@ set -eu
 HOME="${HOME:-/home/boss}"
 
 if [ -d /opt/defaults ]; then
-  find /opt/defaults -mindepth 1 -type f | while IFS= read -r src; do
-    rel="${src#/opt/defaults/}"
-    dst="${HOME}/${rel}"
-    [ -e "$dst" ] && continue
-    mkdir -p "$(dirname "$dst")"
-    cp -a "$src" "$dst" 2>/dev/null || cp "$src" "$dst"
-  done
+  find /opt/defaults -mindepth 1 -type f -exec sh -eu -c '
+    home="$1"; shift
+    for src; do
+      rel="${src#/opt/defaults/}"
+      dst="${home}/${rel}"
+      [ -e "$dst" ] && continue
+      mkdir -p "$(dirname "$dst")"
+      cp -a "$src" "$dst" 2>/dev/null || cp "$src" "$dst"
+    done
+  ' sh "$HOME" {} +
 fi
 
 if [ -n "${BOSS_IMAGE_VERSION:-}" ]; then
@@ -28,9 +31,9 @@ if [ -n "${BOSS_IMAGE_VERSION:-}" ]; then
 
   if [ "$prev" != "$BOSS_IMAGE_VERSION" ]; then
     if [ -n "$prev" ]; then
-      echo "boss-image-version changed: ${prev} -> ${BOSS_IMAGE_VERSION}"
+      echo "boss-image-version changed: ${prev} -> ${BOSS_IMAGE_VERSION}" >&2
     else
-      echo "boss-image-version changed: <none> -> ${BOSS_IMAGE_VERSION}"
+      echo "boss-image-version changed: <none> -> ${BOSS_IMAGE_VERSION}" >&2
     fi
   fi
 

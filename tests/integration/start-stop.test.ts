@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { rm, mkdir } from 'node:fs/promises';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 
 // Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
 const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
@@ -16,6 +16,24 @@ let configDir: string;
 
 function podmanExecSync(args: string[]): string {
   return execFileSync('podman', args, { encoding: 'utf-8' }).trim();
+}
+
+function podmanEnvMap(): Record<string, string> {
+  const envText = execFileSync(
+    'podman',
+    ['exec', TEST_CONTAINER, 'env', '-0'],
+    { encoding: 'utf-8' },
+  );
+  const map: Record<string, string> = {};
+  for (const line of envText.split('\0')) {
+    if (!line) continue;
+    const sep = line.indexOf('=');
+    if (sep <= 0) continue;
+    const key = line.slice(0, sep);
+    const value = line.slice(sep + 1);
+    map[key] = value;
+  }
+  return map;
 }
 
 async function cleanup(): Promise<void> {
@@ -122,31 +140,20 @@ describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }
   });
 
   it('sets DR-005 package-manager environment variables and PATH order', () => {
-    const xdgConfig = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'XDG_CONFIG_HOME']);
-    const xdgCache = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'XDG_CACHE_HOME']);
-    const xdgData = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'XDG_DATA_HOME']);
-    const xdgState = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'XDG_STATE_HOME']);
-    const pipUser = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'PIP_USER']);
-    const pythonUserBase = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'PYTHONUSERBASE']);
-    const npmPrefix = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'NPM_CONFIG_PREFIX']);
-    const goPath = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'GOPATH']);
-    const goBin = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'GOBIN']);
-    const cargoHome = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'CARGO_HOME']);
-    const rustupHome = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'RUSTUP_HOME']);
-    const path = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'PATH']);
+    const env = podmanEnvMap();
 
-    expect(xdgConfig).toBe('/home/boss/.config');
-    expect(xdgCache).toBe('/home/boss/.cache');
-    expect(xdgData).toBe('/home/boss/.local/share');
-    expect(xdgState).toBe('/home/boss/.local/state');
-    expect(pipUser).toBe('1');
-    expect(pythonUserBase).toBe('/home/boss/.local');
-    expect(npmPrefix).toBe('/home/boss/.local/share/npm-global');
-    expect(goPath).toBe('/home/boss/.local/share/go');
-    expect(goBin).toBe('/home/boss/.local/bin');
-    expect(cargoHome).toBe('/home/boss/.local/share/cargo');
-    expect(rustupHome).toBe('/home/boss/.local/share/rustup');
-    expect(path.startsWith(
+    expect(env.XDG_CONFIG_HOME).toBe('/home/boss/.config');
+    expect(env.XDG_CACHE_HOME).toBe('/home/boss/.cache');
+    expect(env.XDG_DATA_HOME).toBe('/home/boss/.local/share');
+    expect(env.XDG_STATE_HOME).toBe('/home/boss/.local/state');
+    expect(env.PIP_USER).toBe('1');
+    expect(env.PYTHONUSERBASE).toBe('/home/boss/.local');
+    expect(env.NPM_CONFIG_PREFIX).toBe('/home/boss/.local/share/npm-global');
+    expect(env.GOPATH).toBe('/home/boss/.local/share/go');
+    expect(env.GOBIN).toBe('/home/boss/.local/bin');
+    expect(env.CARGO_HOME).toBe('/home/boss/.local/share/cargo');
+    expect(env.RUSTUP_HOME).toBe('/home/boss/.local/share/rustup');
+    expect((env.PATH ?? '').startsWith(
       '/home/boss/.local/share/mise/shims:' +
       '/home/boss/.local/bin:' +
       '/home/boss/.local/share/npm-global/bin:' +
@@ -154,7 +161,7 @@ describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }
     )).toBe(true);
   });
 
-  it('sudo shim passes through common flags and blocks user/group/shell switching', () => {
+  it('sudo shim passes through common flags (including --) and blocks user/group/shell switching', () => {
     const output = podmanExecSync([
       'exec',
       TEST_CONTAINER,
@@ -164,6 +171,33 @@ describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }
     ]);
     expect(output).toContain('# rootless: sudo is a no-op shim; running as boss');
     expect(output).toContain('boss');
+
+    const sep = podmanExecSync([
+      'exec',
+      TEST_CONTAINER,
+      'sh',
+      '-lc',
+      'sudo -- sh -lc "printf ok"',
+    ]);
+    expect(sep).toContain('ok');
+
+    const combined = podmanExecSync([
+      'exec',
+      TEST_CONTAINER,
+      'sh',
+      '-lc',
+      'sudo -nE sh -lc "printf combo"',
+    ]);
+    expect(combined).toContain('combo');
+
+    const combinedReversed = podmanExecSync([
+      'exec',
+      TEST_CONTAINER,
+      'sh',
+      '-lc',
+      'sudo -En sh -lc "printf reverse"',
+    ]);
+    expect(combinedReversed).toContain('reverse');
 
     expect(() => {
       execFileSync('podman', ['exec', TEST_CONTAINER, 'sudo', '-u', 'root', 'true'], { stdio: 'ignore' });
@@ -197,9 +231,10 @@ describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }
   it('records image version marker and logs version transitions', async () => {
     const current = podmanExecSync(['exec', TEST_CONTAINER, 'printenv', 'BOSS_IMAGE_VERSION']);
     const marker = '/home/boss/.local/state/.boss-image-version';
+    const prior = `0.0.0-test-${Date.now()}`;
     execFileSync(
       'podman',
-      ['exec', TEST_CONTAINER, 'sh', '-lc', `printf '%s\\n' 0.0.0-test > ${marker}`],
+      ['exec', TEST_CONTAINER, 'sh', '-lc', `printf '%s\\n' ${prior} > ${marker}`],
       { stdio: 'ignore' },
     );
 
@@ -207,8 +242,12 @@ describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }
     const markerValue = podmanExecSync(['exec', TEST_CONTAINER, 'cat', marker]);
     expect(markerValue).toBe(current);
 
-    const logs = podmanExecSync(['logs', TEST_CONTAINER]);
-    expect(logs).toContain(`boss-image-version changed: 0.0.0-test -> ${current}`);
+    const logResult = spawnSync('podman', ['logs', '--tail', '200', TEST_CONTAINER], {
+      encoding: 'utf-8',
+    });
+    expect(logResult.status).toBe(0);
+    const allLogs = (logResult.stdout ?? '') + (logResult.stderr ?? '');
+    expect(allLogs).toContain(`boss-image-version changed: ${prior} -> ${current}`);
   });
 
   it('loads DR-005 interactive venv guard in bash and restores PIP_USER on venv exit', () => {

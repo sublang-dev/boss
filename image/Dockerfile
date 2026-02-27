@@ -45,7 +45,11 @@ RUN set -eux; \
 # ---------- non-root user ----------
 # node:22-bookworm-slim ships uid=1000/gid=1000 as "node"; rename to "boss"
 RUN groupmod -n boss node \
- && usermod -l boss -d /home/boss -m -s /bin/bash node
+ && if [ -d /home/boss ]; then \
+      usermod -l boss -d /home/boss -s /bin/bash node; \
+    else \
+      usermod -l boss -d /home/boss -m -s /bin/bash node; \
+    fi
 
 # ---------- remove SUID/SGID ----------
 RUN find / -perm /6000 -type f -exec chmod a-s {} + 2>/dev/null || true
@@ -56,30 +60,16 @@ COPY conf/entrypoint.sh /usr/local/bin/boss-entrypoint.sh
 RUN chmod 0555 /usr/local/bin/sudo /usr/local/bin/boss-entrypoint.sh
 
 # ---------- user-local tool layer ----------
-RUN mkdir -p /home/boss/.local/bin \
+RUN mkdir -p /home/boss/.local/bin /home/boss/.local/state \
  && chown -R boss:boss /home/boss/.local
 ENV PATH="/home/boss/.local/share/mise/shims:/home/boss/.local/bin:/home/boss/.local/share/npm-global/bin:/home/boss/.local/share/cargo/bin:${PATH}"
 
 # ---------- DR-005 interactive venv guard ----------
+COPY conf/bashrc-venv-guard.sh /tmp/bashrc-venv-guard.sh
 RUN test -f /home/boss/.bashrc || touch /home/boss/.bashrc \
- && cat <<'EOF' >> /home/boss/.bashrc
-_pip_user_venv_guard() {
-    if [ -n "$VIRTUAL_ENV" ]; then
-        unset PIP_USER
-        _BOSS_VENV_WAS_ACTIVE=1
-    elif [ -n "$_BOSS_VENV_WAS_ACTIVE" ]; then
-        export PIP_USER=1
-        unset _BOSS_VENV_WAS_ACTIVE
-    fi
-    # Outside a venv and not transitioning: leave PIP_USER untouched
-    # to preserve any explicit user override (e.g. `unset PIP_USER`).
-}
-case "${PROMPT_COMMAND:-}" in
-    *_pip_user_venv_guard*) ;;
-    *) PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }_pip_user_venv_guard" ;;
-esac
-EOF
-RUN chown boss:boss /home/boss/.bashrc
+ && cat /tmp/bashrc-venv-guard.sh >> /home/boss/.bashrc \
+ && rm /tmp/bashrc-venv-guard.sh \
+ && chown boss:boss /home/boss/.bashrc
 
 # ---------- mise system config + lockfile (root phase) ----------
 COPY conf/mise-system.toml /etc/mise/config.toml
@@ -123,7 +113,10 @@ RUN mkdir -p /opt/defaults/.claude /opt/defaults/.codex /opt/defaults/.gemini \
 
 # ---------- mise tool installation (boss phase) ----------
 # Allow boss to update lockfile during install (rootfs is read-only at runtime)
-RUN chown boss:boss /etc/mise /etc/mise/mise.lock
+# Re-chown home tree: root-phase steps (mise lock, COPY, etc.) may have
+# created XDG dirs (~/.local, ~/.cache, ~/.config) owned by root.
+RUN chown boss:boss /etc/mise /etc/mise/mise.lock \
+ && chown -R boss:boss /home/boss
 
 USER boss
 WORKDIR /home/boss
