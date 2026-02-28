@@ -6,6 +6,7 @@ FROM node:22-bookworm-slim
 # Docker build must pass the npm package version.
 ARG BOSS_VERSION
 RUN test -n "${BOSS_VERSION}"
+ARG NPM_VERSION=11.11.0
 
 # ---------- system packages ----------
 RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/bookworm-backports.list \
@@ -28,6 +29,10 @@ ENV GOPATH=/home/boss/.local/share/go
 ENV GOBIN=/home/boss/.local/bin
 ENV CARGO_HOME=/home/boss/.local/share/cargo
 ENV RUSTUP_HOME=/home/boss/.local/share/rustup
+
+# Keep npm's bundled dependency set on a patched release.
+RUN npm install -g "npm@${NPM_VERSION}" --no-audit --no-fund \
+ && npm --version
 
 # ---------- mise (user-space tool manager, DR-004) ----------
 ARG MISE_VERSION=2026.2.16
