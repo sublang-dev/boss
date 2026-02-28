@@ -21,27 +21,15 @@ CVE-2025-48385
 # glibc: integer overflow in memalign
 CVE-2026-0861
 
-# npm transitive deps — fixes exist (minimatch 10.2.1, tar 7.5.8) but
-# npm 11.10.0 (latest) hasn't updated. Can't patch in-place because npm's
-# package.json references private @npmcli packages not on public registry.
-# Mitigated: read-only rootfs, cap-drop ALL, no-new-privileges;
-# tar/glob exploits require attacker-controlled archive or glob input.
-# Reassess on next npm release.
+# npm transitive deps — npm 11.11.0's vendored bundle pins minimatch 10.2.2,
+# while CVE-2026-27903 / CVE-2026-27904 require 10.2.3+.
+# Can't patch in-place because npm's package.json references private
+# @npmcli packages not on the public registry.
+# Mitigated: read-only rootfs, cap-drop ALL, no-new-privileges.
+# Reassess on the next npm release that bundles minimatch >= 10.2.3.
 
-# minimatch: ReDoS via repeated wildcards (fixed in 10.2.1)
-CVE-2026-26996
+# minimatch: glob parser vulnerability (fixed in 10.2.3 / 9.0.7)
+CVE-2026-27903
 
-# tar: hardlink target escape via symlink chain (fixed in 7.5.8)
-CVE-2026-26960
-
-# glob: command injection via malicious input (fixed in 10.5.0, 11.1.0)
-CVE-2025-64756
-
-# tar: arbitrary file overwrite and creation (fixed in 7.5.3)
-CVE-2026-23745
-
-# tar: arbitrary file overwrite via Unicode path collision (fixed in 7.5.4)
-CVE-2026-23950
-
-# tar: arbitrary file creation via hardlink path traversal (fixed in 7.5.7)
-CVE-2026-24842
+# minimatch: glob parser vulnerability variant (fixed in 10.2.3 / 9.0.7)
+CVE-2026-27904
