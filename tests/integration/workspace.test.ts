@@ -209,35 +209,24 @@ describe('boss rm (integration)', { timeout: 120_000, sequential: true }, () => 
 });
 
 describe('boss open when container not running (integration)', { timeout: 120_000, sequential: true }, () => {
-  // IR-004 test 12: open when container not running
-  it('errors when container is not running', async () => {
-    // Stop the container
+  // IR-004 test 12: open auto-starts container when not running
+  it('auto-starts the container when not running', async () => {
     const { stopCommand } = await import('../../src/commands/stop.js');
     await stopCommand();
 
+    const { isContainerRunning } = await import('../../src/utils/podman.js');
+    const podman = await import('../../src/utils/podman.js');
+    const { readConfig } = await import('../../src/utils/config.js');
+    const config = await readConfig();
+    expect(await isContainerRunning(config.container.name)).toBe(false);
+
+    // Mock podmanSpawn to avoid the interactive tmux session, then call
+    // the real openCommand so the auto-start wiring is exercised end-to-end.
+    const spawnSpy = vi.spyOn(podman, 'podmanSpawn').mockResolvedValue();
     const { openCommand } = await import('../../src/commands/open.js');
+    await openCommand();
+    spawnSpy.mockRestore();
 
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
-      throw new Error('process.exit');
-    }) as never);
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    try {
-      await openCommand();
-    } catch {
-      // Expected
-    }
-
-    expect(exitSpy).toHaveBeenCalledWith(1);
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('is not running'),
-    );
-
-    exitSpy.mockRestore();
-    errorSpy.mockRestore();
-
-    // Restart for any subsequent tests
-    const { startCommand } = await import('../../src/commands/start.js');
-    await startCommand();
+    expect(await isContainerRunning(config.container.name)).toBe(true);
   });
 });

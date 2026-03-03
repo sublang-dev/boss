@@ -30,13 +30,15 @@ Or re-run `boss init` which handles machine initialization automatically.
 
 ## Container Not Running
 
-**Symptom:** `boss open` exits with "Container boss-sandbox is not running. Run `boss start` first."
+**Symptom:** `boss ls` or `boss rm` exits with "Container boss-sandbox is not running. Run `boss start` first."
 
 **Fix:**
 
 ```bash
 boss start
 ```
+
+> **Note:** `boss open` auto-starts the container when it is not running, so this error typically only appears with `boss ls` or `boss rm`.
 
 ## OOM / Memory Issues
 

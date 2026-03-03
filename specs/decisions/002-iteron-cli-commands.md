@@ -141,7 +141,7 @@ Remove a workspace directory and kill any running agent sessions in it.
 ### Trade-offs
 
 - **Some Podman knowledge needed**: For logs, restart, volume backup (documented clearly)
-- **No auto-start**: `boss open` doesn't auto-start container (clear error messages guide users)
+- **Auto-start on open**: `boss open` auto-starts the container when it is not running; `boss ls` and `boss rm` still require an explicit `boss start`
 - **Destructive rm**: `boss rm` deletes workspace; requires confirmation prompt for safety
 - **Home directory clutter**: Running agents in `~` without workspace can mix with other files
 

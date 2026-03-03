@@ -77,7 +77,7 @@ Per [DR-002 §6](../decisions/002-iteron-cli-commands.md#6-boss-rm-workspace):
 | 9 | `boss ls` with sessions `claude@~`, `bash@myproject`, `gemini@backend` running | Tree output groups by location; shows correct attached/detached status and uptime |
 | 10 | `boss rm myproject` with `claude@myproject` running | Prompts "Kill claude@myproject? [y/N]"; on `y`: session killed, `~/myproject` removed |
 | 11 | `boss rm` (no arg) | Exit non-zero; prints usage error |
-| 12 | `boss open` when container not running | Exit non-zero; prints "Container boss-sandbox is not running. Run `boss start` first." |
+| 12 | `boss open` when container not running | Auto-starts the container via `startCommand()`, then opens the session normally. |
 
 ## Dependencies
 

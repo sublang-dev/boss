@@ -94,6 +94,7 @@ confirmation
 
 ### WST-012
 
-Where the container is not running, `boss open`, `boss ls`,
-and `boss rm` shall exit non-zero with a "not running" message
+Where the container is not running, `boss ls` and `boss rm`
+shall exit non-zero with a "not running" message.  `boss open`
+shall auto-start the container before opening the session
 ([WSX-005](../user/workspace.md#wsx-005)).

@@ -39,7 +39,7 @@ Changelog entries shall be grouped under these headings (in order): `Added`, `Ch
 
 ### RELEASE-006
 
-Releases shall be triggered by pushing a git tag matching the pattern `v*` (e.g., `v1.0.0`).
+Releases shall be triggered by pushing a git tag matching the pattern `vMAJOR.MINOR.PATCH` (e.g., `v1.0.0`).
 
 ### RELEASE-007
 
@@ -53,11 +53,15 @@ The release workflow on GitHub shall:
 
 ### RELEASE-008
 
-npm packages shall be published with `--provenance` flag for supply chain security, generating a signed attestation linking the package to its source repository and build.
+npm packages shall be published with `--provenance` flag for supply chain security, generating a signed attestation linking the package to its source repository and build. Authentication shall use npm OIDC trusted publishing — static npm tokens shall not be used.
+
+### RELEASE-009
+
+Scoped packages (e.g., `@sublang/boss`) shall be published with `--access public` to ensure public availability.
 
 ## Pre-release Checklist
 
-### RELEASE-009
+### RELEASE-010
 
 Before tagging a release, the developer/agent shall verify:
 

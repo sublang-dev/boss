@@ -228,7 +228,7 @@ boss open myproject claude -- --resume
 | Code | Meaning |
 | --- | --- |
 | 0 | Session ended normally |
-| 1 | Container not running, or invalid workspace name |
+| 1 | Container failed to auto-start, or invalid workspace name |
 
 ---
 

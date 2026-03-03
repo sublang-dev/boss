@@ -57,7 +57,8 @@ exit non-zero when workspace argument is missing
 ### WSX-005
 
 Where the sandbox container is not running, when a user runs
-`boss open`, `boss ls`, or `boss rm`, the CLI shall
-exit non-zero with a message indicating the container is not
-running and suggesting `boss start`
+`boss ls` or `boss rm`, the CLI shall exit non-zero with a
+message indicating the container is not running and suggesting
+`boss start`.  `boss open` shall auto-start the container
+instead of failing
 ([DR-002 §4](../decisions/002-iteron-cli-commands.md#4-boss-open-workspace-command----args)).

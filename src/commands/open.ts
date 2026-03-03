@@ -8,6 +8,7 @@ import {
   podmanErrorMessage,
 } from '../utils/podman.js';
 import { readConfig, validateWorkspace, KNOWN_AGENTS } from '../utils/config.js';
+import { startCommand } from './start.js';
 import { buildSessionName, validateSessionToken } from '../utils/session.js';
 import { homedir } from 'node:os';
 
@@ -96,21 +97,20 @@ export async function openCommand(
   commandObj?: { args: string[] },
 ): Promise<void> {
   try {
-    const config = await readConfig();
-    const { name } = config.container;
-
-    // Check container is running
-    if (!(await isContainerRunning(name))) {
-      console.error(`Container ${name} is not running. Run \`boss start\` first.`);
-      process.exit(1);
-    }
-
-    // Build positional args (0, 1, or 2)
+    // Validate arguments before any side effects
     const positionalArgs: string[] = [];
     if (workspace !== undefined) positionalArgs.push(workspace);
     if (command !== undefined) positionalArgs.push(command);
 
     const resolved = resolveArgs(positionalArgs);
+
+    const config = await readConfig();
+    const { name } = config.container;
+
+    // Auto-start container if not running
+    if (!(await isContainerRunning(name))) {
+      await startCommand();
+    }
 
     // Create workspace directory if needed
     if (resolved.workDir !== CONTAINER_HOME) {
