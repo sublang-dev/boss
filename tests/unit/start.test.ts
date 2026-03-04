@@ -44,7 +44,7 @@ describe('parseMiseReconcileState', () => {
 });
 
 describe('formatMiseWarning', () => {
-  it('returns null for non-error status', () => {
+  it('returns null for non-error status without hint metadata', () => {
     expect(formatMiseWarning({ status: 'ok', shouldWarn: true })).toBeNull();
   });
 
@@ -66,5 +66,15 @@ describe('formatMiseWarning', () => {
       errorClass: 'network',
       errorMessage: 'Could not resolve host',
     })).toBe('Warning: mise reconciliation failed (install_locked/network): Could not resolve host');
+  });
+
+  it('formats a hint when user lockfile is missing', () => {
+    expect(formatMiseWarning({
+      status: 'ok',
+      shouldWarn: true,
+      failedStep: 'user_lock_missing',
+      errorClass: 'lockfile',
+      errorMessage: 'run mise lock',
+    })).toBe('Warning: mise reconciliation hint (user_lock_missing/lockfile): run mise lock');
   });
 });

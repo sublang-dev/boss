@@ -268,9 +268,15 @@ and executable on `PATH`: `gpg`, `tree`, `gh`, and `glab`
 ### SBD-034
 
 Where the image startup entrypoint runs, it shall perform mise
-reconciliation (`mise trust` on system and user configs, then
-`mise install --locked`) and record reconciliation state at
-`$XDG_STATE_HOME/.boss-mise-reconcile.state`.
+reconciliation by:
+- trusting system + user configs
+- running a locked system phase from a writable temp project copy of
+  `/etc/mise/config.toml` + `/etc/mise/mise.lock`
+- running a locked user phase with `/etc/mise/config.toml` ignored when
+  `~/.config/mise/mise.lock` exists
+- emitting an actionable soft warning when user tools are declared without
+  a user lockfile
+and record reconciliation state at `$XDG_STATE_HOME/.boss-mise-reconcile.state`.
 The state shall include a fingerprint derived from image version plus
 config+lock hashes, and a `should_warn` flag deduped by
 `(fingerprint, failed_step, error_class)`

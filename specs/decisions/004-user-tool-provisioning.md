@@ -80,18 +80,28 @@ across restarts.
 
 ### 5. Reconciliation policy on container start
 
-Container startup entrypoint shall run reconciliation:
+Container startup entrypoint shall run reconciliation in two phases:
 
 - `mise trust /etc/mise/config.toml` \[10]
 - `mise trust ~/.config/mise/config.toml` \[10]
-- `mise install --locked` \[5]\[11]
+- **System phase (locked):** stage `/etc/mise/config.toml` + `/etc/mise/mise.lock`
+  into a writable temp project directory, then run
+  `mise -C <temp-dir> install --locked` \[5]\[11]
+- **User phase (locked, conditional):** if `~/.config/mise/mise.lock` exists,
+  run `mise install --locked` with `/etc/mise/config.toml` ignored so
+  reconciliation targets user-global tools only
 
 Trust state lives under `/home/boss` (on the persistent volume) and may be
 empty on first start or stale after image upgrades, so both configs are
-re-trusted unconditionally. `--locked` is required because the container
-rootfs is read-only and the system lockfile at `/etc/mise/mise.lock` cannot be
-updated at runtime; locked mode reads it as-is. This is idempotent and
-rehydrates missing install artifacts after image upgrades or volume migrations.
+re-trusted unconditionally. Split phases are required because runtime rootfs is
+read-only: direct writes near `/etc/mise/mise.lock` are not allowed. The system
+phase keeps strict lockfile resolution by using an image-owned lockfile staged
+to writable temp storage. The user phase is strict only when a user lockfile is
+present.
+
+If user tools are declared but `~/.config/mise/mise.lock` is absent, user-phase
+reconciliation is skipped and startup emits an actionable soft warning
+(`run mise lock`) once per dedupe key.
 
 Reconciliation is best-effort: failures are logged as warnings but do not
 abort container startup. On a fresh volume the tools are already present
@@ -104,7 +114,9 @@ Entrypoint shall record reconciliation state at
 - status (`ok`, `error`, `skipped`)
 - fingerprint derived from image version plus hashes of system/user mise
   config+lock files
-- failed step + error class/message when status is `error`
+- failed step + class/message for warnings:
+  error failures use `status=error`; advisory hints (for example
+  `user_lock_missing`) keep `status=ok`
 - `should_warn` flag for host-side surfacing
 
 When status is `error`, warning dedupe shall key on
@@ -125,11 +137,11 @@ For the image-owned baseline config, the corresponding lockfile is
 `/etc/mise/mise.lock` \[17]; it is baked into the image layer and updated only
 on image rebuild.
 
-Startup reconciliation uses strict locked mode (`--locked`) because the
-container rootfs is read-only at runtime and the system lockfile cannot be
-regenerated \[11]. The system lockfile is always available (baked into the
-image), and the user-global config is an empty template with no tools to
-resolve, so `--locked` is safe even on fresh volumes.
+Startup reconciliation uses strict locked mode (`--locked`) in both phases.
+System-phase locked resolution uses a temp project copy of image-owned lock
+data; user-phase locked resolution is conditional on user lockfile presence.
+Fresh volumes remain safe because user-global config starts as a template with
+no declared tools.
 
 ### 7. Sync boundaries for future AWS profile
 
@@ -152,6 +164,10 @@ To reduce drift and constrain resolution behavior:
   (`/etc/mise/config.toml`) and recommended user-global config
   (`~/.config/mise/config.toml`) shall enforce "only `npm:` and `github:`"
   by disabling all other backends with `disable_backends` \[12]\[18].
+  User-phase reconciliation intentionally isolates `/etc/mise/config.toml`,
+  so system settings do not override user settings during that phase. Guardrail
+  enforcement therefore depends on the denylist being present in user-global
+  config as well.
   In mise, `github` is a first-class backend type and participates in
   `disable_backends` filtering \[19]\[20].
   Excluding `aqua:` in this DR is a scope-simplification choice, not a claim

@@ -70,7 +70,12 @@ via `/etc/ssh/ssh_config.d/boss.conf`
 
 Where the sandbox container entrypoint runs at startup, it shall
 attempt `mise trust` on both `/etc/mise/config.toml` and
-`~/.config/mise/config.toml`, then `mise install --locked`.
+`~/.config/mise/config.toml`, then run two locked install phases:
+system tools via a writable temp project copy of `/etc/mise` config+lock,
+and user tools with `/etc/mise/config.toml` ignored when
+`~/.config/mise/mise.lock` exists.
+If user tools are declared in `~/.config/mise/config.toml` without a user
+lockfile, startup shall record/surface a soft warning advising `mise lock`.
 Reconciliation is best-effort: failures do not abort startup.
 Entrypoint shall record reconciliation status at
 `$XDG_STATE_HOME/.boss-mise-reconcile.state` with a fingerprint

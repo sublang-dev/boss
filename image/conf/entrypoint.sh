@@ -22,6 +22,8 @@ fingerprint=""
 
 mkdir -p "$state_home"
 : > "$mise_in_progress"
+# dash does not run EXIT traps after `exec "$@"`; explicit rm calls in
+# run_mise_reconciliation remain the primary cleanup path.
 trap 'rm -f "$mise_in_progress"' EXIT INT TERM HUP
 
 hash_file() {
@@ -155,6 +157,61 @@ record_mise_failure() {
   fi
 }
 
+record_mise_hint() {
+  hint_step="$1"
+  hint_class="$2"
+  hint_message="$3"
+
+  should_warn="1"
+  if [ "$prev_status" = "ok" ] \
+    && [ "$prev_fingerprint" = "$fingerprint" ] \
+    && [ "$prev_failed_step" = "$hint_step" ] \
+    && [ "$prev_error_class" = "$hint_class" ]; then
+    should_warn="0"
+  fi
+
+  write_mise_state "ok" "$hint_step" "$hint_class" "$hint_message" "$should_warn"
+  if [ "$should_warn" = "1" ]; then
+    echo "Warning: mise reconciliation hint (${hint_step}/${hint_class}): ${hint_message}" >&2
+  fi
+}
+
+mise_debug_enabled=0
+case "${BOSS_DEBUG:-}" in
+  1|true|TRUE|yes|YES|on|ON) mise_debug_enabled=1 ;;
+esac
+case "${MISE_DEBUG:-}" in
+  1|true|TRUE|yes|YES|on|ON) mise_debug_enabled=1 ;;
+esac
+
+run_mise() {
+  if [ "$mise_debug_enabled" = "1" ] && [ -z "${MISE_VERBOSE:-}" ]; then
+    MISE_VERBOSE=1 mise "$@"
+    return $?
+  fi
+  mise "$@"
+}
+
+user_config_declares_tools() {
+  cfg="$HOME/.config/mise/config.toml"
+  [ -f "$cfg" ] || return 1
+
+  awk '
+    BEGIN { in_tools=0; found=0 }
+    /^[[:space:]]*\[/ {
+      in_tools = ($0 ~ /^[[:space:]]*\[tools\][[:space:]]*$/)
+      next
+    }
+    in_tools {
+      line = $0
+      sub(/[[:space:]]*#.*$/, "", line)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+      if (line ~ /=/) { found=1; exit 0 }
+    }
+    END { exit(found ? 0 : 1) }
+  ' "$cfg"
+}
+
 run_mise_reconciliation() {
   if [ ! -f "$HOME/.config/mise/config.toml" ]; then
     mkdir -p "$HOME/.config/mise"
@@ -170,7 +227,7 @@ run_mise_reconciliation() {
     return 0
   fi
 
-  if trust_system_output="$(mise trust /etc/mise/config.toml 2>&1)"; then
+  if trust_system_output="$(run_mise trust /etc/mise/config.toml 2>&1)"; then
     :
   else
     record_mise_failure "trust_system" "$trust_system_output"
@@ -178,7 +235,7 @@ run_mise_reconciliation() {
     return 0
   fi
 
-  if trust_user_output="$(mise trust "$HOME/.config/mise/config.toml" 2>&1)"; then
+  if trust_user_output="$(run_mise trust "$HOME/.config/mise/config.toml" 2>&1)"; then
     :
   else
     record_mise_failure "trust_user" "$trust_user_output"
@@ -186,12 +243,63 @@ run_mise_reconciliation() {
     return 0
   fi
 
-  if install_output="$(mise install --locked 2>&1)"; then
-    write_mise_state "ok" "" "" "" "0"
+  if sys_tmp="$(mktemp -d /tmp/boss-mise-system.XXXXXX 2>/dev/null)"; then
+    :
   else
-    record_mise_failure "install_locked" "$install_output"
+    sys_tmp="/tmp/boss-mise-system-$$"
+    rm -rf "$sys_tmp" 2>/dev/null || true
+    mkdir -p "$sys_tmp"
   fi
 
+  if prepare_system_output="$(
+    cp /etc/mise/config.toml "$sys_tmp/mise.toml" 2>&1
+    cp /etc/mise/mise.lock "$sys_tmp/mise.lock" 2>&1
+  )"; then
+    :
+  else
+    record_mise_failure "prepare_system_locked" "$prepare_system_output"
+    rm -rf "$sys_tmp" 2>/dev/null || true
+    rm -f "$mise_in_progress"
+    return 0
+  fi
+
+  if trust_system_tmp_output="$(run_mise trust "$sys_tmp/mise.toml" 2>&1)"; then
+    :
+  else
+    record_mise_failure "trust_system_locked" "$trust_system_tmp_output"
+    rm -rf "$sys_tmp" 2>/dev/null || true
+    rm -f "$mise_in_progress"
+    return 0
+  fi
+
+  system_ignore_paths="/etc/mise/config.toml:$HOME/.config/mise/config.toml"
+  if install_system_output="$(MISE_IGNORED_CONFIG_PATHS="$system_ignore_paths" run_mise -C "$sys_tmp" install --locked 2>&1)"; then
+    :
+  else
+    record_mise_failure "install_system_locked" "$install_system_output"
+    rm -rf "$sys_tmp" 2>/dev/null || true
+    rm -f "$mise_in_progress"
+    return 0
+  fi
+
+  rm -rf "$sys_tmp" 2>/dev/null || true
+
+  if [ -f "$HOME/.config/mise/mise.lock" ]; then
+    if install_user_output="$(MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml" run_mise install --locked 2>&1)"; then
+      :
+    else
+      record_mise_failure "install_user_locked" "$install_user_output"
+      rm -f "$mise_in_progress"
+      return 0
+    fi
+  elif user_config_declares_tools; then
+    user_lock_hint="user tools declared without ~/.config/mise/mise.lock; run 'mise lock' to enable startup reconciliation"
+    record_mise_hint "user_lock_missing" "lockfile" "$user_lock_hint"
+    rm -f "$mise_in_progress"
+    return 0
+  fi
+
+  write_mise_state "ok" "" "" "" "0"
   rm -f "$mise_in_progress"
 }
 

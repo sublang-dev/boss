@@ -21,6 +21,7 @@ const MISE_STATE_FILE = '.boss-mise-reconcile.state';
 const MISE_PROGRESS_FILE = '.boss-mise-reconcile.in-progress';
 const MISE_STATE_POLL_INTERVAL_MS = 200;
 const MISE_STATE_POLL_TIMEOUT_MS = 300_000;
+const MISE_STATE_BOOTSTRAP_GRACE_MS = 3_000;
 const MISE_STATE_IN_PROGRESS = '__BOSS_MISE_STATE_IN_PROGRESS__';
 
 interface MiseStateProbeResult {
@@ -76,15 +77,24 @@ export function parseMiseReconcileState(content: string): MiseReconcileState | n
 }
 
 export function formatMiseWarning(state: MiseReconcileState): string | null {
-  if (state.status !== 'error') return null;
   if (state.shouldWarn === false) return null;
   const step = state.failedStep ?? 'unknown-step';
   const klass = state.errorClass ?? 'unknown';
   const message = state.errorMessage ?? 'unknown error';
-  return `Warning: mise reconciliation failed (${step}/${klass}): ${message}`;
+
+  if (state.status === 'error') {
+    return `Warning: mise reconciliation failed (${step}/${klass}): ${message}`;
+  }
+  if (state.status === 'ok' && state.failedStep === 'user_lock_missing') {
+    return `Warning: mise reconciliation hint (${step}/${klass}): ${message}`;
+  }
+  return null;
 }
 
-async function readEntrypointMiseState(containerName: string): Promise<MiseStateProbeResult> {
+async function readEntrypointMiseState(
+  containerName: string,
+  minUpdatedAtEpoch?: number,
+): Promise<MiseStateProbeResult> {
   const probeScript = [
     'state_home="${XDG_STATE_HOME:-/home/boss/.local/state}"',
     `state_file="$state_home/${MISE_STATE_FILE}"`,
@@ -99,15 +109,37 @@ async function readEntrypointMiseState(containerName: string): Promise<MiseState
   ].join('\n');
 
   const deadline = Date.now() + MISE_STATE_POLL_TIMEOUT_MS;
+  const bootstrapDeadline = Date.now() + MISE_STATE_BOOTSTRAP_GRACE_MS;
   while (Date.now() < deadline) {
     const { stdout } = await podmanExec(['exec', containerName, 'sh', '-c', probeScript]);
     const trimmed = stdout.trim();
-    if (!trimmed) return { state: null, timedOut: false };
+    if (!trimmed) {
+      // New images write the in-progress marker near PID1 start. Briefly
+      // retry empty reads before treating this as a legacy (no-state) image.
+      if (Date.now() < bootstrapDeadline) {
+        await new Promise(r => setTimeout(r, MISE_STATE_POLL_INTERVAL_MS));
+        continue;
+      }
+      return { state: null, timedOut: false };
+    }
     if (trimmed === MISE_STATE_IN_PROGRESS) {
       await new Promise(r => setTimeout(r, MISE_STATE_POLL_INTERVAL_MS));
       continue;
     }
-    return { state: parseMiseReconcileState(trimmed), timedOut: false };
+
+    const state = parseMiseReconcileState(trimmed);
+    if (
+      state
+      && minUpdatedAtEpoch !== undefined
+      && Date.now() < bootstrapDeadline
+      && (state.updatedAtEpoch === undefined || state.updatedAtEpoch <= minUpdatedAtEpoch)
+    ) {
+      // A pre-existing volume can expose last-run state before the entrypoint
+      // overwrites it for this boot; wait a short grace window for fresh state.
+      await new Promise(r => setTimeout(r, MISE_STATE_POLL_INTERVAL_MS));
+      continue;
+    }
+    return { state, timedOut: false };
   }
 
   console.warn('Warning: timed out waiting for mise reconciliation state from entrypoint.');
@@ -197,6 +229,7 @@ export async function startCommand(): Promise<void> {
       args.push('--tmpfs', `/run/boss/ssh:size=${64 * existingKeyPaths.length}k`);
     }
 
+    const containerStartEpoch = Math.floor(Date.now() / 1000);
     args.push(image, 'sleep', 'infinity');
     await podmanExec(args);
 
@@ -216,7 +249,7 @@ export async function startCommand(): Promise<void> {
     await podmanExec(['exec', name, 'mkdir', '-p', '/home/boss/.local/bin']);
 
     try {
-      const probe = await readEntrypointMiseState(name);
+      const probe = await readEntrypointMiseState(name, containerStartEpoch);
       if (probe.state) {
         const warning = formatMiseWarning(probe.state);
         if (warning) console.warn(warning);

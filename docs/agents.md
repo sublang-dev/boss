@@ -169,7 +169,16 @@ mise upgrade claude       # upgrade a specific tool
 
 ### Reconciliation on start
 
-Container startup entrypoint runs mise reconciliation (`mise trust` + `mise install --locked`) before launching the main process.
+Container startup entrypoint runs two-phase mise reconciliation before launching
+the main process:
+
+- `mise trust /etc/mise/config.toml`
+- `mise trust ~/.config/mise/config.toml`
+- locked system phase from a writable temp copy of `/etc/mise` config+lock
+- locked user phase only when `~/.config/mise/mise.lock` exists
+
+If user tools are declared without a user lockfile, startup emits a soft
+warning to run `mise lock` so user tools are reconciled on future starts.
 
 Reconciliation state is recorded at:
 

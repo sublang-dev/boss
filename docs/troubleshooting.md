@@ -142,7 +142,11 @@ boss start
 
 **Symptom:** `claude`, `codex`, or another agent command is not found after upgrading the sandbox image.
 
-**Cause:** Agent CLIs are managed by mise and preinstalled in the image. Container entrypoint runs reconciliation (`mise trust` + `mise install --locked`) on each start; reconciliation may fail (for example, during network outages).
+**Cause:** Agent CLIs are managed by mise and preinstalled in the image.
+Container entrypoint runs two-phase reconciliation on each start:
+trust system/user configs, run locked system reconcile from a writable temp
+copy of `/etc/mise` config+lock, then run locked user reconcile when
+`~/.config/mise/mise.lock` exists.
 
 **Fix:**
 
@@ -160,9 +164,23 @@ boss start
    boss open
    mise trust /etc/mise/config.toml
    mise trust ~/.config/mise/config.toml
-   mise install --locked
+   # system phase
+   tmp="$(mktemp -d /tmp/boss-mise-system.XXXXXX)"
+   cp /etc/mise/config.toml "$tmp/mise.toml"
+   cp /etc/mise/mise.lock "$tmp/mise.lock"
+   MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml:$HOME/.config/mise/config.toml" \
+     mise -C "$tmp" install --locked
+   rm -rf "$tmp"
+   # user phase (only if user lock exists)
+   [ -f ~/.config/mise/mise.lock ] && \
+     MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml" mise install --locked
    ```
-4. As a last resort, recreate the volume for a fresh copy from the image:
+4. To debug reconciliation internals during startup, set in `~/.boss/.env`:
+   ```bash
+   BOSS_DEBUG=1
+   ```
+   Then restart with `boss stop && boss start`.
+5. As a last resort, recreate the volume for a fresh copy from the image:
    ```bash
    boss stop
    podman volume rm boss-data    # WARNING: deletes all workspace data
@@ -173,7 +191,10 @@ boss start
 
 **Symptom:** `boss start` takes a long time or warns about mise reconciliation failure.
 
-**Cause:** `mise install --locked` downloads tool artifacts from npm and GitHub when they are missing. When tools are already present, this step is typically fast with minimal or no downloads.
+**Cause:** Startup reconciliation may download tool artifacts from npm/GitHub
+when they are missing. When tools are already present, this is typically fast.
+User-phase reconciliation is skipped when user tools are declared without
+`~/.config/mise/mise.lock`, and startup emits a hint to run `mise lock`.
 
 **Fix:**
 

@@ -151,22 +151,42 @@ disable_backends = [
 ]
 ```
 
-Per [DR-004 §8](../decisions/004-user-tool-provisioning.md), the backend denylist is replicated in user-global config as a recommendation. The system config enforces the baseline; user-global config extends it for user/agent additions.
+Per [DR-004 §8](../decisions/004-user-tool-provisioning.md), the backend
+denylist is replicated in user-global config. User-phase reconciliation ignores
+system config, so denylist guardrails for user tools must exist in
+`~/.config/mise/config.toml` as well.
 
 ### 6. Start-time reconciliation
 
-Per [DR-004 §5](../decisions/004-user-tool-provisioning.md), container startup entrypoint shall run reconciliation and write state for host-side surfacing:
+Per [DR-004 §5](../decisions/004-user-tool-provisioning.md), container startup
+entrypoint shall run two-phase reconciliation and write state for host-side
+surfacing:
 
 ```sh
-# DR-004: reconcile mise tools at startup (idempotent, locked mode)
+# DR-004: reconcile mise tools at startup (two-phase, locked mode)
 mise trust /etc/mise/config.toml
 mise trust ~/.config/mise/config.toml
-mise install --locked
+# System phase (locked) using writable temp project copy
+sys_tmp="$(mktemp -d /tmp/boss-mise-system.XXXXXX)"
+cp /etc/mise/config.toml "$sys_tmp/mise.toml"
+cp /etc/mise/mise.lock "$sys_tmp/mise.lock"
+MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml:$HOME/.config/mise/config.toml" \
+  mise -C "$sys_tmp" install --locked
+rm -rf "$sys_tmp"
+# User phase (locked) when user lockfile exists
+[ -f ~/.config/mise/mise.lock ] && \
+  MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml" mise install --locked
 ```
 
 Entrypoint writes `$XDG_STATE_HOME/.boss-mise-reconcile.state` with status, fingerprint, failed-step/error metadata, and `should_warn`. `boss start` reads this file after startup and prints warnings only when `should_warn=1`.
 
-`mise trust` marks both the system and user-global configs as trusted so mise processes them; trust state lives on the volume and may be empty on first start. `mise install --locked` rehydrates missing install artifacts using the image-baked lockfile at `/etc/mise/mise.lock` — needed after image upgrades when the volume persists but image-layer installs are overwritten. `--locked` is required because the container rootfs is read-only at runtime.
+`mise trust` marks both the system and user-global configs as trusted so mise
+processes them; trust state lives on the volume and may be empty on first
+start. The system phase uses `/etc/mise/mise.lock` via writable temp staging to
+avoid read-only rootfs writes while preserving strict locked resolution.
+The user phase is strict when `~/.config/mise/mise.lock` exists; if user tools
+are declared without a lockfile, startup emits a soft warning to run
+`mise lock`.
 
 This step is idempotent: if all tools are already installed at the declared versions, `mise install` exits immediately.
 

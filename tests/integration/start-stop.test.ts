@@ -36,6 +36,18 @@ function podmanEnvMap(): Record<string, string> {
   return map;
 }
 
+function parseKeyValueState(content: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const sep = trimmed.indexOf('=');
+    if (sep <= 0) continue;
+    out[trimmed.slice(0, sep)] = trimmed.slice(sep + 1);
+  }
+  return out;
+}
+
 async function cleanup(): Promise<void> {
   try { execFileSync('podman', ['stop', '-t', '0', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
   try { execFileSync('podman', ['rm', '-f', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
@@ -251,15 +263,22 @@ describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }
   });
 
   it('records mise reconciliation state in XDG state home', () => {
+    const nowEpoch = Math.floor(Date.now() / 1000);
     const state = podmanExecSync([
       'exec',
       TEST_CONTAINER,
       'cat',
       '/home/boss/.local/state/.boss-mise-reconcile.state',
     ]);
-    expect(state).toContain('status=');
-    expect(state).toContain('fingerprint=');
-    expect(state).toContain('should_warn=');
+    const parsed = parseKeyValueState(state);
+    expect(parsed.status).toMatch(/^(ok|error|skipped)$/);
+    expect(parsed.fingerprint).toBeTruthy();
+    expect(parsed.should_warn).toMatch(/^(0|1)$/);
+
+    const updated = Number.parseInt(parsed.updated_at_epoch ?? '', 10);
+    expect(Number.isFinite(updated)).toBe(true);
+    // Ensure this was produced by a recent boot path, not stale prior-run state.
+    expect(updated).toBeGreaterThan(nowEpoch - 300);
   });
 
   it('loads DR-005 interactive venv guard in bash and restores PIP_USER on venv exit', () => {
