@@ -10,6 +10,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-04
+
+### Added
+
+- **Auto-start on open**: `boss open` now automatically starts the container when it is not running
+- **Mise reconciliation state**: `boss start` persists mise reconcile warning state across restarts
+- **DR-005 package-manager environment** (IR-009): XDG env vars for native package managers, mock sudo shim, entrypoint defaults seeding
+- **Trivy SARIF upload**: CI uploads high/critical vulnerability scan results to GitHub code scanning
+
+### Changed
+
+- Split mise reconciliation into separate phases during container start for reliability
+
+### Fixed
+
+- Release workflow trigger aligned with spec
+- Sudo shim, entrypoint hardening, and related test fixes
+- Trivyignore updated for npm 11.11.0 vendored CVEs
+
+### Security
+
+- Updated npm to 11.11.0 inside container image
+- Updated trivyignore for npm vendored CVEs
+
 ## [0.2.0] - 2026-02-22
 
 ### Added
@@ -97,7 +121,8 @@ Install with `npm install -g @sublang/iteron`.
 - GitHub Actions CI workflow
 - Project specifications structure
 
-[Unreleased]: https://github.com/sublang-dev/boss/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/sublang-dev/boss/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/sublang-dev/boss/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/sublang-dev/boss/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/sublang-dev/boss/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/sublang-dev/boss/compare/v0.1.1...v0.1.2
