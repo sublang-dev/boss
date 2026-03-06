@@ -55,3 +55,13 @@ CVE-2026-24842
 
 # tar: arbitrary file read/write via symlink (fixed in 7.5.8)
 CVE-2026-26960
+
+# tar: hardlink path traversal via drive-relative linkpath (fixed in 7.5.10)
+CVE-2026-29786
+
+# gh CLI gobinary — docker/cli transitive dep
+# Mitigated: Linux-only sandbox, no Docker socket access.
+# Reassess on next gh release that updates docker/cli.
+
+# docker/cli: Windows privilege escalation (fixed in 29.2.0)
+CVE-2025-15558
