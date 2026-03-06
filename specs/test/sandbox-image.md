@@ -358,9 +358,9 @@ container shall exit 0 and print the pinned version
 ### SBT-047
 
 Where `boss-sandbox:<tag>` is built, `/etc/mise/config.toml`
-shall declare `npm:@anthropic-ai/claude-code`,
-`npm:@google/gemini-cli`, `npm:opencode-ai`, and
-`github:openai/codex`
+shall declare `npm:@anthropic-ai/claude-code` and
+`github:openai/codex` (baseline agents only; on-demand agents
+are declared in `/etc/mise/ondemand.toml`)
 ([SBD-025](../dev/sandbox-image.md#sbd-025)).
 
 ### SBT-048
@@ -371,9 +371,10 @@ shall exist and contain version entries for all declared tools
 
 ### SBT-049
 
-Where `boss-sandbox:<tag>` is built, `claude --version`,
-`codex --help`, `gemini --version`, and `opencode --version`
-shall each exit 0 via mise shims
+Where `boss-sandbox:<tag>` is built, `claude --version` and
+`codex --help` shall each exit 0 via mise shims (baseline
+agents only; on-demand agents are verified after first-use
+installation via `boss open`)
 ([SBD-027](../dev/sandbox-image.md#sbd-027)).
 
 ## DR-005 Package Manager Environment
@@ -447,3 +448,10 @@ Where a container starts from `boss-sandbox:<tag>`, startup entrypoint
 shall write `$XDG_STATE_HOME/.boss-mise-reconcile.state` containing
 `status`, `fingerprint`, and `should_warn` fields
 ([SBD-034](../dev/sandbox-image.md#sbd-034)).
+
+### SBT-059
+
+Where `boss open ~ gemini` is invoked against a running container
+without gemini pre-installed, the CLI shall install gemini from the
+on-demand config+lockfile and the agent binary shall be callable
+afterward ([SBD-036](../dev/sandbox-image.md#sbd-036)).

@@ -35,6 +35,7 @@ Tools are separated by lifecycle:
 | Layer | Contents | Storage | Change cadence |
 | --- | --- | --- | --- |
 | **Image** | OS base, `mise`, `/etc/mise/config.toml` (baseline agent and runtime declarations) | OCI image | Slow |
+| **Image (on-demand)** | `/etc/mise/ondemand.toml` + `ondemand.lock` (on-demand agent declarations, locked but not pre-installed) | OCI image | Slow |
 | **Manifest** | `~/.config/mise/config.toml` and `~/.config/mise/mise.lock` (user-global declarations and lockfile) | `boss-data` volume | As needed |
 | **Installed tools** | `~/.local/share/mise/` installs/downloads/shims (agent and user tool artifacts) | `boss-data` volume | Reconciled |
 
@@ -52,6 +53,13 @@ with `mise install` \[5]\[9]. The user-global config file
 (`~/.config/mise/config.toml`) is reserved for user/agent-managed additions.
 This makes the baseline explicit in the image layer while preserving runtime
 flexibility in the volume layer.
+
+Some agent CLIs (e.g. `gemini`, `opencode`) are declared in a separate
+on-demand config (`/etc/mise/ondemand.toml` + `ondemand.lock`) and are **not**
+pre-installed during image build. Instead, they are installed at first use when
+`boss open` targets that agent, using locked resolution from the image-owned
+on-demand lockfile ([SBD-035](../dev/sandbox-image.md#sbd-035),
+[SBD-036](../dev/sandbox-image.md#sbd-036)).
 
 Language runtimes (Python, Go, Rust) follow the same declaration pattern as
 agent CLIs. Node.js is the one exception: because the base image is

@@ -208,6 +208,28 @@ describe('boss rm (integration)', { timeout: 120_000, sequential: true }, () => 
   });
 });
 
+describe('boss open on-demand agent install (integration)', { timeout: 300_000, sequential: true }, () => {
+  // SBT-059: boss open ~ gemini triggers on-demand install
+  it('installs gemini on first boss open ~ gemini', async () => {
+    const podman = await import('../../src/utils/podman.js');
+
+    // Confirm gemini is not yet available
+    expect(() =>
+      containerExec(['sh', '-c', 'command -v gemini']),
+    ).toThrow();
+
+    // Mock podmanSpawn to skip interactive tmux
+    const spawnSpy = vi.spyOn(podman, 'podmanSpawn').mockResolvedValue();
+    const { openCommand } = await import('../../src/commands/open.js');
+    await openCommand('~', 'gemini');
+    spawnSpy.mockRestore();
+
+    // Verify gemini is now callable
+    const version = containerExec(['gemini', '--version']);
+    expect(version).toBeTruthy();
+  });
+});
+
 describe('boss open when container not running (integration)', { timeout: 120_000, sequential: true }, () => {
   // IR-004 test 12: open auto-starts container when not running
   it('auto-starts the container when not running', async () => {
