@@ -284,37 +284,24 @@ run_mise_reconciliation() {
 
   rm -rf "$sys_tmp" 2>/dev/null || true
 
-  if [ -f "$HOME/.config/mise/mise.lock" ]; then
-    if install_user_output="$(MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml" run_mise install --locked 2>&1)"; then
-      :
-    else
-      record_mise_failure "install_user_locked" "$install_user_output"
-      rm -f "$mise_in_progress"
-      return 0
-    fi
-  elif user_config_declares_tools; then
-    user_lock_hint="user tools declared without ~/.config/mise/mise.lock; run 'mise lock' to enable startup reconciliation"
-    record_mise_hint "user_lock_missing" "lockfile" "$user_lock_hint"
-    rm -f "$mise_in_progress"
-    return 0
-  fi
-
   # --- on-demand agent reconciliation ---
-  # If on-demand agents were previously installed (shim resolves), reconcile
-  # them using the on-demand config+lock so image upgrades propagate.
+  # On-demand agents are activated via symlinks in ~/.local/bin/ (created by
+  # `boss open`).  Check for those symlinks — NOT `mise which`, which would
+  # require the tool to be declared in a mise config.  This block must run
+  # BEFORE the user-phase so that the user_config_declares_tools early-return
+  # cannot shadow it.
   ondemand_cfg="/etc/mise/ondemand.toml"
   ondemand_lock="/etc/mise/ondemand.lock"
   if [ -f "$ondemand_cfg" ] && [ -f "$ondemand_lock" ]; then
-    # Check if any on-demand tool is already installed
-    has_ondemand=0
+    # Collect on-demand tools that were previously activated
+    od_activated=""
     for tool_bin in gemini opencode; do
-      if mise which "$tool_bin" >/dev/null 2>&1; then
-        has_ondemand=1
-        break
+      if [ -L "$HOME/.local/bin/$tool_bin" ]; then
+        od_activated="${od_activated} ${tool_bin}"
       fi
     done
 
-    if [ "$has_ondemand" = "1" ]; then
+    if [ -n "$od_activated" ]; then
       if od_tmp="$(mktemp -d /tmp/boss-mise-ondemand.XXXXXX 2>/dev/null)"; then
         :
       else
@@ -346,8 +333,15 @@ run_mise_reconciliation() {
 
       ondemand_ignore="/etc/mise/config.toml:$HOME/.config/mise/config.toml"
       if od_install_output="$(MISE_IGNORED_CONFIG_PATHS="$ondemand_ignore" run_mise -C "$od_tmp" install --locked 2>&1)"; then
+        # Update symlinks to point to the (possibly upgraded) binary paths.
+        for tool_bin in $od_activated; do
+          real_path="$(MISE_IGNORED_CONFIG_PATHS="$ondemand_ignore" run_mise -C "$od_tmp" which "$tool_bin" 2>/dev/null || true)"
+          if [ -n "$real_path" ] && [ -x "$real_path" ]; then
+            ln -sf "$real_path" "$HOME/.local/bin/$tool_bin"
+          fi
+        done
         # Clean up OpenCode musl binaries if opencode was reconciled
-        if mise which opencode >/dev/null 2>&1; then
+        if [ -L "$HOME/.local/bin/opencode" ]; then
           find ~/.local/share/mise/installs -type d -name 'opencode-linux-*-musl' -exec rm -rf {} + 2>/dev/null || true
         fi
       else
@@ -359,6 +353,31 @@ run_mise_reconciliation() {
 
       rm -rf "$od_tmp" 2>/dev/null || true
     fi
+
+    # Remove stale mise shims for on-demand tools left over from an older
+    # image that baked them in.  Only delete if no mise config claims the
+    # tool (i.e. user hasn't explicitly adopted it via mise use -g).
+    for tool_bin in gemini opencode; do
+      stale_shim="$HOME/.local/share/mise/shims/$tool_bin"
+      if [ -f "$stale_shim" ] && ! mise which "$tool_bin" >/dev/null 2>&1; then
+        rm -f "$stale_shim"
+      fi
+    done
+  fi
+
+  if [ -f "$HOME/.config/mise/mise.lock" ]; then
+    if install_user_output="$(MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml" run_mise install --locked 2>&1)"; then
+      :
+    else
+      record_mise_failure "install_user_locked" "$install_user_output"
+      rm -f "$mise_in_progress"
+      return 0
+    fi
+  elif user_config_declares_tools; then
+    user_lock_hint="user tools declared without ~/.config/mise/mise.lock; run 'mise lock' to enable startup reconciliation"
+    record_mise_hint "user_lock_missing" "lockfile" "$user_lock_hint"
+    rm -f "$mise_in_progress"
+    return 0
   fi
 
   write_mise_state "ok" "" "" "" "0"

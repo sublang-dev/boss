@@ -18,19 +18,35 @@ const ONDEMAND_LOCK = '/etc/mise/ondemand.lock';
 
 /**
  * Ensure an on-demand agent is installed inside the container.
- * Copies the locked on-demand config to a writable tmpdir (rootfs is
- * read-only) and runs `mise install --locked`.
+ *
+ * Installs from the image-owned on-demand config+lockfile, then creates a
+ * symlink at ~/.local/bin/<agent> pointing to the real binary.  This
+ * bypasses mise's shim/config resolution entirely — no user-config
+ * pollution, no lockfile side-effects — while keeping the agent on PATH.
+ * The symlink also serves as the activation marker that the entrypoint
+ * checks for restart reconciliation.
  */
 async function ensureOnDemandAgent(
   containerName: string,
   agent: string,
 ): Promise<void> {
-  // Check if the agent binary already resolves via mise shim
+  // Skip if the agent is already available through a supported path:
+  //   - our symlink or a user-placed binary in ~/.local/bin
+  //   - a working mise-managed tool (mise use -g)
+  //   - a native package-manager install (DR-005), e.g. npm install -g
+  //     into ~/.local/share/npm-global/bin
+  // We use `command -v` to cover all PATH entries, then filter out stale
+  // mise shims (left from an older image that baked the tool in) — those
+  // live under ~/.local/share/mise/shims/ and fail `mise which`.
   try {
-    await podmanExec(['exec', containerName, 'mise', 'which', agent]);
-    return; // already installed
+    await podmanExec([
+      'exec', containerName, 'sh', '-c',
+      `p="$(command -v ${agent} 2>/dev/null)" || exit 1; `
+      + `case "$p" in */mise/shims/*) mise which ${agent} >/dev/null 2>&1;; esac`,
+    ]);
+    return; // already available — respect existing install
   } catch {
-    // not installed — proceed
+    // not available through any supported means — proceed with install
   }
 
   console.log(`Installing ${agent} (first use)...`);
@@ -41,13 +57,22 @@ async function ensureOnDemandAgent(
     `cp ${ONDEMAND_CONFIG} "$td/mise.toml"`,
     `cp ${ONDEMAND_LOCK} "$td/mise.lock"`,
     'mise trust "$td/mise.toml"',
-    `MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml:$HOME/.config/mise/config.toml" mise -C "$td" install --locked`,
-    'mise reshim',
+    'ignore="/etc/mise/config.toml:$HOME/.config/mise/config.toml"',
+    'MISE_IGNORED_CONFIG_PATHS="$ignore" mise -C "$td" install --locked',
+    // Resolve real binary path while the temp config is still active.
+    `real_bin="$(MISE_IGNORED_CONFIG_PATHS="$ignore" mise -C "$td" which ${agent})"`,
+    'rm -rf "$td"',
+    // Symlink into ~/.local/bin so the agent is on PATH without touching
+    // the user-global mise config or relying on mise shims.
+    'mkdir -p ~/.local/bin',
+    `ln -sf "$real_bin" ~/.local/bin/${agent}`,
+    // Remove any stale mise shim that would shadow our symlink (left over
+    // from an older image that baked the tool in).
+    `rm -f ~/.local/share/mise/shims/${agent}`,
     // OpenCode ships unused musl binaries — clean them up
     ...(agent === 'opencode'
       ? ['find ~/.local/share/mise/installs -type d -name \'opencode-linux-*-musl\' -exec rm -rf {} + 2>/dev/null || true']
       : []),
-    'rm -rf "$td"',
   ].join('\n');
 
   await podmanExec(['exec', containerName, 'sh', '-c', script]);

@@ -248,16 +248,26 @@ memory = "2g"
       await startCommand();
 
       // Install on-demand agents (gemini, opencode) — they are not baked into the image.
+      // After locked install, create symlinks in ~/.local/bin/ (same mechanism as
+      // `boss open` uses) so the agents are on PATH without touching user mise config.
       const ondemandScript = [
         'set -eu',
         'td="$(mktemp -d /tmp/boss-ondemand.XXXXXX)"',
         'cp /etc/mise/ondemand.toml "$td/mise.toml"',
         'cp /etc/mise/ondemand.lock "$td/mise.lock"',
         'mise trust "$td/mise.toml"',
-        'MISE_IGNORED_CONFIG_PATHS="/etc/mise/config.toml:$HOME/.config/mise/config.toml" mise -C "$td" install --locked',
-        'mise reshim',
-        'find ~/.local/share/mise/installs -type d -name \'opencode-linux-*-musl\' -exec rm -rf {} + 2>/dev/null || true',
+        'ignore="/etc/mise/config.toml:$HOME/.config/mise/config.toml"',
+        'MISE_IGNORED_CONFIG_PATHS="$ignore" mise -C "$td" install --locked',
+        'mkdir -p ~/.local/bin',
+        'for tool in gemini opencode; do',
+        '  real="$(MISE_IGNORED_CONFIG_PATHS="$ignore" mise -C "$td" which "$tool" 2>/dev/null || true)"',
+        '  if [ -n "$real" ] && [ -x "$real" ]; then',
+        '    ln -sf "$real" "$HOME/.local/bin/$tool"',
+        '    rm -f "$HOME/.local/share/mise/shims/$tool"',
+        '  fi',
+        'done',
         'rm -rf "$td"',
+        'find ~/.local/share/mise/installs -type d -name \'opencode-linux-*-musl\' -exec rm -rf {} + 2>/dev/null || true',
       ].join('\n');
       try {
         execFileSync('podman', ['exec', TEST_CONTAINER, 'sh', '-c', ondemandScript], {

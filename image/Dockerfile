@@ -12,7 +12,7 @@ ARG NPM_VERSION=11.11.0
 RUN echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/bookworm-backports.list \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
-      tini tmux bash git curl jq ca-certificates openssh-client locales gpg tree vim-tiny glab/bookworm-backports \
+      tini tmux bash git curl jq ca-certificates openssh-client locales gpg tree glab/bookworm-backports \
  && sed -i 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen \
  && locale-gen \
  && rm -rf /var/lib/apt/lists/*
