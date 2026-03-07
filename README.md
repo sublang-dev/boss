@@ -121,6 +121,8 @@ Then loop back to the next decision or iteration.
 
 ## Contributing
 
+See [Development Guide](docs/development.md) for running from source and using dev images.
+
 We welcome contributions of all kinds. If you'd like to help:
 
 - 🌟 Star our repo if you find Boss useful.
