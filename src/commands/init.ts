@@ -138,8 +138,17 @@ export async function initCommand(options: { image?: string; yes?: boolean }): P
       step(`Image ${pullTarget}`, 'skipped');
     } else {
       console.log(`  Pulling image ${pullTarget}...`);
-      await pullImage(pullTarget);
-      step(`Image ${pullTarget}`, 'done');
+      try {
+        await pullImage(pullTarget);
+        step(`Image ${pullTarget}`, 'done');
+      } catch (pullErr) {
+        if (await imageExists(pullTarget)) {
+          console.warn(`Warning: pull failed, using locally cached image. (${podmanErrorMessage(pullErr)})`);
+          step(`Image ${pullTarget}`, 'skipped');
+        } else {
+          throw pullErr;
+        }
+      }
     }
 
     // 7. Create volume
