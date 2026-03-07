@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { detectPlatform, needsMachine } from '../utils/platform.js';
 import {
   isMachineRunning,
+  machineExists,
   startMachine,
   isContainerRunning,
   containerExists,
@@ -110,6 +111,7 @@ async function readEntrypointMiseState(
 
   const deadline = Date.now() + MISE_STATE_POLL_TIMEOUT_MS;
   const bootstrapDeadline = Date.now() + MISE_STATE_BOOTSTRAP_GRACE_MS;
+  let progressShown = false;
   while (Date.now() < deadline) {
     const { stdout } = await podmanExec(['exec', containerName, 'sh', '-c', probeScript]);
     const trimmed = stdout.trim();
@@ -123,9 +125,14 @@ async function readEntrypointMiseState(
       return { state: null, timedOut: false };
     }
     if (trimmed === MISE_STATE_IN_PROGRESS) {
+      if (!progressShown) {
+        process.stderr.write('Waiting for tool reconciliation...');
+        progressShown = true;
+      }
       await new Promise(r => setTimeout(r, MISE_STATE_POLL_INTERVAL_MS));
       continue;
     }
+    if (progressShown) process.stderr.write(' done.\n');
 
     const state = parseMiseReconcileState(trimmed);
     if (
@@ -142,6 +149,7 @@ async function readEntrypointMiseState(
     return { state, timedOut: false };
   }
 
+  if (progressShown) process.stderr.write('\n');
   console.warn('Warning: timed out waiting for mise reconciliation state from entrypoint.');
   return { state: null, timedOut: true };
 }
@@ -179,6 +187,10 @@ export async function startCommand(): Promise<void> {
     // Ensure machine running on macOS/WSL
     const platform = detectPlatform();
     if (needsMachine(platform) && !(await isMachineRunning())) {
+      if (!(await machineExists())) {
+        console.error('Error: No Podman machine found. Run "boss init" to set up your environment.');
+        process.exit(1);
+      }
       console.log('Starting Podman machine...');
       await startMachine();
     }

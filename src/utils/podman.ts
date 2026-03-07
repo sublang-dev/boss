@@ -13,9 +13,9 @@ export interface ExecResult {
   stderr: string;
 }
 
-export function podmanExec(args: string[]): Promise<ExecResult> {
+export function podmanExec(args: string[], options?: { timeout?: number }): Promise<ExecResult> {
   return new Promise((resolve, reject) => {
-    execFile('podman', args, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+    execFile('podman', args, { maxBuffer: 10 * 1024 * 1024, timeout: options?.timeout }, (error, stdout, stderr) => {
       if (error) {
         reject(Object.assign(error, { stdout, stderr }));
       } else {
@@ -77,8 +77,9 @@ export async function initMachine(): Promise<void> {
   await podmanExec(['machine', 'init', '--memory', '4096', '--cpus', '2']);
 }
 
+/** Start the Podman machine with a 2-minute timeout. */
 export async function startMachine(): Promise<void> {
-  await podmanExec(['machine', 'start']);
+  await podmanExec(['machine', 'start'], { timeout: 120_000 });
 }
 
 export async function imageExists(image: string): Promise<boolean> {
