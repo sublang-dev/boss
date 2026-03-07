@@ -115,8 +115,11 @@ export async function initCommand(options: { image?: string; yes?: boolean }): P
     }
 
     // 5. Pull OCI image
+    // Always pull mutable references so `boss init` picks up newer builds.
+    // Only skip for digest-pinned refs (@sha256:…) which are immutable.
     const image = options.image ?? DEFAULT_IMAGE;
-    if (await imageExists(image)) {
+    const isImmutable = image.includes('@sha256:');
+    if (isImmutable && await imageExists(image)) {
       step(`Image ${image}`, 'skipped');
     } else {
       console.log(`  Pulling image ${image}...`);
