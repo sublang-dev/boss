@@ -21,8 +21,8 @@ import {
 import {
   readConfig,
   writeConfig,
+  updateConfigImage,
   writeEnvTemplate,
-  DEFAULT_IMAGE,
   VOLUME_NAME,
 } from '../utils/config.js';
 
@@ -114,41 +114,41 @@ export async function initCommand(options: { image?: string; yes?: boolean }): P
       process.exit(1);
     }
 
-    // 5. Pull OCI image
-    // Priority: --image flag > existing config > DEFAULT_IMAGE.
-    // --image is a one-shot override and does not mutate config.
-    // Always pull mutable refs; only skip digest-pinned (@sha256:…).
-    let configImage: string | undefined;
-    try {
-      configImage = (await readConfig()).container.image;
-    } catch {
-      // Config does not exist yet — first init.
-    }
-    const pullImage_ = options.image ?? configImage ?? DEFAULT_IMAGE;
-    const isImmutable = pullImage_.includes('@sha256:');
-    if (isImmutable && await imageExists(pullImage_)) {
-      step(`Image ${pullImage_}`, 'skipped');
-    } else {
-      console.log(`  Pulling image ${pullImage_}...`);
-      await pullImage(pullImage_);
-      step(`Image ${pullImage_}`, 'done');
+    // 5. Generate config and env (before pull so config is the image source of truth)
+    const configCreated = await writeConfig(options.image);
+    step('Config ~/.boss/config.toml', configCreated ? 'created' : 'skipped');
+
+    // --image updates an existing config's image (IR-002 §2)
+    if (!configCreated && options.image) {
+      const current = (await readConfig()).container.image;
+      if (current !== options.image) {
+        await updateConfigImage(options.image);
+        step('Config image', 'updated');
+      }
     }
 
-    // 6. Create volume
+    const envCreated = await writeEnvTemplate();
+    step('Env template ~/.boss/.env', envCreated ? 'created' : 'skipped');
+
+    // 6. Pull OCI image from config (--image already persisted above)
+    // Always pull mutable refs; only skip digest-pinned (@sha256:…).
+    const pullTarget = (await readConfig()).container.image;
+    const isImmutable = pullTarget.includes('@sha256:');
+    if (isImmutable && await imageExists(pullTarget)) {
+      step(`Image ${pullTarget}`, 'skipped');
+    } else {
+      console.log(`  Pulling image ${pullTarget}...`);
+      await pullImage(pullTarget);
+      step(`Image ${pullTarget}`, 'done');
+    }
+
+    // 7. Create volume
     if (await volumeExists(VOLUME_NAME)) {
       step(`Volume "${VOLUME_NAME}"`, 'skipped');
     } else {
       await createVolume(VOLUME_NAME);
       step(`Volume "${VOLUME_NAME}"`, 'created');
     }
-
-    // 7. Generate config (only on first init; re-init never overwrites)
-    const configCreated = await writeConfig(configImage ?? DEFAULT_IMAGE);
-    step('Config ~/.boss/config.toml', configCreated ? 'created' : 'skipped');
-
-    // 8. Generate .env template
-    const envCreated = await writeEnvTemplate();
-    step('Env template ~/.boss/.env', envCreated ? 'created' : 'skipped');
 
     console.log('\nInitialization complete.');
   } catch (error) {

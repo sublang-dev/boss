@@ -11,7 +11,6 @@ export const CONFIG_DIR = process.env.BOSS_CONFIG_DIR ?? join(homedir(), '.boss'
 export const CONFIG_PATH = join(CONFIG_DIR, 'config.toml');
 export const ENV_PATH = join(CONFIG_DIR, '.env');
 
-export const DEFAULT_IMAGE = 'ghcr.io/sublang-dev/boss-sandbox:latest';
 export const DEFAULT_CONTAINER_NAME = 'boss-sandbox';
 export const DEFAULT_MEMORY = '16g';
 export const VOLUME_NAME = 'boss-data';
@@ -71,7 +70,7 @@ export async function ensureConfigDir(): Promise<void> {
 }
 
 function configTemplate(image?: string): string {
-  const img = image ?? DEFAULT_IMAGE;
+  const img = image ?? 'ghcr.io/sublang-dev/boss-sandbox:latest';
   return `# Boss configuration — all available settings
 # Uncomment and edit values as needed.
 
@@ -106,6 +105,16 @@ export async function writeConfig(image?: string): Promise<boolean> {
   }
   await writeFile(CONFIG_PATH, configTemplate(image), 'utf-8');
   return true;
+}
+
+/** Update the image field in an existing config file, preserving comments. */
+export async function updateConfigImage(image: string): Promise<void> {
+  const content = await readFile(CONFIG_PATH, 'utf-8');
+  const updated = content.replace(
+    /^(\s*image\s*=\s*)(?:"[^"]*"|'[^']*')/m,
+    `$1"${image}"`,
+  );
+  await writeFile(CONFIG_PATH, updated, 'utf-8');
 }
 
 export async function readConfig(): Promise<BossConfig> {

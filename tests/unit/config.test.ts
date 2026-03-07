@@ -48,9 +48,11 @@ describe('exported constants', () => {
     expect(ON_DEMAND_TOOL_IDS.get('opencode')).toBe('npm:opencode-ai');
   });
 
-  it('DEFAULT_IMAGE points to GHCR sandbox', async () => {
-    const { DEFAULT_IMAGE } = await import('../../src/utils/config.js');
-    expect(DEFAULT_IMAGE).toBe('ghcr.io/sublang-dev/boss-sandbox:latest');
+  it('writeConfig template uses GHCR sandbox as default image', async () => {
+    const { writeConfig, readConfig } = await import('../../src/utils/config.js');
+    await writeConfig();
+    const config = await readConfig();
+    expect(config.container.image).toBe('ghcr.io/sublang-dev/boss-sandbox:latest');
   });
 });
 
@@ -82,6 +84,57 @@ describe('writeConfig / readConfig', () => {
   it('readConfig throws when config is missing', async () => {
     const { readConfig } = await import('../../src/utils/config.js');
     await expect(readConfig()).rejects.toThrow(/Config not found/);
+  });
+
+  it('updateConfigImage replaces image and preserves comments', async () => {
+    const { writeConfig, updateConfigImage, readConfig } = await import('../../src/utils/config.js');
+    await writeConfig();
+    await updateConfigImage('ghcr.io/myorg/custom:v2');
+    const config = await readConfig();
+    expect(config.container.image).toBe('ghcr.io/myorg/custom:v2');
+    // Comments and template structure must survive the update
+    const content = readFileSync(join(tmpDir, 'config.toml'), 'utf-8');
+    expect(content).toContain('# Boss configuration');
+    expect(content).toContain('# ─── SSH key injection');
+    expect(content).toContain('# keyfiles = [');
+  });
+
+  it('updateConfigImage handles indented TOML keys', async () => {
+    const { updateConfigImage, readConfig } = await import('../../src/utils/config.js');
+    const indentedToml = `[container]
+  name = "boss-sandbox"
+  image = "ghcr.io/sublang-dev/boss-sandbox:latest"
+  memory = "16g"
+
+[auth]
+  profile = "local"
+
+[auth.ssh]
+  mode = "off"
+`;
+    writeFileSync(join(tmpDir, 'config.toml'), indentedToml, 'utf-8');
+    await updateConfigImage('ghcr.io/myorg/indented:v3');
+    const config = await readConfig();
+    expect(config.container.image).toBe('ghcr.io/myorg/indented:v3');
+  });
+
+  it('updateConfigImage rewrites single-quoted image values', async () => {
+    const { updateConfigImage, readConfig } = await import('../../src/utils/config.js');
+    const singleQuotedToml = `[container]
+name = "boss-sandbox"
+image = 'ghcr.io/sublang-dev/boss-sandbox:latest'
+memory = "16g"
+
+[auth]
+profile = "local"
+
+[auth.ssh]
+mode = "off"
+`;
+    writeFileSync(join(tmpDir, 'config.toml'), singleQuotedToml, 'utf-8');
+    await updateConfigImage('ghcr.io/myorg/single:v4');
+    const config = await readConfig();
+    expect(config.container.image).toBe('ghcr.io/myorg/single:v4');
   });
 
 });

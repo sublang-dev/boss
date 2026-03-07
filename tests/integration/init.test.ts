@@ -30,13 +30,12 @@ describe('boss init (integration)', { timeout: 120_000 }, () => {
     const { initCommand } = await import('../../src/commands/init.js');
     await initCommand({ image: TEST_IMAGE, yes: true });
 
-    // IR-002 test 10: config.toml exists with expected content
-    // --image is a one-shot pull override; config stores DEFAULT_IMAGE.
+    // IR-002 test 10: config.toml exists with --image persisted
     const configPath = join(configDir, 'config.toml');
     expect(existsSync(configPath)).toBe(true);
     const configContent = readFileSync(configPath, 'utf-8');
     expect(configContent).toContain('[container]');
-    expect(configContent).toContain('boss-sandbox');
+    expect(configContent).toContain(TEST_IMAGE);
 
     // IR-002 test 11: .env exists with expected keys
     const envPath = join(configDir, '.env');
