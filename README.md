@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <!-- SPDX-FileCopyrightText: 2025 SubLang International <https://sublang.ai> -->
 
-# <img src="assets/boss.svg" alt="boss" width="128" height="128">
+# <img src="docs/assets/boss.svg" alt="boss" width="128" height="128">
 
 [![npm version](https://img.shields.io/npm/v/@sublang/boss)](https://www.npmjs.com/package/@sublang/boss)
 [![Node.js](https://img.shields.io/node/v/@sublang/boss)](https://nodejs.org/)
@@ -102,7 +102,7 @@ For full auth details and caveats, see [Agent Configuration](docs/agents.md).
 
 ## Workflow
 
-<img src="assets/workflow.png" alt="Boss Workflow" width="530" height="510" style="max-width: 100%; height: auto">
+<img src="docs/assets/workflow.png" alt="Boss Workflow" width="530" height="510" style="max-width: 100%; height: auto">
 
 1. **Make Decisions** — Discuss requirements and architecture with AI. It generates decision records in `specs/decisions/`.
 2. **Plan Iterations** — Break down work into iteration specs with AI. It generates iteration records in `specs/iterations/`.

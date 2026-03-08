@@ -11,12 +11,12 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "prepare": "npm run build",
-    "test": "vitest run tests/unit",
-    "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:integration:external": "vitest run --config vitest.integration-external.config.ts",
-    "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
-    "test:watch": "vitest tests/unit",
-    "test:coverage": "vitest run --coverage tests/unit"
+    "test": "vitest run --config config/vitest.config.ts",
+    "test:integration": "vitest run --config config/vitest.integration.config.ts",
+    "test:integration:external": "vitest run --config config/vitest.integration-external.config.ts",
+    "test:all": "vitest run --config config/vitest.config.ts && vitest run --config config/vitest.integration.config.ts",
+    "test:watch": "vitest --config config/vitest.config.ts",
+    "test:coverage": "vitest run --config config/vitest.config.ts --coverage"
   },
   "keywords": [
     "cli",
