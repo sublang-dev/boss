@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process';
 // Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
 const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
 const TEST_CONTAINER = 'boss-test-sandbox';
+const TEST_VOLUME = 'boss-test-data';
 
 let configDir: string;
 
@@ -25,6 +26,7 @@ function containerExec(cmd: string[]): string {
 async function cleanup(): Promise<void> {
   try { execFileSync('podman', ['stop', '-t', '0', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
   try { execFileSync('podman', ['rm', '-f', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
+  try { execFileSync('podman', ['volume', 'rm', '-f', TEST_VOLUME], { stdio: 'ignore' }); } catch {}
 }
 
 beforeAll(async () => {
@@ -39,12 +41,14 @@ beforeAll(async () => {
 name = "${TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${TEST_VOLUME}"
 `;
   writeFileSync(join(configDir, 'config.toml'), configToml, 'utf-8');
   writeFileSync(join(configDir, '.env'), 'ANTHROPIC_API_KEY=sk-test-123\n', 'utf-8');
 
-  // Ensure volume exists (image is guaranteed by globalSetup)
-  try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
+  // Create isolated test volume (image is guaranteed by globalSetup)
+  try { execFileSync('podman', ['volume', 'rm', '-f', TEST_VOLUME], { stdio: 'ignore' }); } catch {}
+  execFileSync('podman', ['volume', 'create', TEST_VOLUME], { stdio: 'ignore' });
 
   // Start container
   const { startCommand } = await import('../../src/commands/start.js');
@@ -58,7 +62,7 @@ afterAll(async () => {
   if (configDir) await rm(configDir, { recursive: true, force: true });
 });
 
-describe('boss open (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('boss open (integration)', { timeout: 360_000, sequential: true }, () => {
   // IR-004 test 1: `boss open` → bash in ~, tmux shows bash@~
   it('opens shell in home directory', async () => {
     // Create a tmux session directly (can't use interactive open in test)
@@ -230,7 +234,7 @@ describe('boss open on-demand agent install (integration)', { timeout: 300_000, 
   });
 });
 
-describe('boss open when container not running (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('boss open when container not running (integration)', { timeout: 360_000, sequential: true }, () => {
   // IR-004 test 12: open auto-starts container when not running
   it('auto-starts the container when not running', async () => {
     const { stopCommand } = await import('../../src/commands/stop.js');

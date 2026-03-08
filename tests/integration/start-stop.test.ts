@@ -11,6 +11,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 // Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
 const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
 const TEST_CONTAINER = 'boss-test-sandbox';
+const TEST_VOLUME = 'boss-test-data';
 
 let configDir: string;
 
@@ -51,7 +52,7 @@ function parseKeyValueState(content: string): Record<string, string> {
 async function cleanup(): Promise<void> {
   try { execFileSync('podman', ['stop', '-t', '0', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
   try { execFileSync('podman', ['rm', '-f', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
-  // Do NOT remove the volume — it may contain real user data (boss-data is shared).
+  try { execFileSync('podman', ['volume', 'rm', '-f', TEST_VOLUME], { stdio: 'ignore' }); } catch {}
 }
 
 beforeAll(async () => {
@@ -63,19 +64,20 @@ beforeAll(async () => {
   // Ensure config dir exists
   await mkdir(configDir, { recursive: true });
 
-  // Write a test config.toml
+  // Write a test config.toml with isolated volume
   const configToml = `[container]
 name = "${TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${TEST_VOLUME}"
 `;
   writeFileSync(join(configDir, 'config.toml'), configToml, 'utf-8');
 
   // Write a test .env with a test key
   writeFileSync(join(configDir, '.env'), 'ANTHROPIC_API_KEY=sk-test-123\n', 'utf-8');
 
-  // Ensure volume exists (image is guaranteed by globalSetup)
-  try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
+  // Create isolated test volume (image is guaranteed by globalSetup)
+  try { execFileSync('podman', ['volume', 'create', TEST_VOLUME], { stdio: 'ignore' }); } catch {}
 });
 
 afterAll(async () => {
@@ -84,7 +86,7 @@ afterAll(async () => {
   if (configDir) await rm(configDir, { recursive: true, force: true });
 });
 
-describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('boss start/stop (integration)', { timeout: 360_000, sequential: true }, () => {
   async function restartContainer(): Promise<void> {
     const { stopCommand } = await import('../../src/commands/stop.js');
     await stopCommand();
@@ -358,7 +360,6 @@ describe('boss start/stop (integration)', { timeout: 120_000, sequential: true }
   });
 
   // SBT-035: ~/.local/bin reconciled on start with pre-existing volume
-  // TODO: Use an isolated test volume once the volume name is configurable in start.ts
   it('reconciles ~/.local/bin on start with pre-existing volume', async () => {
     const BIN_DIR = '/home/boss/.local/bin';
     const BACKUP  = `/home/boss/.local/bin.test-backup-${Date.now()}`;

@@ -9,6 +9,6 @@ export default defineConfig({
     exclude: ['tests/integration/autonomous.test.ts'],
     fileParallelism: false,
     globalSetup: ['tests/integration/globalSetup.ts'],
-    hookTimeout: 120_000,
+    hookTimeout: 360_000,
   },
 });

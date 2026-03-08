@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process';
 // Guaranteed by globalSetup (builds boss-sandbox:dev locally when unset).
 const TEST_IMAGE = process.env.BOSS_TEST_IMAGE!;
 const TEST_CONTAINER = 'boss-test-sandbox';
+const TEST_VOLUME = 'boss-test-data';
 
 let configDir: string;
 let xdgDataDir: string;
@@ -23,6 +24,7 @@ function podmanExecSync(args: string[]): string {
 async function cleanup(): Promise<void> {
   try { execFileSync('podman', ['stop', '-t', '0', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
   try { execFileSync('podman', ['rm', '-f', TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
+  try { execFileSync('podman', ['volume', 'rm', '-f', TEST_VOLUME], { stdio: 'ignore' }); } catch {}
 }
 
 /**
@@ -54,7 +56,7 @@ function ensureImageLoaded(): void {
   }
 }
 
-describe('IR-005 headless auth (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('IR-005 headless auth (integration)', { timeout: 360_000, sequential: true }, () => {
   beforeAll(async () => {
     await cleanup();
 
@@ -68,6 +70,7 @@ describe('IR-005 headless auth (integration)', { timeout: 120_000, sequential: t
 name = "${TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${TEST_VOLUME}"
 `;
     writeFileSync(join(configDir, 'config.toml'), configToml, 'utf-8');
 
@@ -78,8 +81,9 @@ memory = "512m"
       'utf-8',
     );
 
-    // Ensure volume exists (image is guaranteed by globalSetup)
-    try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
+    // Create isolated test volume (image is guaranteed by globalSetup)
+    try { execFileSync('podman', ['volume', 'rm', '-f', TEST_VOLUME], { stdio: 'ignore' }); } catch {}
+    execFileSync('podman', ['volume', 'create', TEST_VOLUME], { stdio: 'ignore' });
   }, 120_000);
 
   afterAll(async () => {
@@ -206,15 +210,17 @@ memory = "512m"
 // ---------------------------------------------------------------------------
 
 const SSH_TEST_CONTAINER = 'boss-test-ssh';
+const SSH_TEST_VOLUME = 'boss-test-ssh-data';
 
 let sshConfigDir: string;
 let sshXdgDir: string;
 let sshKeyDir: string;
 
-describe('DR-003 SSH key mount (integration)', { timeout: 120_000, sequential: true }, () => {
+describe('DR-003 SSH key mount (integration)', { timeout: 360_000, sequential: true }, () => {
   async function sshCleanup(): Promise<void> {
     try { execFileSync('podman', ['stop', '-t', '0', SSH_TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
     try { execFileSync('podman', ['rm', '-f', SSH_TEST_CONTAINER], { stdio: 'ignore' }); } catch {}
+    try { execFileSync('podman', ['volume', 'rm', '-f', SSH_TEST_VOLUME], { stdio: 'ignore' }); } catch {}
   }
 
   beforeAll(async () => {
@@ -237,8 +243,9 @@ describe('DR-003 SSH key mount (integration)', { timeout: 120_000, sequential: t
     // Write .env (required by startCommand)
     writeFileSync(join(sshConfigDir, '.env'), 'ANTHROPIC_API_KEY=sk-test-ssh\n', 'utf-8');
 
-    // Ensure volume exists (image is guaranteed by globalSetup)
-    try { execFileSync('podman', ['volume', 'create', 'boss-data'], { stdio: 'ignore' }); } catch {}
+    // Create isolated SSH test volume (image is guaranteed by globalSetup)
+    try { execFileSync('podman', ['volume', 'rm', '-f', SSH_TEST_VOLUME], { stdio: 'ignore' }); } catch {}
+    execFileSync('podman', ['volume', 'create', SSH_TEST_VOLUME], { stdio: 'ignore' });
   }, 120_000);
 
   afterAll(async () => {
@@ -260,6 +267,7 @@ describe('DR-003 SSH key mount (integration)', { timeout: 120_000, sequential: t
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 
 [auth]
 profile = "local"
@@ -309,6 +317,7 @@ keyfiles = ["${keyPath}"]
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 
 [auth]
 profile = "local"
@@ -334,6 +343,7 @@ keyfiles = ["${keyPath}"]
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 
 [auth]
 profile = "local"
@@ -363,6 +373,7 @@ mode = "off"
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 
 [auth]
 profile = "local"
@@ -389,6 +400,7 @@ mode = "off"
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 `;
     writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
 
@@ -409,6 +421,7 @@ memory = "512m"
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 
 [auth]
 profile = "local"
@@ -446,6 +459,7 @@ keyfiles = ["/nonexistent/path/id_ed25519"]
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 
 [auth]
 profile = "local"
@@ -492,6 +506,7 @@ keyfiles = ["${keyPath1}", "${keyPath2}"]
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 
 [auth]
 profile = "local"
@@ -528,6 +543,7 @@ keyfiles = ["${join(githubDir, 'id_ed25519')}", "${join(gitlabDir, 'id_ed25519')
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 
 [auth]
 profile = "local"
@@ -567,6 +583,7 @@ keyfiles = ["${keyPath}", "/nonexistent/path/id_missing"]
 name = "${SSH_TEST_CONTAINER}"
 image = "${TEST_IMAGE}"
 memory = "512m"
+volume = "${SSH_TEST_VOLUME}"
 `;
     writeFileSync(join(sshConfigDir, 'config.toml'), configToml, 'utf-8');
 

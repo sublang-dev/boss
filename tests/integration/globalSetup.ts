@@ -15,9 +15,24 @@
 import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { mkdtempSync, unlinkSync, rmdirSync } from 'node:fs';
+import { mkdtempSync, unlinkSync, rmdirSync, statSync, readdirSync } from 'node:fs';
 
 let createdTar = '';
+
+/** Newest mtime (ms) across all files in `dirs`, recursively. */
+function newestMtime(...dirs: string[]): number {
+  let newest = 0;
+  for (const dir of dirs) {
+    for (const entry of readdirSync(dir, { withFileTypes: true, recursive: true })) {
+      const full = join(entry.parentPath ?? entry.path, entry.name);
+      try {
+        const mt = statSync(full).mtimeMs;
+        if (mt > newest) newest = mt;
+      } catch { /* skip unreadable */ }
+    }
+  }
+  return newest;
+}
 
 export async function setup(): Promise<void> {
   if (process.env.BOSS_TEST_IMAGE) return;
@@ -37,17 +52,29 @@ export async function setup(): Promise<void> {
     (process.env.BOSS_FORCE_BUILD ?? '').toLowerCase(),
   );
 
-  let imageExists = false;
-  if (!forceRebuild) {
+  let needsBuild = forceRebuild;
+  if (!needsBuild) {
     try {
       execFileSync('podman', ['image', 'exists', IMAGE], { stdio: 'ignore' });
-      imageExists = true;
+      // Image exists — check if source files are newer (stale image).
+      const root = join(dirname(new URL(import.meta.url).pathname), '..', '..');
+      const srcNewest = newestMtime(join(root, 'image'), join(root, 'scaffolding'));
+      const imageCreated = execFileSync(
+        'podman', ['image', 'inspect', IMAGE, '--format', '{{.Created}}'],
+        { encoding: 'utf-8' },
+      ).trim();
+      const imageMs = new Date(imageCreated).getTime();
+      if (srcNewest > imageMs) {
+        console.log(`boss-sandbox:dev is stale (source newer by ${Math.round((srcNewest - imageMs) / 1000)}s), rebuilding...`);
+        needsBuild = true;
+      }
     } catch {
       // image not found — will build
+      needsBuild = true;
     }
   }
 
-  if (!imageExists) {
+  if (needsBuild) {
     execFileSync('bash', ['scripts/build-image.sh'], {
       stdio: 'inherit',
       timeout: 600_000,

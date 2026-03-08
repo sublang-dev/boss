@@ -31,6 +31,7 @@ export interface ContainerConfig {
   name: string;
   image: string;
   memory: string;
+  volume?: string;
 }
 
 export type SshAuthMode = 'keyfile' | 'off';

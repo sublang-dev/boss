@@ -16,7 +16,7 @@ import {
   podmanExecStdin,
   podmanErrorMessage,
 } from '../utils/podman.js';
-import { readConfig, resolveSshKeyPaths, uniqueSshKeyNames, ENV_PATH } from '../utils/config.js';
+import { readConfig, resolveSshKeyPaths, uniqueSshKeyNames, ENV_PATH, VOLUME_NAME } from '../utils/config.js';
 
 const MISE_STATE_FILE = '.boss-mise-reconcile.state';
 const MISE_PROGRESS_FILE = '.boss-mise-reconcile.in-progress';
@@ -213,9 +213,10 @@ export async function startCommand(): Promise<void> {
       '--name', name,
       '--cap-drop', 'ALL',
       '--security-opt', 'no-new-privileges',
+      '--security-opt', 'label=disable',
       '--read-only',
       '--tmpfs', '/tmp',
-      '-v', 'boss-data:/home/boss:U',
+      '-v', `${config.container.volume ?? VOLUME_NAME}:/home/boss:U`,
       '--env-file', ENV_PATH,
       '--memory', memory,
       '--init',
