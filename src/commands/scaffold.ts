@@ -50,8 +50,8 @@ export async function scaffoldCommand(targetPath?: string): Promise<void> {
 
     for (const result of subDirs) {
       const status = result.created ? '(created)' : '(already exists)';
-      const dirName = basename(result.path);
-      console.log(`    ${dirName}/ ${status}`);
+      const relPath = result.path.slice(specsDir.length + 1);
+      console.log(`    ${relPath}/ ${status}`);
     }
 
     // Copy template files
@@ -80,7 +80,7 @@ export async function scaffoldCommand(targetPath?: string): Promise<void> {
       }
     }
 
-    console.log('\nBoss scaffolding complete!');
+    console.log('\nBoss scaffold complete!');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`Failed to scaffold boss: ${message}`);

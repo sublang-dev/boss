@@ -29,7 +29,7 @@ export async function createSpecsStructure(basePath: string): Promise<{
   subDirs: CreateDirResult[];
 }> {
   const specsDir = join(basePath, 'specs');
-  const subfolders = ['decisions', 'iterations', 'user', 'dev', 'test'];
+  const subfolders = ['decisions', 'iterations', 'items/user', 'items/dev', 'items/test'];
 
   // Create specs directory first
   await ensureDir(specsDir);
@@ -48,12 +48,12 @@ export interface CopyResult {
 }
 
 /**
- * Get the scaffolding directory path.
+ * Get the scaffold directory path.
  */
-function getScaffoldingDir(): string {
+function getScaffoldDir(): string {
   // __dirname is dist/utils, go up to package root
   const distDir = dirname(__dirname);
-  return join(dirname(distDir), 'scaffolding');
+  return join(dirname(distDir), 'scaffold');
 }
 
 /**
@@ -87,11 +87,11 @@ async function copyTemplateDir(
 }
 
 /**
- * Copy scaffolding spec templates to the specs directory.
+ * Copy scaffold spec templates to the specs directory.
  */
 export async function copyTemplates(specsDir: string): Promise<CopyResult[]> {
-  const scaffoldingDir = getScaffoldingDir();
-  const specsTemplateDir = join(scaffoldingDir, 'specs');
+  const scaffoldDir = getScaffoldDir();
+  const specsTemplateDir = join(scaffoldDir, 'specs');
   const results: CopyResult[] = [];
 
   if (existsSync(specsTemplateDir)) {
@@ -118,7 +118,16 @@ async function appendSpecsToFile(
   if (existsSync(filePath)) {
     const existingContent = await readFile(filePath, 'utf-8');
     if (existingContent.includes('## Specs (Source of Truth)')) {
-      return { path: filePath, action: 'skipped' };
+      // Replace the existing specs section with the current template.
+      const updated = existingContent.replace(
+        /## Specs \(Source of Truth\)\r?\n[\s\S]*?(?=\r?\n## |\r?\n# |$)/,
+        specsContent.trimEnd() + '\n',
+      );
+      if (updated === existingContent) {
+        return { path: filePath, action: 'skipped' };
+      }
+      await writeFile(filePath, updated);
+      return { path: filePath, action: 'appended' };
     }
     const separator = existingContent.endsWith('\n') ? '\n' : '\n\n';
     await appendFile(filePath, separator + specsContent);
@@ -139,8 +148,8 @@ async function appendSpecsToFile(
  * Does not append if the content is already present in a file.
  */
 export async function appendAgentSpecs(basePath: string): Promise<AppendAgentSpecsResult[]> {
-  const scaffoldingDir = getScaffoldingDir();
-  const agentSpecsPath = join(scaffoldingDir, 'agent-specs.txt');
+  const scaffoldDir = getScaffoldDir();
+  const agentSpecsPath = join(scaffoldDir, 'agent-specs.txt');
 
   if (!existsSync(agentSpecsPath)) {
     return [];

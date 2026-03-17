@@ -8,7 +8,7 @@
 - No comment syntax: e.g., JSON, binaries
 - Config: e.g., `.gitignore`, `.editorconfig`, `**/settings.json`, `AGENTS.md`, `.github/workflows/ci.yml`, lock files
 - Generated/vendor: e.g., `dist/`, `node_modules/`, vendor directories
-- Templates: `scaffolding/` (copied to user projects)
+- Templates: `scaffold/` (copied to user projects)
 - License/legal documents
 
 ## SPDX-001: Copyright Header Presence
