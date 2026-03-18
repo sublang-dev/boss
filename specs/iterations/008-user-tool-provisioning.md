@@ -203,7 +203,7 @@ Add new requirements:
 
 Update existing:
 
-- **SAND-2**: Change "the build shall install Claude Code, Gemini CLI, and OpenCode via npm and install Codex from a pinned standalone Linux musl release binary" → "the build shall install all agent CLIs via mise using npm and github backends".
+- **SAND-2**: Change "the build shall install Claude Code, Gemini CLI, and OpenCode via npm and install Codex from a pinned standalone Linux musl release binary" → "the build shall install baseline agent CLIs (claude, codex) via mise using npm and github backends. On-demand agent CLIs (gemini, opencode) shall be declared in a separate on-demand config, locked at build time, but not pre-installed".
 - **SAND-13**: Add mise shims to `PATH` ordering: `~/.local/share/mise/shims` before `~/.local/bin`.
 
 #### Dev specs (`specs/items/dev/lifecycle.md`)
@@ -217,9 +217,9 @@ Add:
 Add:
 
 - **SAND-97**: Where `boss-sandbox:<tag>` is built, `mise --version` in the container shall exit 0 and print the pinned version ([SAND-24](../items/dev/sandbox-image.md#sand-24)).
-- **SAND-98**: Where `boss-sandbox:<tag>` is built, `/etc/mise/config.toml` shall declare `npm:@anthropic-ai/claude-code`, `npm:@google/gemini-cli`, `npm:opencode-ai`, and `github:openai/codex` ([SAND-25](../items/dev/sandbox-image.md#sand-25)).
+- **SAND-98**: Where `boss-sandbox:<tag>` is built, `/etc/mise/config.toml` shall declare `npm:@anthropic-ai/claude-code` and `github:openai/codex` (baseline agents only; on-demand agents are declared in `/etc/mise/ondemand.toml`) ([SAND-25](../items/dev/sandbox-image.md#sand-25)).
 - **SAND-99**: Where `boss-sandbox:<tag>` is built, `/etc/mise/mise.lock` shall exist and contain version entries for all declared tools ([SAND-26](../items/dev/sandbox-image.md#sand-26)).
-- **SAND-100**: Where `boss-sandbox:<tag>` is built, `claude --version`, `codex --help`, `gemini --version`, and `opencode --version` shall each exit 0 via mise shims ([SAND-27](../items/dev/sandbox-image.md#sand-27)).
+- **SAND-100**: Where `boss-sandbox:<tag>` is built, `claude --version` and `codex --help` shall each exit 0 via mise shims (baseline agents only; on-demand agents are verified after first-use installation via `boss open`) ([SAND-27](../items/dev/sandbox-image.md#sand-27)).
 
 #### User specs (`specs/items/user/sandbox-image.md`)
 

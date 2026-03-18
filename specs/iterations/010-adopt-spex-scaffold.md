@@ -11,10 +11,10 @@ test traceability, and `map.md` organized by packages.
 
 ## Deliverables
 
-- [ ] Spec items live under `specs/items/{user,dev,test}/`
-- [ ] DR-000 reflects spex scaffold structure and format
-- [ ] Root `specs/meta.md` replaces `user/meta.md` and `dev/style.md`
-- [ ] Licensing package (LIC) replaces scattered SPDX specs
+- [x] Spec items live under `specs/items/{user,dev,test}/`
+- [x] DR-000 reflects spex scaffold structure and format
+- [x] Root `specs/meta.md` replaces `user/meta.md` and `dev/style.md`
+- [x] Licensing package (LIC) replaces scattered SPDX specs
 - [ ] Each spec package uses one prefix across all item groups
 - [ ] Item IDs use `<PACK>-<N>` format (no zero-padding)
 - [ ] All test items have `Verifies:` metadata lines
