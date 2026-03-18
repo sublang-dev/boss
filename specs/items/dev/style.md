@@ -3,7 +3,7 @@
 
 # STYLE: Authoring Conventions
 
-This component defines authoring conventions, per [DR-000](../../decisions/000-initial-specs-structure.md#dr-000-initial-specs-structure).
+This component defines authoring conventions, per [DR-000](../../decisions/000-spec-structure-format.md).
 
 ## Spec Format
 

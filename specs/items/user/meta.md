@@ -3,7 +3,7 @@
 
 # META: Specification Format
 
-This component defines how to read specifications using GEARS syntax, per [DR-000](../../decisions/000-initial-specs-structure.md#dr-000-initial-specs-structure).
+This component defines how to read specifications using GEARS syntax, per [DR-000](../../decisions/000-spec-structure-format.md).
 
 ## GEARS Syntax
 
