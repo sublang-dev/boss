@@ -135,6 +135,15 @@ Each test item shall include one `Verifies:` metadata line immediately below its
 
 The `Verifies:` line shall contain one or more comma-separated [citations](#meta-15) to the user or dev items that the test item verifies.
 
+## Transition
+
+The existing spec corpus does not yet fully conform to all META
+items. Known gaps — `spec-map.md` rename to `map.md` ([META-1](#meta-1)),
+IR `## Acceptance criteria` headings ([META-5](#meta-5)), unified
+package prefixes ([META-11](#meta-11)), test `Verifies:` metadata
+([META-19](#meta-19)), and the LIC package — are tracked and
+resolved by [IR-010](iterations/010-adopt-spex-scaffold.md).
+
 ## References
 
 [1]: https://sublang.ai/ref/gears-ai-ready-spec-syntax "GEARS: AI-Ready Spec Syntax"

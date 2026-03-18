@@ -10,7 +10,7 @@ Add SPDX headers (license and copyright info) to applicable files.
 ## Deliverables
 
 - [x] Add SPDX headers to applicable files missing them
-- [x] Document header format in [dev/style.md](../items/dev/style.md)
+- [x] Document header format (was dev/style.md; canonical format examples in [task 4 below](#tasks); migrating to LIC package per [IR-010](010-adopt-spex-scaffold.md) task 4)
 
 ## Tasks
 
@@ -28,7 +28,7 @@ Add SPDX headers (license and copyright info) to applicable files.
 
 3. **Add headers** in the first comment block (after shebang if present), using appropriate comment syntax per file type
 
-4. **Document format** in [dev/style.md](../items/dev/style.md) according to the license(s). E.g.:
+4. **Document format** in a dev spec (was dev/style.md; migrating to LIC package per [IR-010](010-adopt-spex-scaffold.md) task 4) according to the license(s). E.g.:
 
    > **Source code** (including specs):
    >
