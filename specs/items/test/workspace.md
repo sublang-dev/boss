@@ -39,11 +39,11 @@ shall be rejected
 
 ### WS-16
 
-Verifies: [WS-4](../dev/workspace.md#ws-4)
+Verifies: [WS-3](../dev/workspace.md#ws-3), [WS-4](../dev/workspace.md#ws-4)
 
 Where a workspace input is `.`, `..`, absolute, or contains
 `/`, `\`, or `@`, it shall be rejected
-([WS-4](../dev/workspace.md#ws-4)).
+([WS-3](../dev/workspace.md#ws-3), [WS-4](../dev/workspace.md#ws-4)).
 
 ### WS-17
 
