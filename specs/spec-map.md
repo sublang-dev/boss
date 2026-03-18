@@ -58,6 +58,7 @@ Authoring rules: [meta.md](meta.md).
 | [lifecycle.md](items/dev/lifecycle.md) | Rootless enforcement, container hardening, env template, env exposure |
 | [release.md](items/dev/release.md) | Semantic versioning, changelog, npm publish with provenance |
 | [sandbox-image.md](items/dev/sandbox-image.md) | Dockerfile, agent installs, runtime defaults, security hardening, image size budget, headless auth config, vulnerability scanning |
+| [licensing.md](items/dev/licensing.md) | SPDX header requirements and file-scope rules |
 | [workspace.md](items/dev/workspace.md) | Session identity format, input constraints, open/ls/rm behavior |
 
 ### `items/user/`
@@ -71,6 +72,6 @@ Authoring rules: [meta.md](meta.md).
 
 | File | Summary |
 | --- | --- |
-| [spdx-headers.md](items/test/spdx-headers.md) | Copyright and license header presence checks |
+| [licensing.md](items/test/licensing.md) | Copyright and license header presence checks |
 | [sandbox-image.md](items/test/sandbox-image.md) | Build, security, config, script, image size, auth, autonomous execution, container hardening, and vulnerability scanning checks |
 | [workspace.md](items/test/workspace.md) | Session identity, input constraints, open/ls/rm, container-down handling |

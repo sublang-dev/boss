@@ -10,7 +10,7 @@ Add SPDX headers (license and copyright info) to applicable files.
 ## Deliverables
 
 - [x] Add SPDX headers to applicable files missing them
-- [x] Document header format (was dev/style.md; canonical format examples in [task 4 below](#tasks); migrating to LIC package per [IR-010](010-adopt-spex-scaffold.md) task 4)
+- [x] Document header format in [dev/licensing.md](../items/dev/licensing.md) ([LIC-3](../items/dev/licensing.md#lic-3))
 
 ## Tasks
 
@@ -28,7 +28,7 @@ Add SPDX headers (license and copyright info) to applicable files.
 
 3. **Add headers** in the first comment block (after shebang if present), using appropriate comment syntax per file type
 
-4. **Document format** in a dev spec (was dev/style.md; migrating to LIC package per [IR-010](010-adopt-spex-scaffold.md) task 4) according to the license(s). E.g.:
+4. **Document format** in [dev/licensing.md](../items/dev/licensing.md) ([LIC-3](../items/dev/licensing.md#lic-3)) according to the license(s). E.g.:
 
    > **Source code** (including specs):
    >
@@ -51,5 +51,5 @@ Add SPDX headers (license and copyright info) to applicable files.
 
 ## Acceptance Criteria
 
-- All source files have SPDX-FileCopyrightText header ([SPDX-001](../items/test/spdx-headers.md#spdx-001-copyright-header-presence))
-- Files have SPDX-License-Identifier if a license file exists ([SPDX-002](../items/test/spdx-headers.md#spdx-002-license-header-presence))
+- All source files have SPDX-FileCopyrightText header ([LIC-4](../items/test/licensing.md#lic-4))
+- Files have SPDX-License-Identifier if a license file exists ([LIC-5](../items/test/licensing.md#lic-5))
