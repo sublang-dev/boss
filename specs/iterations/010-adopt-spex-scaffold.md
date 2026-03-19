@@ -15,9 +15,9 @@ test traceability, and `map.md` organized by packages.
 - [x] DR-000 reflects spex scaffold structure and format
 - [x] Root `specs/meta.md` replaces `user/meta.md` and `dev/style.md`
 - [x] Licensing package (LIC) replaces scattered SPDX specs
-- [ ] Each spec package uses one prefix across all item groups
-- [ ] Item IDs use `<PACK>-<N>` format (no zero-padding)
-- [ ] All test items have `Verifies:` metadata lines
+- [x] Each spec package uses one prefix across all item groups
+- [x] Item IDs use `<PACK>-<N>` format (no zero-padding)
+- [x] All test items have `Verifies:` metadata lines
 - [ ] `map.md` replaces `spec-map.md`, organized by packages
 - [ ] `CLAUDE.md` and `AGENTS.md` updated to reference `specs/map.md`
 - [ ] Existing IRs use `## Acceptance criteria` and have valid paths
