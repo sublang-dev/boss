@@ -49,10 +49,9 @@ contain placeholders for `CLAUDE_CODE_OAUTH_TOKEN`,
 
 ### LCD-52
 
-Verifies: [LCD-2](../dev/lifecycle.md#lcd-2), [SAND-43](../user/sandbox-image.md#sand-43)
+Verifies: [LCD-2](../dev/lifecycle.md#lcd-2)
 
 Where `~/.boss/.env` defines `CLAUDE_CODE_OAUTH_TOKEN=<value>`,
 when the container starts, `printenv CLAUDE_CODE_OAUTH_TOKEN`
 inside the container shall equal `<value>`
-([LCD-2](../dev/lifecycle.md#lcd-2),
-[SAND-43](../user/sandbox-image.md#sand-43)).
+([LCD-2](../dev/lifecycle.md#lcd-2)).

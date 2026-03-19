@@ -188,6 +188,15 @@ cached credentials, the CLI shall print an auth URL and accept an
 authorization code pasted in the terminal
 ([SAND-46](../user/sandbox-image.md#sand-46)).
 
+### SAND-110
+
+Verifies: [SAND-43](../user/sandbox-image.md#sand-43)
+
+Where `CLAUDE_CODE_OAUTH_TOKEN=<value>` is set in `~/.boss/.env`,
+a non-interactive Claude command in the container shall
+authenticate successfully without an interactive login prompt
+([SAND-43](../user/sandbox-image.md#sand-43)).
+
 ### SAND-72
 
 Verifies: [SAND-44](../user/sandbox-image.md#sand-44)
