@@ -210,7 +210,7 @@ Update existing:
 
 Add:
 
-- **LCD-007**: Where container startup entrypoint runs, it shall reconcile mise with `mise trust` + `mise install --locked` and emit reconcile state for `boss start` warning surfacing ([DR-004 §5](../decisions/004-user-tool-provisioning.md)).
+- **LCD-7**: Where container startup entrypoint runs, it shall reconcile mise with `mise trust` + `mise install --locked` and emit reconcile state for `boss start` warning surfacing ([DR-004 §5](../decisions/004-user-tool-provisioning.md)).
 
 #### Test specs (`specs/items/test/sandbox-image.md`)
 

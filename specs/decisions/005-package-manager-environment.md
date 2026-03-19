@@ -172,7 +172,7 @@ The image shall set a Dockerfile `ENV` variable `BOSS_IMAGE_VERSION` to the
 version string from `package.json`, passed at image build time via a Docker
 build argument. The build shall fail if the argument is empty or absent.
 For release builds, the release pipeline additionally verifies that this value
-matches the git tag per [RELEASE-002](../items/dev/release.md#release-002); that
+matches the git tag per [RELEASE-2](../items/dev/release.md#release-2); that
 parity check is a release-pipeline concern, not a build-time Dockerfile
 constraint. The entrypoint shall record
 `$BOSS_IMAGE_VERSION` in `$XDG_STATE_HOME/.boss-image-version` on every start.

@@ -10,7 +10,7 @@ commands that prepare and launch the local Boss sandbox.
 
 ## Initialization
 
-### LCD-003
+### LCD-3
 
 Where `boss init` verifies the container runtime, initialization
 shall refuse to proceed if the runtime is not operating in rootless
@@ -19,7 +19,7 @@ mode
 
 ## Container Hardening
 
-### LCD-004
+### LCD-4
 
 Where `boss start` launches the sandbox container, the container
 shall run with all Linux capabilities dropped, new-privilege
@@ -29,7 +29,7 @@ tmpfs at `/tmp`
 
 ## Headless Authentication
 
-### LCD-001
+### LCD-1
 
 Where `boss init` creates `~/.boss/.env`, the template shall
 include placeholders for `CLAUDE_CODE_OAUTH_TOKEN`,
@@ -37,7 +37,7 @@ include placeholders for `CLAUDE_CODE_OAUTH_TOKEN`,
 ([DR-001 §3](../../decisions/001-sandbox-architecture.md#3-authentication),
 [DR-002 §1](../../decisions/002-iteron-cli-commands.md#1-boss-init)).
 
-### LCD-002
+### LCD-2
 
 Where `boss start` launches the sandbox container,
 authentication variables from `~/.boss/.env` shall be exposed to
@@ -47,7 +47,7 @@ processes in the container environment
 
 ## SSH Authentication
 
-### LCD-005
+### LCD-5
 
 Where `boss start` is invoked with `[auth.ssh] mode = "keyfile"`,
 the command shall inject each configured host key into an ephemeral
@@ -59,7 +59,7 @@ shall be removed to prevent stale `IdentityFile` directives from
 persisting on the volume
 ([DR-003 §2](../../decisions/003-runtime-profiled-auth.md#2-local-profile)).
 
-### LCD-006
+### LCD-6
 
 The sandbox image shall pre-seed `/etc/ssh/ssh_known_hosts` with
 GitHub and GitLab.com host keys and enforce `StrictHostKeyChecking yes`
@@ -68,7 +68,7 @@ via `/etc/ssh/ssh_config.d/boss.conf`
 
 ## Tool Provisioning
 
-### LCD-007
+### LCD-7
 
 Where the sandbox container entrypoint runs at startup, it shall
 attempt `mise trust` on both `/etc/mise/config.toml` and
