@@ -62,7 +62,7 @@ Per [DR-002 §6](../decisions/002-iteron-cli-commands.md#6-boss-rm-workspace):
 - Refuse to remove home directory (`~`) with clear error
 - Confirmation prompt listing sessions that will be killed
 
-## Verification
+## Acceptance criteria
 
 | # | Test | Expected |
 | --- | --- | --- |

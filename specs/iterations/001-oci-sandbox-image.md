@@ -81,7 +81,7 @@ These defaults live in the image so every container launch is autonomous out of 
   - Mouse mode off by default (toggleable with `Ctrl-B m`, persisted across restarts)
   - `set -g default-terminal "screen-256color"`
 
-## Verification
+## Acceptance criteria
 
 | # | Test | Expected |
 | --- | --- | --- |

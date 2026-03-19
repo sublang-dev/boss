@@ -99,7 +99,7 @@ Extend `.github/workflows/ci.yml` with four jobs:
 - **test-integration**: after build — `npm run test:integration` on Ubuntu, Node 22 only, `alpine:latest` (fast smoke test, Podman pre-installed)
 - **test-integration-image**: after build — `npm run test:integration` on Ubuntu, Node 22, with `BOSS_TEST_IMAGE=ghcr.io/sublang-dev/boss-sandbox:dev-latest` (validates CLI against real sandbox image; macOS omitted because GitHub Actions runners lack nested virtualization for Podman machine)
 
-## Verification
+## Acceptance criteria
 
 | # | Test | Expected |
 | --- | --- | --- |

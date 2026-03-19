@@ -83,7 +83,7 @@ Rationale for `glab` channel choice:
   - activate venv in interactive Bash, guard unsets `PIP_USER`,
   - deactivate venv, guard restores `PIP_USER=1`.
 
-## Verification
+## Acceptance criteria
 
 | # | Test | Expected |
 | --- | --- | --- |

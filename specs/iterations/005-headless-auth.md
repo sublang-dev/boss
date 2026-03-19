@@ -78,7 +78,7 @@ Per [DR-001 §3](../decisions/001-sandbox-architecture.md#3-authentication):
 
 - Inject provider env var (e.g. `ANTHROPIC_API_KEY`) via `~/.boss/.env` \[13]
 
-## Verification
+## Acceptance criteria
 
 Each test runs in a freshly started container (`boss stop && boss start`).
 

@@ -74,7 +74,7 @@ Per [DR-001 §6](../decisions/001-sandbox-architecture.md#6-user-local-tool-laye
 - Add `ENV PATH="/home/boss/.local/bin:${PATH}"` so binaries placed there are found by name
 - The directory persists via the `boss-data` volume mount at `/home/boss`
 
-## Verification
+## Acceptance criteria
 
 | # | Test | Expected |
 | --- | --- | --- |

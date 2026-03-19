@@ -90,7 +90,7 @@ For each agent test above, additionally verify that the agent did not pause for 
 - Grep log for known permission prompt patterns (e.g., `[Y/n]`, `Allow`, `approve`, `permission`)
 - Expected: no matches (agent ran without pausing for approval)
 
-## Verification
+## Acceptance criteria
 
 | # | Test | Input | Expected output |
 | --- | --- | --- | --- |

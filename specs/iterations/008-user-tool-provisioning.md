@@ -249,11 +249,11 @@ Add troubleshooting entries:
 
 Update Task 2 to reflect that agent installation uses mise instead of direct npm/binary installs.
 
-#### spec-map.md
+#### map.md
 
 Add IR-008 row to the Iterations table.
 
-## Verification
+## Acceptance criteria
 
 | # | Test | Expected |
 | --- | --- | --- |

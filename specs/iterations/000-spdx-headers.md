@@ -49,7 +49,7 @@ Add SPDX headers (license and copyright info) to applicable files.
    > <!-- SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai> -->
    > ```
 
-## Acceptance Criteria
+## Acceptance criteria
 
 - All source files have SPDX-FileCopyrightText header ([LIC-4](../items/test/licensing.md#lic-4))
 - Files have SPDX-License-Identifier if a license file exists ([LIC-5](../items/test/licensing.md#lic-5))

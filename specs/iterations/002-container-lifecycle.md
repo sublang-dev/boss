@@ -100,7 +100,7 @@ CODEX_API_KEY=
 GEMINI_API_KEY=
 ```
 
-## Verification
+## Acceptance criteria
 
 | # | Test | Expected |
 | --- | --- | --- |
