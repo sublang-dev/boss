@@ -16,9 +16,10 @@ by cross-cutting audit of `specs/items/`, CLI source, and `docs/`.
 - [ ] `docs/install.md` reflects current version and `init` behavior
 - [ ] `boss rm` abort exit-code behavior is canonicalized
 - [ ] LCD-55 non-rootless failure path has an integration test
-- [ ] SAND-8 / SAND-64 (image-size gate) removal is clean
+- [x] SAND-8 / SAND-64 (image-size gate) removal is clean
 - [ ] `boss scaffold` has a spec package
 - [ ] DR-002 acknowledges `scaffold` as the seventh command
+- [ ] LCD-6 moved to SAND to resolve META-13 package-boundary violation
 
 ## Tasks
 
@@ -36,7 +37,7 @@ by cross-cutting audit of `specs/items/`, CLI source, and `docs/`.
 2. **Fix `docs/cli-reference.md` exit codes**
    - `boss ls`: change exit-code table from "0 Always" to reflect
      non-zero on container-not-running, per
-     [WS-12](items/user/workspace.md#ws-12) and `ls.ts`
+     [WS-12](../items/user/workspace.md#ws-12) and `ls.ts`
    - `boss rm`: reconcile "1 on user abort" with the code
      (`rm.ts` returns 0); see task 4
 
@@ -45,12 +46,12 @@ by cross-cutting audit of `specs/items/`, CLI source, and `docs/`.
    - Operation order: match `init.ts` (config/env first, then
      pull/volume), not the stale pull-first narrative
    - Verify expected output blocks match current CLI output,
-     per [DOC-2](items/dev/docs.md#doc-2)
+     per [DOC-2](../items/dev/docs.md#doc-2)
 
 4. **Canonicalize `boss rm` abort behavior**
    - Decide: should abort exit 0 (current code) or 1 (current docs)?
    - Update whichever is wrong (code or docs) and add the abort
-     exit-code to [WS-11](items/user/workspace.md#ws-11) so the
+     exit-code to [WS-11](../items/user/workspace.md#ws-11) so the
      spec is authoritative
 
 5. **Add LCD-55 integration test**
@@ -86,6 +87,17 @@ by cross-cutting audit of `specs/items/`, CLI source, and `docs/`.
      as the seventh command, noting it is a project-setup utility
      distinct from the sandbox-lifecycle commands
 
+9. **Move LCD-6 to SAND (META-13 fix)**
+   - LCD-6's shall clause uses the subject "The sandbox image," which
+     is a SAND subject; [META-13](../meta.md#meta-13) requires shall
+     clauses to stay within the package's closed intent
+   - Move the SSH known-hosts / `StrictHostKeyChecking` / config
+     include requirement to `items/dev/sandbox-image.md` as a new
+     SAND item
+   - Update LCD-5 to reference the new SAND item via a Where
+     precondition (allowed by [META-14](../meta.md#meta-14))
+   - Update any `Verifies:` lines in `items/test/` that cite LCD-6
+
 ## Acceptance criteria
 
 - `specs/items/user/lifecycle.md` exists with LCD user items for
@@ -100,3 +112,5 @@ by cross-cutting audit of `specs/items/`, CLI source, and `docs/`.
 - `boss scaffold` has a spec package (SCAF) with at least user and
   dev item files listed in `map.md`
 - DR-002 documents `scaffold` as part of the CLI command set
+- LCD-6 content lives in SAND; LCD-5 references it via precondition;
+  no META-13 violations remain in LCD
