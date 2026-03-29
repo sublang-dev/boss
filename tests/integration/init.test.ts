@@ -47,24 +47,33 @@ describe('boss init (integration)', { timeout: 120_000 }, () => {
     expect(envContent).toContain('GEMINI_API_KEY=');
   });
 
-  // LCD-55: non-rootless runtime → exit non-zero
-  it('exits non-zero when runtime is not rootless', async () => {
+  // LCD-55: non-rootless runtime → exit non-zero, refuse to proceed
+  it('exits non-zero and refuses to proceed when runtime is not rootless', async () => {
     const podman = await import('../../src/utils/podman.js');
+    const config = await import('../../src/utils/config.js');
     const functionalSpy = vi.spyOn(podman, 'isPodmanFunctional').mockResolvedValue(false);
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
       throw new Error('process.exit');
     }) as never);
+    // writeConfig is the first action after the rootless gate (init.ts:118).
+    // If it runs, the rootless check failed to stop execution.
+    const writeConfigSpy = vi.spyOn(config, 'writeConfig');
 
-    const { initCommand } = await import('../../src/commands/init.js');
     try {
-      await initCommand({ image: TEST_IMAGE, yes: true });
-    } catch {
-      // Expected — mock process.exit throws
-    }
+      const { initCommand } = await import('../../src/commands/init.js');
+      try {
+        await initCommand({ image: TEST_IMAGE, yes: true });
+      } catch {
+        // Expected — mock process.exit throws
+      }
 
-    expect(exitSpy).toHaveBeenCalledWith(1);
-    exitSpy.mockRestore();
-    functionalSpy.mockRestore();
+      expect(exitSpy).toHaveBeenCalledWith(1);
+      expect(writeConfigSpy).not.toHaveBeenCalled();
+    } finally {
+      writeConfigSpy.mockRestore();
+      exitSpy.mockRestore();
+      functionalSpy.mockRestore();
+    }
   });
 
   // IR-002 test 3: idempotent
