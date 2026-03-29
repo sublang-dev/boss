@@ -28,7 +28,7 @@ Authoring rules: [meta.md](meta.md).
 | --- | --- | --- |
 | DR-000 | [000-spec-structure-format.md](decisions/000-spec-structure-format.md) | Spec structure, format, and naming conventions |
 | DR-001 | [001-sandbox-architecture.md](decisions/001-sandbox-architecture.md) | OCI container design, Podman, tmux mapping, auth strategies |
-| DR-002 | [002-iteron-cli-commands.md](decisions/002-iteron-cli-commands.md) | Workspace model and 6-command CLI (init/start/stop/open/ls/rm) |
+| DR-002 | [002-iteron-cli-commands.md](decisions/002-iteron-cli-commands.md) | Workspace model and 7-command CLI (scaffold/init/start/stop/open/ls/rm) |
 | DR-003 | [003-runtime-profiled-auth.md](decisions/003-runtime-profiled-auth.md) | Runtime-profiled auth: local (file mounts) vs AWS (Secrets Manager) |
 | DR-004 | [004-user-tool-provisioning.md](decisions/004-user-tool-provisioning.md) | Three-layer tool provisioning via mise: image / manifest / volume |
 | DR-005 | [005-package-manager-environment.md](decisions/005-package-manager-environment.md) | XDG env vars for native package managers, mock sudo shim, entrypoint defaults seeding, EFS tuning |
