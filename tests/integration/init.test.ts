@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 SubLang International <https://sublang.ai>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -45,6 +45,26 @@ describe('boss init (integration)', { timeout: 120_000 }, () => {
     expect(envContent).toContain('ANTHROPIC_API_KEY=');
     expect(envContent).toContain('CODEX_API_KEY=');
     expect(envContent).toContain('GEMINI_API_KEY=');
+  });
+
+  // LCD-55: non-rootless runtime → exit non-zero
+  it('exits non-zero when runtime is not rootless', async () => {
+    const podman = await import('../../src/utils/podman.js');
+    const functionalSpy = vi.spyOn(podman, 'isPodmanFunctional').mockResolvedValue(false);
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('process.exit');
+    }) as never);
+
+    const { initCommand } = await import('../../src/commands/init.js');
+    try {
+      await initCommand({ image: TEST_IMAGE, yes: true });
+    } catch {
+      // Expected — mock process.exit throws
+    }
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    exitSpy.mockRestore();
+    functionalSpy.mockRestore();
   });
 
   // IR-002 test 3: idempotent
