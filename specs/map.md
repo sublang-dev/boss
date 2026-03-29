@@ -93,6 +93,13 @@ Authoring rules: [meta.md](meta.md).
 | user | [sandbox-image.md](items/user/sandbox-image.md) | Agent availability, runtime behavior, headless auth per agent |
 | test | [sandbox-image.md](items/test/sandbox-image.md) | Build, security, config, script, auth, autonomous execution, container hardening, and vulnerability scanning checks |
 
+### SCAF
+
+| Group | File | Summary |
+| --- | --- | --- |
+| user | [scaffold.md](items/user/scaffold.md) | Target resolution, idempotency, agent instructions, error handling |
+| dev | [scaffold.md](items/dev/scaffold.md) | Directory creation, template copying, scaffold path resolution, agent spec appending |
+
 ### WS
 
 | Group | File | Summary |
