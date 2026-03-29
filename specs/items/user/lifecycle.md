@@ -36,9 +36,9 @@ making the command idempotent
 ### LCD-11
 
 Where a user runs `boss init` and Podman is not installed, the CLI
-shall prompt for confirmation before installing. When the user
-declines, the CLI shall exit non-zero with a message advising
-manual installation.
+shall prompt for confirmation before installing unless `-y`/`--yes`
+is passed. When the user declines, the CLI shall exit non-zero with
+a message advising manual installation.
 
 ## Starting the Sandbox
 
@@ -78,4 +78,4 @@ the CLI shall print a message indicating this and exit successfully.
 ### LCD-17
 
 Where any lifecycle command encounters an unrecoverable error, the
-CLI shall print a message prefixed with `Error:` and exit non-zero.
+CLI shall print an error message to stderr and exit non-zero.
