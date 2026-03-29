@@ -6,7 +6,7 @@
 ## Intent
 
 This spec defines implementation requirements for the
-`boss scaffold` command.
+`scaffold` subcommand.
 
 ## Directory Structure
 
