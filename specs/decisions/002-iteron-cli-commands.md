@@ -42,15 +42,6 @@ boss <command> [options] [args]
 
 ### Core Commands
 
-#### 0. `boss scaffold [path]`
-
-Create the Boss specs directory structure and templates in a project.
-Not part of the sandbox lifecycle — this is a one-time project-setup
-utility that scaffolds `specs/`, copies templates, and appends agent
-instructions to `CLAUDE.md`/`AGENTS.md`.
-
----
-
 #### 1. `boss init`
 
 One-time environment setup. Installs Podman, pulls sandbox image, creates volume, generates config.
@@ -122,7 +113,6 @@ Remove a workspace directory and kill any running agent sessions in it.
 
 | Command | Purpose | Alternative |
 | --- | --- | --- |
-| `boss scaffold [path]` | Scaffold specs and agent instructions | Manual directory and file creation |
 | `boss init` | One-time setup | Manual podman install + config |
 | `boss start` | Start sandbox | `podman run -d --name boss-sandbox [complex flags]` |
 | `boss stop` | Stop sandbox | `podman stop boss-sandbox` |
@@ -142,7 +132,7 @@ Remove a workspace directory and kill any running agent sessions in it.
 
 ### Benefits
 
-- **Minimal command set**: 7 commands cover all common operations
+- **Minimal command set**: 6 commands cover all common operations
 - **Intuitive naming**: `open` matches user mental model ("open project with Claude")
 - **Home directory default**: No artificial "default workspace"; just use `~` when no workspace specified
 - **Multi-workspace support**: One sandbox, multiple projects

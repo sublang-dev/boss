@@ -17,9 +17,8 @@ by cross-cutting audit of `specs/items/`, CLI source, and `docs/`.
 - [x] `boss rm` abort exit-code behavior is canonicalized
 - [x] LCD-55 non-rootless failure path has an integration test
 - [x] SAND-8 / SAND-64 (image-size gate) removal is clean
-- [x] `boss scaffold` has a spec package
-- [x] DR-002 acknowledges `scaffold` as the seventh command
 - [x] LCD-6 moved to SAND to resolve META-13 package-boundary violation
+- [x] `scaffold` subcommand removed (moved to spex repo)
 
 ## Tasks
 
@@ -67,27 +66,7 @@ by cross-cutting audit of `specs/items/`, CLI source, and `docs/`.
    - `map.md` summaries updated
    - Confirm no dangling cross-references remain
 
-7. **Create spec package for `boss scaffold`**
-   - Choose package short form (suggested: SCAF)
-   - Create `items/user/scaffold.md`: target directory resolution
-     (explicit path, git root, cwd), idempotency behavior, what
-     gets created (`specs/` tree, `CLAUDE.md`/`AGENTS.md` append),
-     success/error messages
-   - Create `items/dev/scaffold.md`: template copy mechanics
-     (`scaffold/` → target), `getScaffoldDir()` resolution,
-     `appendAgentSpecs()` logic, file-existence guards
-   - Add both files to `map.md` under a new SCAF package section
-   - Optionally add `items/test/scaffold.md` with verification items
-
-8. **Update DR-002 to acknowledge `scaffold`**
-   - DR-002 currently describes a 6-command CLI
-     (`init`/`start`/`stop`/`open`/`ls`/`rm`); `scaffold` was
-     added later without updating the DR
-   - Add a section or amend the command set to include `scaffold`
-     as the seventh command, noting it is a project-setup utility
-     distinct from the sandbox-lifecycle commands
-
-9. **Move LCD-6 to SAND (META-13 fix)**
+7. **Move LCD-6 to SAND (META-13 fix)**
    - LCD-6's shall clause uses the subject "The sandbox image," which
      is a SAND subject; [META-13](../meta.md#meta-13) requires shall
      clauses to stay within the package's closed intent
@@ -109,8 +88,5 @@ by cross-cutting audit of `specs/items/`, CLI source, and `docs/`.
 - `boss rm` abort behavior is consistent across spec, code, and docs
 - LCD-55 has a passing integration test
 - No spec items reference removed SAND-8 or SAND-64
-- `boss scaffold` has a spec package (SCAF) with at least user and
-  dev item files listed in `map.md`
-- DR-002 documents `scaffold` as part of the CLI command set
 - LCD-6 content lives in SAND; LCD-5 references it via precondition;
   no META-13 violations remain in LCD

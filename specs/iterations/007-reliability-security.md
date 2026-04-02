@@ -60,7 +60,7 @@ npm CVEs with upstream fixes suppressed in `.trivyignore` — npm 11.10.0 (lates
 ### 3. Documentation
 
 - **Installation guide** (`docs/install.md`): step-by-step `boss init` on macOS, Linux, WSL2 with expected terminal output
-- **CLI reference** (`docs/cli-reference.md`): all 7 commands (`scaffold`, `init`, `start`, `stop`, `open`, `ls`, `rm`) with options, examples, and exit codes
+- **CLI reference** (`docs/cli-reference.md`): all 6 commands (`init`, `start`, `stop`, `open`, `ls`, `rm`) with options, examples, and exit codes
 - **Agent configuration** (`docs/agents.md`): API key setup per agent, `hasCompletedOnboarding`, `apiKeyHelper`, subscription auth alternatives
 - **Workspace guide** (`docs/workspaces.md`): creating workspaces, running multiple agents, `boss ls` output interpretation, `boss rm` cleanup
 - **Tmux quick reference** (`docs/tmux.md`): detach (`Ctrl-B D`), reattach (`boss open`), pane splits, scrollback, custom `~/.tmux.conf`

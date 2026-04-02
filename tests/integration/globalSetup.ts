@@ -58,7 +58,7 @@ export async function setup(): Promise<void> {
       execFileSync('podman', ['image', 'exists', IMAGE], { stdio: 'ignore' });
       // Image exists — check if source files are newer (stale image).
       const root = join(dirname(new URL(import.meta.url).pathname), '..', '..');
-      const srcNewest = newestMtime(join(root, 'image'), join(root, 'scaffold'));
+      const srcNewest = newestMtime(join(root, 'image'));
       const imageCreated = execFileSync(
         'podman', ['image', 'inspect', IMAGE, '--format', '{{.Created}}'],
         { encoding: 'utf-8' },

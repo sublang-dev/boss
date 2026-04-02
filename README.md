@@ -15,27 +15,6 @@ Delegate dev loops to Claude Code, Codex CLI, Gemini CLI, OpenCode or any AI cod
 
 Pick the path that fits your setup:
 
-- **Spec Scaffolding** — Start with structured specs to guide AI coding agents.
-- **Sandbox** — You want to run AI agents in an isolated Podman container.
-
-### Spec Scaffolding
-
-Scaffold [GEARS](https://sublang.ai/ref/gears-ai-ready-spec-syntax) specs into any project and let AI agents iterate on them:
-
-```bash
-npm install -g @sublang/boss
-cd your-project
-boss scaffold
-```
-
-Review the sample iteration `specs/iterations/000-spdx-headers.md`, update the copyright text, then prompt your AI coding agent:
-
-```text
-Complete Iteration #0
-```
-
-### Sandbox
-
 Install Boss globally to launch AI agents in an isolated Podman container.
 
 #### Prerequisites

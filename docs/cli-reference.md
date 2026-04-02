@@ -12,47 +12,6 @@ boss -h, --help       Show help
 
 ---
 
-## `boss scaffold [path]`
-
-Create the Boss specs directory structure and templates.
-
-### Synopsis
-
-```
-boss scaffold [path]
-```
-
-### Arguments
-
-| Argument | Description | Default |
-| --- | --- | --- |
-| `path` | Target directory | Git root or current directory |
-
-### Behavior
-
-- If `path` is provided, uses that directory (must exist)
-- If inside a git repository, creates `specs/` at the repo root
-- Otherwise, creates `specs/` in the current directory
-
-### Examples
-
-```bash
-# Scaffold in current git repo
-boss scaffold
-
-# Scaffold in a specific directory
-boss scaffold ~/projects/myapp
-```
-
-### Exit Codes
-
-| Code | Meaning |
-| --- | --- |
-| 0 | Scaffolding complete |
-| 1 | Path does not exist or is not a directory |
-
----
-
 ## `boss init [options]`
 
 Install Podman, pull the sandbox image, create the data volume, and generate configuration files.

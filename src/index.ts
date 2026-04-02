@@ -5,7 +5,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { scaffoldCommand } from './commands/scaffold.js';
 import { initCommand } from './commands/init.js';
 import { startCommand } from './commands/start.js';
 import { stopCommand } from './commands/stop.js';
@@ -22,12 +21,6 @@ program
   .description('Delegate dev loops to Claude Code + Codex CLI. Iterates for hours. No API keys.')
   .version(pkg.version)
   .enablePositionalOptions();
-
-program
-  .command('scaffold')
-  .description('Create boss specs directory structure and templates')
-  .argument('[path]', 'target directory (defaults to git root or cwd)')
-  .action(scaffoldCommand);
 
 program
   .command('init')
