@@ -5,7 +5,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@sublang/boss)](https://www.npmjs.com/package/@sublang/boss)
 [![Node.js](https://img.shields.io/node/v/@sublang/boss)](https://nodejs.org/)
-[![CI](https://github.com/sublang-dev/boss/actions/workflows/ci.yml/badge.svg)](https://github.com/sublang-dev/boss/actions/workflows/ci.yml)
+[![CI](https://github.com/sublang-ai/boss/actions/workflows/ci.yml/badge.svg)](https://github.com/sublang-ai/boss/actions/workflows/ci.yml)
 
 *Enter boss mode.*
 
@@ -105,6 +105,6 @@ See [Development Guide](docs/development.md) for running from source and using d
 We welcome contributions of all kinds. If you'd like to help:
 
 - 🌟 Star our repo if you find Boss useful.
-- [Open an issue](https://github.com/sublang-dev/boss/issues) for bugs or feature requests.
-- [Open a PR](https://github.com/sublang-dev/boss/pulls) for fixes or improvements.
-- Discuss on [Discord](https://discord.gg/cxUsykWr) for support or new ideas.
+- [Open an issue](https://github.com/sublang-ai/boss/issues) for bugs or feature requests.
+- [Open a PR](https://github.com/sublang-ai/boss/pulls) for fixes or improvements.
+- Discuss on [Discord](https://discord.gg/XxTPjNqy9g) for support or new ideas.
