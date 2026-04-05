@@ -86,3 +86,6 @@ CVE-2026-35385
 
 # picomatch: ReDoS via crafted extglob patterns (fixed in 4.0.4)
 CVE-2026-33671
+
+# nghttp2: DoS via malformed HTTP/2; no fix in Debian Bookworm yet
+CVE-2026-27135
