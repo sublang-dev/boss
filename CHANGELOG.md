@@ -10,9 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-05
+
 ### Removed
 
 - **`boss scaffold` subcommand**: Spec scaffolding is no longer part of Boss.
+
+### Changed
+
+- README heading levels promoted from h4 to h3; added License section.
+- Updated Discord invite link and organization URLs in README.
+- CLI documentation updated for 6-command set.
 
 ## [0.4.0] - 2026-03-08
 
@@ -152,7 +160,8 @@ Install with `npm install -g @sublang/iteron`.
 - GitHub Actions CI workflow
 - Project specifications structure
 
-[Unreleased]: https://github.com/sublang-dev/boss/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/sublang-dev/boss/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/sublang-dev/boss/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/sublang-dev/boss/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/sublang-dev/boss/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/sublang-dev/boss/compare/v0.1.3...v0.2.0
